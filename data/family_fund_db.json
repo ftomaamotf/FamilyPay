@@ -1,0 +1,280 @@
+{
+  "activeAdminId": "b-2",
+  "currency": {
+    "code": "IQD",
+    "symbol": "د.ع",
+    "name": "دينار عراقي"
+  },
+  "monthlyFundAmount": 1000000,
+  "sendingCardId": "card-1",
+  "security": {
+    "fundPin": "9988",
+    "isCardFrozen": false,
+    "maxSingleTransferLimit": 500000,
+    "requirePinOnEveryTransfer": true,
+    "isBalanceHiddenByAdmin": true,
+    "transferPermissions": {
+      "mode": "admin_only",
+      "allowedSenderIds": [
+        "b-2"
+      ]
+    }
+  },
+  "bankCards": [
+    {
+      "id": "card-1",
+      "name": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "bankName": "ماستر كي / Qi Card",
+      "accountNumber": "7115069812",
+      "cardHolder": "صندوق عائلة عجمي المشترك",
+      "balance": 1000000,
+      "isSendingCard": true,
+      "isFrozen": false,
+      "color": "#059669",
+      "lastUpdated": "2026-08-20T23:21:57.501Z"
+    },
+    {
+      "id": "card-2",
+      "name": "بطاقة طوارئ العائلة",
+      "bankName": "مصرف الرافدين / Qi Card",
+      "accountNumber": "880000000000002",
+      "cardHolder": "حساب الطوارئ",
+      "balance": 500000,
+      "isSendingCard": false,
+      "isFrozen": false,
+      "color": "#3b82f6",
+      "lastUpdated": "2026-08-20T18:00:00.000Z"
+    }
+  ],
+  "brothers": [
+    {
+      "id": "b-1",
+      "name": "عمر عجمي",
+      "email": "omar.ajmi@gmail.com",
+      "accountNumber": "1001",
+      "phone": "07703432608",
+      "bankAccountNumber": "7115069812",
+      "password": "1989",
+      "bankName": "ماستر كي / Qi Card",
+      "avatarColor": "#10b981",
+      "isAdmin": false,
+      "approvedFields": [
+        {
+          "id": "f-1",
+          "name": "حليب ومواد غذائية 🥛",
+          "limit": 200000,
+          "spent": 0
+        },
+        {
+          "id": "f-2",
+          "name": "فواتير وانترنت ⚡",
+          "limit": 100000,
+          "spent": 0
+        },
+        {
+          "id": "f-3",
+          "name": "صيانة منزلية 🔧",
+          "limit": 100000,
+          "spent": 0
+        },
+        {
+          "id": "f-1787246876444-537",
+          "name": "اطباء",
+          "limit": 100000,
+          "spent": 0
+        }
+      ]
+    },
+    {
+      "id": "b-2",
+      "name": "عبدالله عجمي",
+      "email": "abduallh_ajmi@yahoo.com",
+      "accountNumber": "1002",
+      "phone": "07702206214",
+      "bankAccountNumber": "9256869125",
+      "password": "1988",
+      "bankName": "ماستر كي / Qi Card",
+      "avatarColor": "#6366f1",
+      "isAdmin": true,
+      "approvedFields": [
+        {
+          "id": "f-4",
+          "name": "بنزين ومواصلات ⛽",
+          "limit": 150000,
+          "spent": 0
+        },
+        {
+          "id": "f-5",
+          "name": "حليب للأطفال 🥛",
+          "limit": 150000,
+          "spent": 0
+        },
+        {
+          "id": "f-6",
+          "name": "مصاريف عامة 🛒",
+          "limit": 100000,
+          "spent": 0
+        },
+        {
+          "id": "f-1787246913231-83",
+          "name": "اطباء",
+          "limit": 100000,
+          "spent": 0
+        }
+      ]
+    },
+    {
+      "id": "b-1787243535948",
+      "name": "محمد عجمي",
+      "accountNumber": "1003",
+      "phone": "07727959161",
+      "bankAccountNumber": "7145810946",
+      "bankName": "ماستر كي / Qi Card",
+      "password": "1986",
+      "avatarColor": "#8b5cf6",
+      "isAdmin": false,
+      "approvedFields": [
+        {
+          "id": "f-1787243536212-1",
+          "name": "مصاريف عامة 🛒",
+          "limit": 1000,
+          "spent": 0
+        },
+        {
+          "id": "f-1787243536212-2",
+          "name": "بنزين ونقل ⛽",
+          "limit": 500,
+          "spent": 0
+        },
+        {
+          "id": "f-1787246670888-114",
+          "name": "اطباء",
+          "limit": 100000,
+          "spent": 0
+        }
+      ]
+    }
+  ],
+  "transfers": [],
+  "notifications": [
+    {
+      "id": "notif-1787246809140",
+      "title": "💰 تحويل مالي: 16000 د.ع",
+      "message": "تم تحويل 16000 د.ع إلى حساب الأخ (عبدالله عجمي) رقم (9256869125) لحاجة [بنزين]. المتبقي في بطاقة الصندوق: 984000 د.ع",
+      "transferId": "tx-1787246809140",
+      "recipientId": "b-2",
+      "amount": 16000,
+      "reason": "بنزين",
+      "timestamp": "2026-08-20T17:26:49.140Z",
+      "readBy": []
+    },
+    {
+      "id": "notif-1787244681563",
+      "title": "✅ تمت الموافقة على طلب الأموال: 16000 د.ع",
+      "message": "وافق الأدمن على طلب الأخ (محمد عجمي) وتم تحويل 16000 د.ع لحاجة [بانزين].",
+      "timestamp": "2026-08-20T16:51:21.563Z",
+      "readBy": []
+    },
+    {
+      "id": "notif-1787244666311",
+      "title": "📥 طلب أموال جديد: 16000 د.ع",
+      "message": "قدم الأخ (محمد عجمي) طلب سحب مبلغ 16000 د.ع لحاجة [بانزين]. بانتظار موافقة الأدمن.",
+      "timestamp": "2026-08-20T16:51:06.311Z",
+      "readBy": []
+    },
+    {
+      "id": "notif-1787244592392",
+      "title": "✅ تمت الموافقة على طلب الأموال: 12000 د.ع",
+      "message": "وافق الأدمن على طلب الأخ (محمد عجمي) وتم تحويل 12000 د.ع لحاجة [بانزين].",
+      "timestamp": "2026-08-20T16:49:52.392Z",
+      "readBy": []
+    },
+    {
+      "id": "notif-1787244536807",
+      "title": "📥 طلب أموال جديد: 12000 د.ع",
+      "message": "قدم الأخ (محمد عجمي) طلب سحب مبلغ 12000 د.ع لحاجة [بانزين]. بانتظار موافقة الأدمن.",
+      "timestamp": "2026-08-20T16:48:56.807Z",
+      "readBy": []
+    },
+    {
+      "id": "notif-1787243704591",
+      "title": "❌ تم رفض طلب الأموال",
+      "message": "اعتذر الأدمن عن طلب الأخ (محمد عجمي) بمبلغ 5000 د.ع لحاجة [تمن].",
+      "timestamp": "2026-08-20T16:35:04.591Z",
+      "readBy": []
+    },
+    {
+      "id": "notif-1787243653415",
+      "title": "📥 طلب أموال جديد: 5000 د.ع",
+      "message": "قدم الأخ (محمد عجمي) طلب سحب مبلغ 5000 د.ع لحاجة [تمن]. بانتظار موافقة الأدمن.",
+      "timestamp": "2026-08-20T16:34:13.415Z",
+      "readBy": []
+    },
+    {
+      "id": "notif-1787240846474",
+      "title": "💰 تحويل مالي: 9000 د.ع",
+      "message": "تم تحويل 9000 د.ع إلى حساب الأخ (عمر عجمي) رقم (7115069812) لحاجة [حليب للأطفال 🥛]. المتبقي في بطاقة الصندوق: 991000 د.ع",
+      "transferId": "tx-1787240846474",
+      "recipientId": "b-1",
+      "amount": 9000,
+      "reason": "حليب للأطفال 🥛",
+      "timestamp": "2026-08-20T15:47:26.474Z",
+      "readBy": []
+    },
+    {
+      "id": "notif-admin-change",
+      "title": "👑 تعيين أدمن جديد للصندوق",
+      "message": "تم تسليم إدارة الصندوق ومهمة الإرسال للأخ (عبدالله عجمي) - حساب رقم: #1002",
+      "timestamp": "2026-08-20T18:30:00.000Z",
+      "readBy": []
+    }
+  ],
+  "monthlyArchives": [],
+  "yearlyArchives": [],
+  "invitations": [],
+  "fundRequests": [
+    {
+      "id": "req-1787244666311",
+      "brotherId": "b-1787243535948",
+      "brotherName": "محمد عجمي",
+      "brotherAccountNumber": "1003",
+      "bankAccountNumber": "7145810946",
+      "amount": 16000,
+      "fieldId": "f-1787243536212-1",
+      "fieldName": "مصاريف عامة 🛒",
+      "reason": "بانزين",
+      "status": "approved",
+      "createdAt": "2026-08-20T16:51:06.311Z",
+      "approvedAt": "2026-08-20T16:51:21.563Z"
+    },
+    {
+      "id": "req-1787244536807",
+      "brotherId": "b-1787243535948",
+      "brotherName": "محمد عجمي",
+      "brotherAccountNumber": "1003",
+      "bankAccountNumber": "7145810946",
+      "amount": 12000,
+      "fieldId": "f-1787243536212-1",
+      "fieldName": "مصاريف عامة 🛒",
+      "reason": "بانزين",
+      "status": "approved",
+      "createdAt": "2026-08-20T16:48:56.807Z",
+      "approvedAt": "2026-08-20T16:49:52.392Z"
+    },
+    {
+      "id": "req-1787243653415",
+      "brotherId": "b-1787243535948",
+      "brotherName": "محمد عجمي",
+      "brotherAccountNumber": "1003",
+      "bankAccountNumber": "7145810946",
+      "amount": 5000,
+      "fieldId": "f-1787243536212-1",
+      "fieldName": "مصاريف عامة 🛒",
+      "reason": "تمن",
+      "status": "rejected",
+      "createdAt": "2026-08-20T16:34:13.415Z",
+      "rejectedAt": "2026-08-20T16:35:04.591Z",
+      "rejectionReason": "اعتذر الأدمن عن تنفيذ الطلب حالياً"
+    }
+  ]
+}
