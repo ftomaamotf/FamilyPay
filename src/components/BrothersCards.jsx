@@ -36,9 +36,11 @@ export const BrothersCards = ({
     updateBrotherFields
   } = useFinance();
   const [copiedId, setCopiedId] = useState(null);
+  const [copiedToast, setCopiedToast] = useState(null);
   const [sortBy, setSortBy] = useState('admin_first'); // 'admin_first', 'alphabetical', 'highest_spent', 'lowest_spent'
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBrotherId, setSelectedBrotherId] = useState(null);
+  const pressTimerRef = React.useRef(null);
   const currency = settings.currencySymbol;
 
   const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
@@ -51,10 +53,30 @@ export const BrothersCards = ({
     }
   }, [brothers, activeAdminId]);
 
-  const handleCopy = (brotherId, text) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(brotherId);
-    setTimeout(() => setCopiedId(null), 2000);
+  const copyAccountNumber = (brother) => {
+    const acc = brother.bankAccountNumber || brother.accountNumber;
+    navigator.clipboard.writeText(acc);
+    setCopiedId(brother.id);
+    setCopiedToast(`تم نسخ رقم حساب ${brother.name}: ${acc}`);
+    if (window.navigator?.vibrate) {
+      window.navigator.vibrate(50);
+    }
+    setTimeout(() => {
+      setCopiedId(null);
+      setCopiedToast(null);
+    }, 2500);
+  };
+
+  const handleTouchStart = (brother) => {
+    pressTimerRef.current = setTimeout(() => {
+      copyAccountNumber(brother);
+    }, 550);
+  };
+
+  const handleTouchEnd = () => {
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+    }
   };
 
   // Filter & Sort Brothers dynamically
@@ -106,6 +128,14 @@ export const BrothersCards = ({
   return (
     <div className="space-y-6 animate-fadeIn">
       
+      {/* Toast Banner on Copy */}
+      {copiedToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white px-5 py-2.5 rounded-2xl shadow-2xl font-black text-xs flex items-center gap-2 animate-bounce border-2 border-white/40">
+          <Check className="w-4 h-4" />
+          <span>{copiedToast}</span>
+        </div>
+      )}
+
       {/* Header & Quick Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -114,7 +144,7 @@ export const BrothersCards = ({
             <span>دوائر الإخوة والأدمن والمصروفات</span>
           </h3>
           <p className="text-xs text-slate-400">
-            اضغط على أي دائرة لمشاهدة تفاصيل السلع، وسجل الطلبات، وإرسال الأموال
+            اضغط على الدائرة لعرض السلع • اضغط مطولاً لنسخ رقم الحساب المصرفي
           </p>
         </div>
 
@@ -216,15 +246,15 @@ export const BrothersCards = ({
 
       </div>
 
-      {/* 🔴 THE CIRCULAR USERS & ADMIN HUB (دوائر الأسماء مع أرقام الصرف الكلي) 🔴 */}
+      {/* 🔴 THE CIRCULAR USERS & ADMIN HUB (دوائر الأسماء مع أرقام الصرف الكلي والنسخ المطول) 🔴 */}
       <div className="bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5 rounded-3xl border border-slate-800 shadow-xl">
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-black text-emerald-400 flex items-center gap-1.5">
             <Sparkles className="w-4 h-4" />
-            <span>اختر دائرة الأخ لعرض تفاصيله الكاملة والسلع وسجل الطلبات:</span>
+            <span>دوائر المستخدمين: اضغط للتحديد • اضغط مطولاً لنسخ رقم الحساب 📋</span>
           </span>
-          <span className="text-[11px] text-slate-400 font-bold">
-            اضغط على أي دائرة للتحديد 👆
+          <span className="text-[11px] text-slate-400 font-bold hidden sm:inline-block">
+            ضغطة مطولة = نسخ الحساب
           </span>
         </div>
 
@@ -234,90 +264,109 @@ export const BrothersCards = ({
             const isSenderAdmin = b.id === activeAdminId;
             const isMe = b.id === currentUser?.id;
             const isSelected = b.id === selectedBrotherId;
+            const isCopied = copiedId === b.id;
 
             // Total spent for this brother
             const brotherTransfers = transfers.filter((t) => t.recipientId === b.id);
             const totalReceived = brotherTransfers.reduce((acc, t) => acc + (t.amount || 0), 0);
 
             return (
-              <button
+              <div
                 key={b.id}
-                onClick={() => setSelectedBrotherId(b.id)}
-                className={`flex flex-col items-center group transition-all duration-200 shrink-0 outline-none ${
-                  isSelected ? 'scale-105' : 'opacity-80 hover:opacity-100 hover:scale-102'
-                }`}
+                className="flex flex-col items-center shrink-0"
               >
-                {/* Outer Circular Ring */}
-                <div
-                  className={`relative p-1 rounded-full transition-all duration-300 ${
-                    isSelected
-                      ? 'ring-4 ring-emerald-500 ring-offset-4 ring-offset-slate-950 shadow-lg shadow-emerald-500/30'
-                      : 'ring-2 ring-slate-700 group-hover:ring-slate-500'
+                <button
+                  onClick={() => setSelectedBrotherId(b.id)}
+                  onMouseDown={() => handleTouchStart(b)}
+                  onMouseUp={handleTouchEnd}
+                  onMouseLeave={handleTouchEnd}
+                  onTouchStart={() => handleTouchStart(b)}
+                  onTouchEnd={handleTouchEnd}
+                  title={`اضغط لتحديد ${b.name} • اضغط مطولاً لنسخ رقم الحساب`}
+                  className={`flex flex-col items-center group transition-all duration-200 outline-none select-none relative ${
+                    isSelected ? 'scale-105' : 'opacity-85 hover:opacity-100 hover:scale-102'
                   }`}
                 >
-                  {/* The Inner Avatar Circle */}
+                  {/* Outer Circular Ring */}
                   <div
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-black shadow-inner relative overflow-hidden"
-                    style={{ backgroundColor: b.avatarColor || '#10b981' }}
+                    className={`relative p-1 rounded-full transition-all duration-300 ${
+                      isCopied
+                        ? 'ring-4 ring-emerald-400 scale-110 shadow-xl shadow-emerald-400/50'
+                        : isSelected
+                        ? 'ring-4 ring-emerald-500 ring-offset-4 ring-offset-slate-950 shadow-lg shadow-emerald-500/30'
+                        : 'ring-2 ring-slate-700 group-hover:ring-slate-500'
+                    }`}
                   >
-                    <span>{b.name[0]}</span>
+                    {/* The Inner Avatar Circle */}
+                    <div
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-black shadow-inner relative overflow-hidden"
+                      style={{ backgroundColor: b.avatarColor || '#10b981' }}
+                    >
+                      {isCopied ? (
+                        <Check className="w-8 h-8 text-white animate-pulse" />
+                      ) : (
+                        <span>{b.name[0]}</span>
+                      )}
 
-                    {/* Gradient Overlay for luxury effect */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/20 pointer-events-none" />
+                      {/* Gradient Overlay for luxury effect */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/20 pointer-events-none" />
+                    </div>
+
+                    {/* Admin Crown Badge */}
+                    {isSenderAdmin && (
+                      <div
+                        title="الأدمن الرئيسي"
+                        className="absolute -top-2 -right-1 w-7 h-7 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center shadow-md border-2 border-slate-950 font-black animate-bounce"
+                      >
+                        <Crown className="w-4 h-4 fill-slate-950" />
+                      </div>
+                    )}
+
+                    {/* 'You' Badge */}
+                    {isMe && !isSenderAdmin && (
+                      <div className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[9px] font-black shadow border border-slate-950">
+                        أنت
+                      </div>
+                    )}
                   </div>
 
-                  {/* Admin Crown Badge */}
-                  {isSenderAdmin && (
-                    <div
-                      title="الأدمن الرئيسي"
-                      className="absolute -top-2 -right-1 w-7 h-7 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center shadow-md border-2 border-slate-950 font-black animate-bounce"
-                    >
-                      <Crown className="w-4 h-4 fill-slate-950" />
-                    </div>
-                  )}
+                  {/* Brother Name */}
+                  <span
+                    className={`mt-2 text-xs sm:text-sm font-black truncate max-w-[90px] text-center ${
+                      isSelected ? 'text-emerald-400' : 'text-slate-200 group-hover:text-white'
+                    }`}
+                  >
+                    {b.name}
+                  </span>
 
-                  {/* 'You' Badge */}
-                  {isMe && !isSenderAdmin && (
-                    <div className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[9px] font-black shadow border border-slate-950">
-                      أنت
-                    </div>
-                  )}
-                </div>
-
-                {/* Brother Name */}
-                <span
-                  className={`mt-2 text-xs sm:text-sm font-black truncate max-w-[90px] text-center ${
-                    isSelected ? 'text-emerald-400' : 'text-slate-200 group-hover:text-white'
-                  }`}
-                >
-                  {b.name}
-                </span>
-
-                {/* Total Spent Pill Badge (داخل كل دائرة / أسفلها) */}
-                <div
-                  className={`mt-1 px-2.5 py-1 rounded-full text-[11px] font-black font-mono shadow-sm flex items-center gap-1 transition-all ${
-                    isSelected
-                      ? 'bg-emerald-500 text-slate-950 scale-105'
-                      : 'bg-slate-800 text-emerald-400 border border-slate-700 group-hover:bg-slate-700'
-                  }`}
-                >
-                  <span>{formatMoney(totalReceived, currency)}</span>
-                </div>
-              </button>
+                  {/* Total Spent Pill Badge (تحت الدائرة مباشرة) */}
+                  <div
+                    className={`mt-1 px-2.5 py-1 rounded-full text-[11px] font-black font-mono shadow-sm flex items-center gap-1 transition-all ${
+                      isCopied
+                        ? 'bg-emerald-400 text-slate-950 font-bold scale-105'
+                        : isSelected
+                        ? 'bg-emerald-500 text-slate-950 scale-105'
+                        : 'bg-slate-800 text-emerald-400 border border-slate-700 group-hover:bg-slate-700'
+                    }`}
+                  >
+                    <span>{isCopied ? 'تم نسخ الحساب!' : formatMoney(totalReceived, currency)}</span>
+                  </div>
+                </button>
+              </div>
             );
           })}
         </div>
       </div>
 
-      {/* 📋 THE EXPANDED DETAILS CARD FOR SELECTED BROTHER 📋 */}
+      {/* 📋 THE EXPANDED DETAILS CARD FOR SELECTED BROTHER (Cleaned Up) 📋 */}
       {selectedBrother && (
         <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-800 border-2 border-emerald-500/40 dark:border-emerald-500/30 shadow-2xl space-y-6 animate-fadeIn">
           
-          {/* Selected Brother Header Banner */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-700">
+          {/* Selected Brother Clean Header Banner */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-4">
               <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg shrink-0 ring-4 ring-emerald-500/20"
+                className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-md shrink-0 ring-4 ring-emerald-500/20"
                 style={{ backgroundColor: selectedBrother.avatarColor || '#10b981' }}
               >
                 {selectedBrother.name[0]}
@@ -339,81 +388,36 @@ export const BrothersCards = ({
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
-                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                    رقم الحساب: #{selectedBrother.accountNumber}
-                  </span>
+                <div className="flex items-center gap-3 mt-1 text-xs text-slate-400 font-bold">
                   {selectedBrother.phone && (
-                    <span>• هاتف: {selectedBrother.phone}</span>
+                    <span>هاتف: {selectedBrother.phone}</span>
                   )}
+                  <span>• {selectedBrother.bankName || 'ماستر كي / Qi Card'}</span>
                 </div>
               </div>
             </div>
 
-            {/* Total Spent Big Pill */}
-            <div className="bg-slate-50 dark:bg-slate-900/90 p-3.5 px-5 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between sm:justify-start gap-4">
-              <div>
-                <span className="text-[11px] font-bold text-slate-400 block">إجمالي ما استلمه هذا الشهر:</span>
-                <strong className="text-lg font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                  {formatMoney(
-                    transfers
-                      .filter((t) => t.recipientId === selectedBrother.id)
-                      .reduce((s, t) => s + (t.amount || 0), 0),
-                    currency
-                  )}
-                </strong>
+            {/* Admin Quick Edit & Sliders Icons */}
+            {isCurrentAdmin && (
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <button
+                  onClick={() => onOpenEditBrother(selectedBrother)}
+                  title="تعديل بيانات الأخ"
+                  className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl transition flex items-center gap-1.5 text-xs font-bold"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>تعديل الاسم والبيانات</span>
+                </button>
+                <button
+                  onClick={() => onOpenFieldsModal(selectedBrother)}
+                  title="تعديل السلع والحقول المعتمدة"
+                  className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 rounded-xl border border-emerald-200 dark:border-emerald-800 transition flex items-center gap-1.5 text-xs font-bold"
+                >
+                  <Sliders className="w-3.5 h-3.5" />
+                  <span>تعديل السلع وسجل الطلبات</span>
+                </button>
               </div>
-
-              {/* Admin Actions */}
-              {isCurrentAdmin && (
-                <div className="flex items-center gap-1.5 mr-2">
-                  <button
-                    onClick={() => onOpenEditBrother(selectedBrother)}
-                    title="تعديل بيانات الحساب"
-                    className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-700 rounded-xl transition"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => onOpenFieldsModal(selectedBrother)}
-                    title="تعديل الحقول والسلع المعتمدة"
-                    className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-700 rounded-xl transition"
-                  >
-                    <Sliders className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Bank Account Number Box with 1-Click Copy */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-750 border border-slate-100 dark:border-slate-700 space-y-2">
-            <div className="flex items-center justify-between text-xs text-slate-400 font-bold mb-1">
-              <span>رقم الحساب المصرفي (للتحويل المالي المباشر):</span>
-              <span className="text-slate-500 font-bold">{selectedBrother.bankName || 'ماستر كي / Qi Card'}</span>
-            </div>
-
-            <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-4 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 font-mono text-sm">
-              <strong className="text-slate-800 dark:text-white truncate">
-                {selectedBrother.bankAccountNumber || selectedBrother.accountNumber}
-              </strong>
-              <button
-                onClick={() => handleCopy(selectedBrother.id, selectedBrother.bankAccountNumber || selectedBrother.accountNumber)}
-                title="نسخ رقم الحساب"
-                className="p-1 text-slate-400 hover:text-emerald-600 transition shrink-0 mr-2 flex items-center gap-1 text-xs font-bold"
-              >
-                {copiedId === selectedBrother.id ? (
-                  <span className="flex items-center gap-1 text-emerald-600 font-bold">
-                    <Check className="w-4 h-4" /> تم النسخ
-                  </span>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    <span>نسخ</span>
-                  </>
-                )}
-              </button>
-            </div>
+            )}
           </div>
 
           {/* Approved Commodities & Fields with Spent Progress Bars & 1-Click Delete */}
