@@ -1,15 +1,19 @@
 {
-  "name": "الصندوق والحسابات المشتركة",
-  "short_name": "الصندوق",
+  "name": "FamilyPay - الصندوق المالي المشترك",
+  "short_name": "FamilyPay",
   "description": "برنامج إدارة الصندوق المالي والتحويلات المصرفية المشتركة وحماية الأموال",
   "start_url": "/",
-  "id": "/",
+  "id": "https://familypay-aw26.onrender.com/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#0b1320",
   "theme_color": "#059669",
   "orientation": "portrait-primary",
   "dir": "rtl",
   "lang": "ar",
+  "categories": ["finance", "productivity", "utilities", "business"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192.png",
@@ -44,6 +48,22 @@
       "type": "image/png",
       "form_factor": "wide",
       "label": "واجهة الصندوق على الكمبيوتر"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "طلب مال جديد",
+      "short_name": "طلب مال",
+      "description": "تقديم طلب مال أو مخصصات جديدة للأخ",
+      "url": "/?action=request",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "إرسال تحويل",
+      "short_name": "تحويل",
+      "description": "إرسال تحويل مالي فوري من بطاقة الصندوق",
+      "url": "/?action=transfer",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
