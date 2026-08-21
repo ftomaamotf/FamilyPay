@@ -499,9 +499,9 @@ export const BrothersCards = ({
             </div>
           </div>
 
-          {/* Action Buttons: Send Transfer or Request Money */}
+          {/* Action Buttons: Send Transfer (Admin Only) or Request Money (Regular Users) */}
           <div className="pt-2 flex items-center gap-3">
-            {canSend ? (
+            {isCurrentAdmin ? (
               <button
                 onClick={() => onOpenTransferModal(selectedBrother)}
                 className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition active:scale-98"

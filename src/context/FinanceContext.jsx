@@ -747,17 +747,11 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // 3.1 Check if current user has permission to send funds
+  // 3.1 Check if current user has permission to send funds (Strictly Admin Only)
   const canCurrentUserSend = useCallback(() => {
     if (!currentUser) return false;
-    const isSenderAdmin = currentUser.id === activeAdminId || currentUser.isAdmin;
-    if (transferPermissions.mode === 'all') return true;
-    if (transferPermissions.mode === 'admin_only') return isSenderAdmin;
-    if (transferPermissions.mode === 'custom') {
-      return isSenderAdmin || (transferPermissions.allowedSenderIds && transferPermissions.allowedSenderIds.includes(currentUser.id));
-    }
-    return isSenderAdmin;
-  }, [currentUser, activeAdminId, transferPermissions]);
+    return currentUser.id === activeAdminId || currentUser.isAdmin === true;
+  }, [currentUser, activeAdminId]);
 
   // 3.2 Update Transfer Permissions (Admin specifies who can send)
   const updateTransferPermissions = async ({ mode, allowedSenderIds, adminPin }) => {

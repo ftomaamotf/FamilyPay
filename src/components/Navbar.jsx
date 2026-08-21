@@ -122,8 +122,8 @@ export const Navbar = ({
               </div>
             )}
 
-            {/* If user CAN send money (Admin / Authorized): Show Transfer Button & Pending Requests */}
-            {canSend ? (
+            {/* If user is Admin: Show Transfer Button & Pending Requests */}
+            {isCurrentAdmin ? (
               <>
                 <button
                   onClick={() => onOpenTransferModal()}
@@ -145,7 +145,7 @@ export const Navbar = ({
                 )}
               </>
             ) : (
-              /* If Regular Brother: Show Request Money Button (NO Transfer button) */
+              /* If Regular Brother: Show Request Money Button ONLY (NO Transfer button) */
               <button
                 onClick={() => onOpenRequestMoney && onOpenRequestMoney()}
                 className="flex items-center gap-1.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm shadow-teal-600/30 transition active:scale-95"
