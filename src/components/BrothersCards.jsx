@@ -36,6 +36,8 @@ export const BrothersCards = ({
     updateBrotherFields
   } = useFinance();
   const [copiedId, setCopiedId] = useState(null);
+  const [sortBy, setSortBy] = useState('admin_first'); // 'admin_first', 'alphabetical', 'highest_spent', 'lowest_spent'
+  const [searchTerm, setSearchTerm] = useState('');
   const currency = settings.currencySymbol;
 
   const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
@@ -51,10 +53,54 @@ export const BrothersCards = ({
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();
 
+  // Filter & Sort Brothers dynamically
+  const sortedBrothers = [...brothers]
+    .filter((b) => {
+      if (!searchTerm.trim()) return true;
+      const q = searchTerm.toLowerCase();
+      return (
+        b.name?.toLowerCase().includes(q) ||
+        b.accountNumber?.includes(q) ||
+        b.phone?.includes(q) ||
+        b.bankAccountNumber?.includes(q)
+      );
+    })
+    .sort((a, b) => {
+      if (sortBy === 'admin_first') {
+        if (a.id === activeAdminId) return -1;
+        if (b.id === activeAdminId) return 1;
+        if (a.id === currentUser?.id) return -1;
+        if (b.id === currentUser?.id) return 1;
+        return a.name.localeCompare(b.name, 'ar');
+      }
+      if (sortBy === 'alphabetical') {
+        return a.name.localeCompare(b.name, 'ar');
+      }
+      if (sortBy === 'highest_spent') {
+        const aSpent = transfers
+          .filter((t) => t.recipientId === a.id)
+          .reduce((acc, t) => acc + (t.amount || 0), 0);
+        const bSpent = transfers
+          .filter((t) => t.recipientId === b.id)
+          .reduce((acc, t) => acc + (t.amount || 0), 0);
+        return bSpent - aSpent;
+      }
+      if (sortBy === 'lowest_spent') {
+        const aSpent = transfers
+          .filter((t) => t.recipientId === a.id)
+          .reduce((acc, t) => acc + (t.amount || 0), 0);
+        const bSpent = transfers
+          .filter((t) => t.recipientId === b.id)
+          .reduce((acc, t) => acc + (t.amount || 0), 0);
+        return aSpent - bSpent;
+      }
+      return 0;
+    });
+
   return (
     <div className="space-y-4 animate-fadeIn">
       
-      {/* Header */}
+      {/* Header & Quick Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h3 className="text-lg sm:text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
@@ -95,9 +141,78 @@ export const BrothersCards = ({
         </div>
       </div>
 
+      {/* Sorting & Search Control Bar */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-800/90 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+        
+        {/* Sorting Buttons */}
+        <div className="flex items-center gap-1.5 flex-wrap w-full md:w-auto">
+          <span className="text-xs font-extrabold text-slate-400 ml-1 hidden sm:inline-block">
+            ترتيب القائمة:
+          </span>
+
+          <button
+            onClick={() => setSortBy('admin_first')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              sortBy === 'admin_first'
+                ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
+                : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            <Crown className="w-3.5 h-3.5 text-amber-300" />
+            <span>الأدمن أولاً 👑</span>
+          </button>
+
+          <button
+            onClick={() => setSortBy('alphabetical')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              sortBy === 'alphabetical'
+                ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
+                : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            <span>أبجدياً (أ - ي) 🔤</span>
+          </button>
+
+          <button
+            onClick={() => setSortBy('highest_spent')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              sortBy === 'highest_spent'
+                ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
+                : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+            <span>الأكثر استلاماً 💰</span>
+          </button>
+
+          <button
+            onClick={() => setSortBy('lowest_spent')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              sortBy === 'lowest_spent'
+                ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
+                : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            <span>الأقل استلاماً 📉</span>
+          </button>
+        </div>
+
+        {/* Live Search Box */}
+        <div className="w-full md:w-64">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="بحث بالاسم أو رقم الحساب..."
+            className="w-full bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-emerald-500 transition text-right"
+          />
+        </div>
+
+      </div>
+
       {/* Grid of Brothers */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {brothers.map((b) => {
+        {sortedBrothers.map((b) => {
           const isSenderAdmin = b.id === activeAdminId;
           const isMe = b.id === currentUser?.id;
 
