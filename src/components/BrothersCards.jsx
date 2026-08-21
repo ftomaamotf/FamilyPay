@@ -447,10 +447,91 @@ export const BrothersCards = ({
                   >
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-1.5">
+                        <span className="font-extrabold text-slate-800 dark:text-white">
+                          {f.name}
+                        </span>
+                        {isCurrentAdmin && (
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`هل أنت متأكد من حذف سلعة [${f.name}] بالكامل للأخ ${selectedBrother.name}؟`)) {
+                                const updated = (selectedBrother.approvedFields || []).filter((item) => item.id !== f.id);
+                                updateBrotherFields(selectedBrother.id, updated);
+                              }
+                            }}
+                            title="حذف هذه السلعة"
+                            className="opacity-0 group-hover/field:opacity-100 p-1 text-slate-400 hover:text-rose-500 rounded transition"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="text-[11px] font-mono">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">
+                          المرسل: {formatMoney(spent, currency)}
+                        </span>
+                        <span className="text-slate-400 font-normal"> / {formatMoney(limit, currency)}</span>
+                      </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          percent >= 100
+                            ? 'bg-rose-500'
+                            : percent >= 80
+                            ? 'bg-amber-500'
+                            : 'bg-emerald-500'
+                        }`}
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+
+              {(!selectedBrother.approvedFields || selectedBrother.approvedFields.length === 0) && (
+                <div className="col-span-2 text-center py-6 text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                  لا توجد سلع مخصصة لهذا الأخ حالياً. اضغط على «إدارة وسقوف السلع» لإضافة سلع جديدة.
+                </div>
+              )}
             </div>
-          );
-        })}
-      </div>
+          </div>
+
+          {/* Action Buttons: Send Transfer or Request Money */}
+          <div className="pt-2 flex items-center gap-3">
+            {canSend ? (
+              <button
+                onClick={() => onOpenTransferModal(selectedBrother)}
+                className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition active:scale-98"
+              >
+                <Send className="w-4 h-4 -rotate-45" />
+                <span>إرسال تحويل مالي لهذا الأخ 💸</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => onOpenRequestMoney && onOpenRequestMoney()}
+                className="flex-1 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-teal-600/20 flex items-center justify-center gap-2 transition active:scale-98"
+              >
+                <Inbox className="w-4 h-4" />
+                <span>طلب أموال من الصندوق 📥</span>
+              </button>
+            )}
+
+            {isCurrentAdmin && (
+              <button
+                onClick={() => onOpenFieldsModal(selectedBrother)}
+                className="px-5 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-extrabold text-sm rounded-2xl transition flex items-center gap-2"
+              >
+                <Sliders className="w-4 h-4" />
+                <span>تعديل السلع وسجل الطلبات ⚙️</span>
+              </button>
+            )}
+          </div>
+
+        </div>
+      )}
 
     </div>
   );
