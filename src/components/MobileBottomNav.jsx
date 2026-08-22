@@ -21,7 +21,7 @@ export const MobileBottomNav = ({
 
   const tabs = [
     { id: 'dashboard', label: 'الصندوق', icon: LayoutDashboard },
-    { id: 'brothers', label: 'الحسابات', icon: Users },
+    { id: 'brothers', label: 'الدوائر 👥', icon: Users },
     { id: 'all-schedules', label: 'الجداول', icon: Eye },
     { id: 'archives', label: 'الأرشيف', icon: Archive },
   ];

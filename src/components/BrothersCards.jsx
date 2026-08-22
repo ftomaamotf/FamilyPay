@@ -190,7 +190,7 @@ export const BrothersCards = ({
         <div>
           <h3 className="text-lg sm:text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
             <Users className="w-5 h-5 text-emerald-600" />
-            <span>دوائر الإخوة والأدمن والمصروفات</span>
+            <span>دوائر المستخدمين والأدمن والمصروفات</span>
           </h3>
           <p className="text-xs text-slate-400">
             اضغط على الدائرة لعرض السلع • اضغط مطولاً لنسخ رقم الحساب المصرفي
@@ -198,14 +198,14 @@ export const BrothersCards = ({
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          {/* Admin Join QR Code Button (باركود إضافة أخ جديد - الطريقة المعتمدة الوحيدة) */}
+          {/* Admin Join QR Code Button */}
           {isCurrentAdmin && onOpenJoinQr && (
             <button
               onClick={onOpenJoinQr}
               className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 font-black text-xs rounded-2xl shadow-md flex items-center gap-1.5 transition active:scale-95 border border-amber-400"
             >
               <QrCode className="w-4 h-4" />
-              <span>باركود إضافة أخ جديد 📷</span>
+              <span>باركود إضافة مستخدم جديد 📷</span>
             </button>
           )}
 

@@ -57,7 +57,8 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
 
   const isReasonValid = reason.trim().length >= 2;
   const isAmountValid = Number(amount) > 0;
-  const canSubmit = isReasonValid && isAmountValid && !isCardFrozen && !loading && isSenderAuthorized;
+  const isPasswordValid = securityPin.trim().length >= 1;
+  const canSubmit = isReasonValid && isAmountValid && isPasswordValid && !isCardFrozen && !loading && isSenderAuthorized;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -406,26 +407,29 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               </div>
             </div>
 
-            {/* 5. ADMIN PASSWORD / SECURITY PIN (حقل كلمة المرور أو رمز حماية الصندوق) */}
-            <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 space-y-2">
+            {/* 5. ADMIN PASSWORD CONFIRMATION (كلمة المرور لتأكيد التحويل) */}
+            <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-300 dark:border-emerald-800 space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
                   <Lock className="w-4 h-4 text-emerald-600" />
-                  <span>5. كلمة مرور الأدمن أو رمز حماية الصندوق 🔑</span>
+                  <span>5. كلمة المرور لتأكيد الصرف والتحويل 🔒 *</span>
                 </label>
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
-                  (1988 أو 123 أو 9988)
-                </span>
+                {!securityPin.trim() && (
+                  <span className="text-[10px] text-rose-600 font-bold animate-pulse">
+                    مطلوبة للتأكيد
+                  </span>
+                )}
               </div>
 
               <div className="relative">
                 <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="password"
+                  required
                   value={securityPin}
                   onChange={(e) => setSecurityPin(e.target.value)}
-                  placeholder="أدخل كلمة المرور (1988) أو الرمز السري لتأكيد التحويل"
-                  className="w-full bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-800 rounded-xl pr-9 pl-3 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                  placeholder="أدخل كلمة مرور حسابك لتأكيد التحويل"
+                  className="w-full bg-white dark:bg-slate-900 border border-emerald-400 dark:border-emerald-700 rounded-xl pr-9 pl-3 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
                 />
               </div>
             </div>

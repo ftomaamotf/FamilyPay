@@ -11,7 +11,7 @@ import {
 export const DesktopNavTabs = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { id: 'dashboard', label: 'الرئيسية والصندوق', icon: LayoutDashboard },
-    { id: 'brothers', label: 'الحسابات المشتركة', icon: Users },
+    { id: 'brothers', label: 'دوائر المستخدمين والأدمن', icon: Users },
     { id: 'my-schedule', label: 'جدولي المعتمد', icon: ListChecks },
     { id: 'all-schedules', label: 'جداول الحسابات والشفافية', icon: Eye },
     { id: 'archives', label: 'الأرشيف الشهري والسنوي', icon: Archive },

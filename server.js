@@ -236,11 +236,8 @@ app.post('/api/auth/login', (req, res) => {
   const inputPass = String(password).trim();
 
   const brother = db.brothers.find((b) => {
-    // Password verification: accept brother password or master admin passwords (1988, 123)
-    const isPassMatch =
-      String(b.password).trim() === inputPass ||
-      ((b.isAdmin || b.id === db.activeAdminId) && (inputPass === '1988' || inputPass === '123' || inputPass === '9988')) ||
-      (!b.isAdmin && (inputPass === '123' || inputPass === '1988'));
+    // Password verification: require exact account password
+    const isPassMatch = String(b.password).trim() === inputPass;
 
     if (!isPassMatch) return false;
 
@@ -1035,20 +1032,17 @@ app.post('/api/transfers', (req, res) => {
   const sender = db.brothers.find((b) => b.id === senderId) || db.brothers.find((b) => b.id === db.activeAdminId) || db.brothers[0];
   const sendingCard = db.bankCards.find((c) => c.id === db.sendingCardId) || db.bankCards[0];
 
-  // 4. Validate PIN / Admin Password (accepts 1988, 123, 9988, or user's password)
+  // 4. Validate Account Password (Strict password verification)
   const inputPin = String(securityPin || '').trim();
+  const admin = db.brothers.find((b) => b.id === db.activeAdminId || b.isAdmin);
   if (inputPin) {
-    const isPinMatch =
-      inputPin === '1988' ||
-      inputPin === '123' ||
-      inputPin === '9988' ||
-      inputPin === String(db.security.fundPin) ||
-      (sender && inputPin === String(sender.password).trim());
+    const isPassMatch = (sender && inputPin === String(sender.password).trim()) ||
+                        (admin && inputPin === String(admin.password).trim());
 
-    if (!isPinMatch) {
+    if (!isPassMatch) {
       return res.status(401).json({
         success: false,
-        message: '❌ كلمة المرور أو رمز حماية الصندوق غير صحيح. الرمز الصحيح هو (1988) أو (123).'
+        message: '❌ كلمة المرور غير صحيحة. يرجى إدخال كلمة مرور حسابك لتأكيد التحويل.'
       });
     }
   }
