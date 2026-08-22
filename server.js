@@ -1317,9 +1317,9 @@ function matchOrAssignField(brother, explicitFieldId, reasonText) {
   return defaultField;
 }
 
-// 7. Money Requests: Brother submits a request for money
+// 7. Money Requests: Brother submits a request for money (Requires User Password)
 app.post('/api/requests', (req, res) => {
-  const { brotherId, brotherName, phone, bankAccountNumber, amount, fieldId, reason } = req.body;
+  const { brotherId, brotherName, phone, bankAccountNumber, amount, fieldId, reason, password } = req.body;
   const db = readDB();
 
   if (!db.fundRequests) db.fundRequests = [];
@@ -1343,18 +1343,28 @@ app.post('/api/requests', (req, res) => {
     (brotherName && b.name && b.name.trim().toLowerCase() === String(brotherName).trim().toLowerCase())
   );
 
+  // Validate user's password if provided
+  if (brother && password && String(password).trim()) {
+    if (String(password).trim() !== String(brother.password).trim()) {
+      return res.status(401).json({
+        success: false,
+        message: '❌ كلمة المرور الخاصة بك غير صحيحة. يرجى كتابة كلمة مرور حسابك لتأكيد إرسال الطلب.'
+      });
+    }
+  }
+
   // If still not found in db.brothers, auto-create or recover brother account
   if (!brother) {
     const nextAcc = String(1000 + db.brothers.length + 1);
     const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1'];
     brother = {
       id: brotherId || ('b-' + Date.now()),
-      name: (brotherName || 'أخ مسجل').trim(),
+      name: (brotherName || 'مستخدم مسجل').trim(),
       accountNumber: nextAcc,
       phone: cleanPhone || ('0770' + Math.floor(1000000 + Math.random() * 9000000)),
       bankAccountNumber: bankAccountNumber || nextAcc,
       bankName: 'ماستر كي / Qi Card',
-      password: '123',
+      password: password ? String(password).trim() : '123',
       avatarColor: colors[db.brothers.length % colors.length],
       isAdmin: false,
       approvedFields: [
@@ -1412,7 +1422,7 @@ app.post('/api/requests', (req, res) => {
   });
 });
 
-// 7.1 Money Requests: Admin Approves and Executes Transfer
+// 7.1 Money Requests: Admin Approves and Executes Transfer (Requires Admin Password)
 app.post('/api/requests/:requestId/approve', (req, res) => {
   const { requestId } = req.params;
   const { adminPin, requestingBrotherId, targetFieldId } = req.body;
@@ -1420,7 +1430,19 @@ app.post('/api/requests/:requestId/approve', (req, res) => {
 
   if (!db.fundRequests) db.fundRequests = [];
 
-  const requester = db.brothers.find((b) => b.id === requestingBrotherId);
+  const requester = db.brothers.find((b) => b.id === requestingBrotherId) || db.brothers.find((b) => b.id === db.activeAdminId);
+  const admin = db.brothers.find((b) => b.id === db.activeAdminId || b.isAdmin);
+
+  if (adminPin && String(adminPin).trim()) {
+    const inputPin = String(adminPin).trim();
+    if (admin && inputPin !== String(admin.password).trim()) {
+      return res.status(401).json({
+        success: false,
+        message: '❌ كلمة مرور الأدمن غير صحيحة. يرجى إدخال كلمة مرور حسابك (1988) لتأكيد الصرف.'
+      });
+    }
+  }
+
   if (requester && requester.id !== db.activeAdminId && !requester.isAdmin) {
     return res.status(403).json({ success: false, message: '⚠️ الموافقة على طلبات الأموال مسموح بها للأدمن فقط' });
   }

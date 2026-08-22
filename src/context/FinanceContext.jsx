@@ -934,8 +934,8 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // 3.3 Submit Money Request (Regular brother asks for funds)
-  const submitMoneyRequest = async ({ brotherId, amount, fieldId, reason }) => {
+  // 3.3 Submit Money Request (Regular brother asks for funds with their account password)
+  const submitMoneyRequest = async ({ brotherId, amount, fieldId, reason, password }) => {
     const activeBrother = brothers.find((br) => br.id === (brotherId || currentUser?.id)) || currentUser;
     try {
       const res = await fetch(`${API_BASE}/api/requests`, {
@@ -948,7 +948,8 @@ export const FinanceProvider = ({ children }) => {
           bankAccountNumber: activeBrother?.bankAccountNumber,
           amount: Number(amount),
           fieldId,
-          reason
+          reason,
+          password
         })
       });
       const data = await res.json();

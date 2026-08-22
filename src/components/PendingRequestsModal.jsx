@@ -260,8 +260,34 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                 </select>
               </div>
 
+              {/* Admin Password Field */}
+              <div className="p-3 bg-emerald-50/60 dark:bg-emerald-950/30 rounded-2xl border border-emerald-300 dark:border-emerald-800 space-y-1.5 text-right">
+                <div className="flex items-center justify-between">
+                  <label className="block font-black text-emerald-900 dark:text-emerald-300 text-xs flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>كلمة مرور الأدمن لتأكيد التحويل 🔒 *:</span>
+                  </label>
+                  {!adminPin.trim() && (
+                    <span className="text-[10px] text-rose-600 font-bold animate-pulse">
+                      مطلوبة للتأكيد
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="password"
+                    required
+                    value={adminPin}
+                    onChange={(e) => setAdminPin(e.target.value)}
+                    placeholder="أدخل كلمة مرور حسابك (1988)"
+                    className="w-full bg-white dark:bg-slate-900 border border-emerald-400 dark:border-emerald-700 rounded-xl pr-9 pl-3 py-2 text-xs text-slate-900 dark:text-white font-mono outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
               {msg && (
-                <div className={`p-2.5 rounded-xl border text-xs font-bold ${
+                <div className={`p-2.5 rounded-xl border text-xs font-bold text-center ${
                   isSuccess
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     : 'bg-rose-50 text-rose-700 border-rose-200'
