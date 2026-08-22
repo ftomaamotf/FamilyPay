@@ -63,6 +63,10 @@ export const GuestJoinBanner = () => {
         isOpen={scannerOpen}
         onClose={() => setScannerOpen(false)}
         onScanSuccess={handleScanSuccess}
+        onManualEntry={() => {
+          setScannerOpen(false);
+          setRegisterModalOpen(true);
+        }}
       />
 
       {/* Guest Registration Form Popup */}
