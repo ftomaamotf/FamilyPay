@@ -258,8 +258,8 @@ export const BrothersCards = ({
           </span>
         </div>
 
-        {/* Horizontal / Grid of Interactive Circles */}
-        <div className="flex items-start gap-4 sm:gap-6 overflow-x-auto pb-3 pt-2 scrollbar-thin scrollbar-thumb-slate-700">
+        {/* Horizontal / Grid of Interactive Circles (Right-Aligned) */}
+        <div className="flex items-start justify-start gap-4 sm:gap-6 overflow-x-auto pb-3 pt-2 scrollbar-thin scrollbar-thumb-slate-700" dir="rtl">
           {sortedBrothers.map((b) => {
             const isSenderAdmin = b.id === activeAdminId;
             const isMe = b.id === currentUser?.id;

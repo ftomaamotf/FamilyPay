@@ -11,7 +11,7 @@
     "fundPin": "9988",
     "isCardFrozen": false,
     "maxSingleTransferLimit": 500000,
-    "requirePinOnEveryTransfer": true,
+    "requirePinOnEveryTransfer": false,
     "isBalanceHiddenByAdmin": true,
     "transferPermissions": {
       "mode": "admin_only",

@@ -258,17 +258,6 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                 </select>
               </div>
 
-              <div className="relative">
-                <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="password"
-                  value={adminPin}
-                  onChange={(e) => setAdminPin(e.target.value)}
-                  placeholder="رمز حماية الصندوق (الافتراضي: 9988 أو 123)"
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pr-9 pl-3 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-center"
-                />
-              </div>
-
               {msg && (
                 <div className={`p-2.5 rounded-xl border text-xs font-bold ${
                   isSuccess

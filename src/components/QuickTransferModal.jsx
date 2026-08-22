@@ -57,8 +57,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
 
   const isReasonValid = reason.trim().length >= 2;
   const isAmountValid = Number(amount) > 0;
-  const isPinValid = securityPin.trim().length >= 3;
-  const canSubmit = isReasonValid && isAmountValid && isPinValid && !isCardFrozen && !loading && isSenderAuthorized;
+  const canSubmit = isReasonValid && isAmountValid && !isCardFrozen && !loading && isSenderAuthorized;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -74,10 +73,6 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
       setErrorMsg('⚠️ يرجى إدخال مبلغ صحيح');
       return;
     }
-    if (!isPinValid) {
-      setErrorMsg('🔒 يرجى إدخال رمز حماية الصندوق السري (الافتراضي: 9988)');
-      return;
-    }
 
     setLoading(true);
     setErrorMsg('');
@@ -87,7 +82,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
       amount: Number(amount),
       fieldId: fieldId || null,
       reason: reason.trim(),
-      securityPin: securityPin.trim()
+      securityPin: ''
     });
 
     setLoading(false);
@@ -379,28 +374,6 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                   </button>
                 ))}
               </div>
-            </div>
-
-            {/* 6. FUND SECURITY PIN (رمز حماية الصندوق) */}
-            <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-black text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
-                  <KeyRound className="w-4 h-4 text-indigo-600" />
-                  <span>5. رمز حماية الصندوق السري (PIN) *</span>
-                </label>
-                <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">
-                  لحماية البطاقة من أي تحويل غير مصرح
-                </span>
-              </div>
-
-              <input
-                type="password"
-                required
-                value={securityPin}
-                onChange={(e) => setSecurityPin(e.target.value)}
-                placeholder="أدخل رمز حماية الصندوق (الافتراضي: 9988)"
-                className="w-full bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-800 rounded-xl px-3 py-2.5 text-xs font-mono text-center font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500"
-              />
             </div>
 
             {errorMsg && (
