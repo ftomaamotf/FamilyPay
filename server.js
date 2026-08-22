@@ -1327,6 +1327,9 @@ app.post('/api/requests', (req, res) => {
     (cleanSearch && String(b.id).toLowerCase() === cleanSearch) ||
     (cleanSearch && String(b.accountNumber).toLowerCase() === cleanSearch) ||
     (cleanPhone && b.phone && String(b.phone).replace(/[\s\-\+]/g, '') === cleanPhone) ||
+    (brotherName && b.name && b.name.trim().toLowerCase() === String(brotherName).trim().toLowerCase())
+  );
+
   // If still not found in db.brothers, auto-create or recover brother account
   if (!brother) {
     const nextAcc = String(1000 + db.brothers.length + 1);
