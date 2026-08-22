@@ -58,14 +58,42 @@ export const BrothersCards = ({
     }
   }, [brothers, currentUser, activeAdminId]);
 
+  // Strict Transfer Matching for Brother (Prevents brother transfers from contaminating Admin or vice versa)
+  const isTransferStrictlyForBrother = (t, b) => {
+    if (!t || !b) return false;
+    const tName = String(t.recipientName || '').trim().toLowerCase();
+    const bName = String(b.name || '').trim().toLowerCase();
+
+    // 1. If recipientName clearly belongs to another brother, reject immediately
+    if (tName && bName) {
+      const isNameMatch = tName === bName || tName.includes(bName) || bName.includes(tName);
+      if (isNameMatch) return true;
+    }
+
+    // 2. Direct recipientId match
+    if (t.recipientId && b.id && String(t.recipientId) === String(b.id)) {
+      // If names differ drastically (e.g. Admin name vs Muhammad), reject false ID alias
+      if (tName && bName && !tName.includes(bName) && !bName.includes(tName)) {
+        return false;
+      }
+      return true;
+    }
+
+    // 3. Bank Account Number match
+    const tBank = String(t.recipientAccountNumber || '').trim();
+    const bBank = String(b.bankAccountNumber || '').trim();
+    if (tBank && bBank && tBank === bBank) {
+      return true;
+    }
+
+    return false;
+  };
+
   const dynamicFieldSpent = (fieldId, fieldName) => {
     if (!selectedBrother) return 0;
     return transfers
       .filter((t) =>
-        (t.recipientId === selectedBrother.id ||
-         (selectedBrother.accountNumber && String(t.accountNumber) === String(selectedBrother.accountNumber)) ||
-         (selectedBrother.bankAccountNumber && String(t.recipientAccountNumber) === String(selectedBrother.bankAccountNumber)) ||
-         (selectedBrother.name && t.recipientName && t.recipientName.trim().toLowerCase() === selectedBrother.name.trim().toLowerCase())) &&
+        isTransferStrictlyForBrother(t, selectedBrother) &&
         (t.fieldId === fieldId || (t.fieldName && fieldName && t.fieldName.includes(fieldName.split(' ')[0])))
       )
       .reduce((sum, t) => sum + (t.amount || 0), 0);
@@ -122,19 +150,19 @@ export const BrothersCards = ({
       }
       if (sortBy === 'highest_spent') {
         const aSpent = transfers
-          .filter((t) => t.recipientId === a.id || (a.name && t.recipientName && t.recipientName.trim().toLowerCase() === a.name.trim().toLowerCase()))
+          .filter((t) => isTransferStrictlyForBrother(t, a))
           .reduce((acc, t) => acc + (t.amount || 0), 0);
         const bSpent = transfers
-          .filter((t) => t.recipientId === b.id || (b.name && t.recipientName && t.recipientName.trim().toLowerCase() === b.name.trim().toLowerCase()))
+          .filter((t) => isTransferStrictlyForBrother(t, b))
           .reduce((acc, t) => acc + (t.amount || 0), 0);
         return bSpent - aSpent;
       }
       if (sortBy === 'lowest_spent') {
         const aSpent = transfers
-          .filter((t) => t.recipientId === a.id || (a.name && t.recipientName && t.recipientName.trim().toLowerCase() === a.name.trim().toLowerCase()))
+          .filter((t) => isTransferStrictlyForBrother(t, a))
           .reduce((acc, t) => acc + (t.amount || 0), 0);
         const bSpent = transfers
-          .filter((t) => t.recipientId === b.id || (b.name && t.recipientName && t.recipientName.trim().toLowerCase() === b.name.trim().toLowerCase()))
+          .filter((t) => isTransferStrictlyForBrother(t, b))
           .reduce((acc, t) => acc + (t.amount || 0), 0);
         return aSpent - bSpent;
       }
@@ -276,13 +304,8 @@ export const BrothersCards = ({
               const isSelected = b.id === selectedBrotherId;
               const isCopied = copiedId === b.id;
 
-              // Total spent for this brother (sum of all transfers received by this specific brother)
-              const brotherTransfers = transfers.filter((t) =>
-                t.recipientId === b.id ||
-                (b.accountNumber && String(t.accountNumber) === String(b.accountNumber)) ||
-                (b.bankAccountNumber && String(t.recipientAccountNumber) === String(b.bankAccountNumber)) ||
-                (b.name && t.recipientName && t.recipientName.trim().toLowerCase() === b.name.trim().toLowerCase())
-              );
+              // Total spent for this brother (strictly isolated to transfers where this brother is the recipient)
+              const brotherTransfers = transfers.filter((t) => isTransferStrictlyForBrother(t, b));
               const totalReceived = brotherTransfers.reduce((acc, t) => acc + (t.amount || 0), 0);
 
               return (

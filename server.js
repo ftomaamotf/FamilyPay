@@ -1450,22 +1450,39 @@ app.post('/api/requests/:requestId/approve', (req, res) => {
   sendingCard.lastUpdated = new Date().toISOString();
 
   // Find recipient and ensure amount goes exactly to the matched commodity field
-  let recipient = db.brothers.find((b) =>
-    b.id === reqItem.brotherId ||
-    (reqItem.phone && b.phone && String(b.phone).replace(/[\s\-\+]/g, '') === String(reqItem.phone).replace(/[\s\-\+]/g, '')) ||
-    (reqItem.brotherAccountNumber && String(b.accountNumber) === String(reqItem.brotherAccountNumber)) ||
-    (reqItem.bankAccountNumber && String(b.bankAccountNumber) === String(reqItem.bankAccountNumber)) ||
-    (reqItem.brotherName && b.name && b.name.trim().toLowerCase() === String(reqItem.brotherName).trim().toLowerCase())
-  );
+  const admin = db.brothers.find((b) => b.id === db.activeAdminId || b.isAdmin);
+  const reqName = String(reqItem.brotherName || '').trim().toLowerCase();
+  const adminName = String(admin?.name || '').trim().toLowerCase();
+  const isRequestForAdmin = reqName && adminName && (reqName === adminName || reqName.includes('عبدالله') || adminName.includes(reqName));
 
-  // If recipient is not yet in db.brothers, auto-create them so they have a circle on the dashboard
+  let recipient = null;
+  if (!isRequestForAdmin && reqName) {
+    // Strictly find non-admin brother matching name, phone, or bank account
+    recipient = db.brothers.find((b) =>
+      b.id !== db.activeAdminId && (
+        (b.name && b.name.trim().toLowerCase() === reqName) ||
+        (reqItem.phone && b.phone && String(b.phone).replace(/[\s\-\+]/g, '') === String(reqItem.phone).replace(/[\s\-\+]/g, '')) ||
+        (reqItem.bankAccountNumber && String(b.bankAccountNumber) === String(reqItem.bankAccountNumber))
+      )
+    );
+  }
+
+  if (!recipient) {
+    if (isRequestForAdmin) {
+      recipient = admin;
+    } else {
+      recipient = db.brothers.find((b) => b.id === reqItem.brotherId && b.id !== db.activeAdminId);
+    }
+  }
+
+  // If recipient is not yet in db.brothers, auto-create them so they have a unique circle on the dashboard
   if (!recipient && (reqItem.brotherName || reqItem.brotherId)) {
     const nextAccNumber = String(1000 + db.brothers.length + 1);
     const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1'];
     recipient = {
-      id: reqItem.brotherId || ('b-' + Date.now()),
-      name: reqItem.brotherName,
-      accountNumber: reqItem.brotherAccountNumber || nextAccNumber,
+      id: 'b-' + Date.now(),
+      name: reqItem.brotherName || 'أخ مستلم',
+      accountNumber: nextAccNumber,
       phone: reqItem.phone || '07700000000',
       bankAccountNumber: reqItem.bankAccountNumber || reqItem.brotherAccountNumber || nextAccNumber,
       bankName: 'ماستر كي / Qi Card',
