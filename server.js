@@ -436,7 +436,7 @@ app.post('/api/invitations/accept', (req, res) => {
 
 // 2.4 QR Registration (New Brother registers via QR Code with mandatory Name, Phone, Qi Card, Password)
 app.post('/api/brothers/register-qr', (req, res) => {
-  const { name, phone, bankAccountNumber, password } = req.body;
+  const { name, email, phone, bankAccountNumber, password } = req.body;
   const db = readDB();
 
   if (!name || !String(name).trim()) {
@@ -453,6 +453,7 @@ app.post('/api/brothers/register-qr', (req, res) => {
   }
 
   const cleanPhone = String(phone).replace(/[\s\-\+]/g, '');
+  const cleanEmail = email ? String(email).trim().toLowerCase() : '';
   const cleanBankAcc = String(bankAccountNumber).trim();
 
   // Check duplicate phone
@@ -473,6 +474,7 @@ app.post('/api/brothers/register-qr', (req, res) => {
   const newBrother = {
     id: 'b-' + Date.now(),
     name: name.trim(),
+    email: cleanEmail,
     accountNumber: nextAccNumber,
     phone: cleanPhone,
     bankAccountNumber: cleanBankAcc,

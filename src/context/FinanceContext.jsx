@@ -674,14 +674,15 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // 1.4 Register Brother Directly via QR Code (Mandatory: Name, Phone, Qi Card Account, Password, isOwner)
-  const registerBrotherViaQr = async ({ name, phone, bankAccountNumber, password, isOwner = false }) => {
+  // 1.4 Register Brother Directly via QR Code (Mandatory: Name, Phone, Qi Card Account, Password, isOwner, email)
+  const registerBrotherViaQr = async ({ name, email = '', phone, bankAccountNumber, password, isOwner = false }) => {
     try {
       const res = await fetch(`${API_BASE}/api/brothers/register-qr`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: String(name).trim(),
+          email: String(email).trim().toLowerCase(),
           phone: String(phone).trim(),
           bankAccountNumber: String(bankAccountNumber).trim(),
           password: String(password).trim(),
@@ -696,11 +697,13 @@ export const FinanceProvider = ({ children }) => {
     } catch {
       // Local fallback
       const cleanPhone = String(phone).replace(/[\s\-\+]/g, '');
+      const cleanEmail = String(email).trim().toLowerCase();
       const nextAcc = String(1000 + brothers.length + 1);
       const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1'];
       const newBrother = {
         id: 'b-' + Date.now(),
         name: name.trim(),
+        email: cleanEmail,
         accountNumber: nextAcc,
         phone: cleanPhone,
         bankAccountNumber: String(bankAccountNumber).trim() || nextAcc,

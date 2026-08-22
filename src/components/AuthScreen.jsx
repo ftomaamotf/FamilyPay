@@ -68,6 +68,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
 
   // New Owner / User Registration state (Mandatory 4 fields)
   const [regName, setRegName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regBankAccount, setRegBankAccount] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -158,6 +159,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
 
     const res = await registerBrotherViaQr({
       name: regName.trim(),
+      email: regEmail.trim(),
       phone: regPhone.trim(),
       bankAccountNumber: regBankAccount.trim(),
       password: regPassword.trim(),
@@ -355,10 +357,28 @@ export const AuthScreen = ({ onLoginSuccess }) => {
               </div>
             </div>
 
-            {/* 2. Phone */}
+            {/* 2. Email (مخصص لصاحب الصندوق) */}
+            <div>
+              <label className="block font-bold text-amber-300 mb-1">
+                2. البريد الإلكتروني (مخصص لصاحب الصندوق):
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-amber-400" />
+                <input
+                  type="email"
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                  placeholder="مثال: abdullah.ajmi@gmail.com"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-emerald-500 font-sans"
+                  dir="ltr"
+                />
+              </div>
+            </div>
+
+            {/* 3. Phone */}
             <div>
               <label className="block font-bold text-slate-300 mb-1">
-                2. رقم هاتفك للتواصل والدخول <span className="text-rose-400 font-black">*</span>:
+                3. رقم هاتفك للتواصل والدخول <span className="text-rose-400 font-black">*</span>:
               </label>
               <div className="relative">
                 <Phone className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -374,10 +394,10 @@ export const AuthScreen = ({ onLoginSuccess }) => {
               </div>
             </div>
 
-            {/* 3. Password */}
+            {/* 4. Password */}
             <div>
               <label className="block font-bold text-slate-300 mb-1">
-                3. كلمة المرور الخاصة بحسابك <span className="text-rose-400 font-black">*</span>:
+                4. كلمة المرور الخاصة بحسابك <span className="text-rose-400 font-black">*</span>:
               </label>
               <div className="relative">
                 <Lock className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -392,10 +412,10 @@ export const AuthScreen = ({ onLoginSuccess }) => {
               </div>
             </div>
 
-            {/* 4. Bank Account Number / Qi Card */}
+            {/* 5. Bank Account Number / Qi Card */}
             <div>
               <label className="block font-bold text-emerald-400 mb-1">
-                4. رقم حسابك المصرفي (ماستر كي / Qi Card) <span className="text-rose-400 font-black">*</span>:
+                5. رقم حسابك المصرفي (ماستر كي / Qi Card) <span className="text-rose-400 font-black">*</span>:
               </label>
               <div className="relative">
                 <CreditCard className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-400" />
