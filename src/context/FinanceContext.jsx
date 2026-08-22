@@ -64,6 +64,21 @@ export const FinanceProvider = ({ children }) => {
     }
   }, []);
 
+  const fetchFundRequests = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/fund-state`);
+      const data = await res.json();
+      if (data.success && data.state) {
+        if (data.state.fundRequests) setFundRequests(data.state.fundRequests);
+        if (data.state.brothers) setBrothers(data.state.brothers);
+        if (data.state.bankCards) setBankCards(data.state.bankCards);
+        if (data.state.transfers) setTransfers(data.state.transfers);
+      }
+    } catch {
+      // offline silent
+    }
+  }, []);
+
   const toggleAdminBalanceVisibility = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/security/toggle-balance-visibility`, {
@@ -529,12 +544,16 @@ export const FinanceProvider = ({ children }) => {
     };
   }, [playChimeSound, currentUser]);
 
-  // Periodic polling for Admin to guarantee instantaneous guest request updates
+  // Periodic polling for Admin and Brothers to guarantee instantaneous real-time sync
   useEffect(() => {
     fetchGuestRequests();
-    const interval = setInterval(fetchGuestRequests, 2500);
+    fetchFundRequests();
+    const interval = setInterval(() => {
+      fetchGuestRequests();
+      fetchFundRequests();
+    }, 2000);
     return () => clearInterval(interval);
-  }, [fetchGuestRequests]);
+  }, [fetchGuestRequests, fetchFundRequests]);
 
   // Active Sending Card
   const sendingCard = useMemo(() => {

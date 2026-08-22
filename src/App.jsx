@@ -29,12 +29,13 @@ import { BottomToolsBar } from './components/BottomToolsBar';
 import { GuestJoinBanner } from './components/GuestJoinBanner';
 import { GuestJoinApprovalsModal } from './components/GuestJoinApprovalsModal';
 import { GuestPortalView } from './components/GuestPortalView';
-import { UserCheck } from 'lucide-react';
+import { UserCheck, Send } from 'lucide-react';
 
 function MainApp() {
-  const { currentUser, setCurrentUser, activeAdminId, guestRequests } = useFinance();
+  const { currentUser, setCurrentUser, activeAdminId, guestRequests, fundRequests } = useFinance();
   const [activeTab, setActiveTab] = useState('dashboard');
   const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
+  const pendingMoneyRequests = (fundRequests || []).filter((r) => r.status === 'pending');
 
   // Modals state
   const [transferModalOpen, setTransferModalOpen] = useState(false);
@@ -137,6 +138,32 @@ function MainApp() {
             >
               <UserCheck className="w-4 h-4" />
               <span>مراجعة واعتماد الطلب بكلمة المرور 🔑</span>
+            </button>
+          </div>
+        )}
+
+        {/* 💰 Admin Pending Money Requests (طلبات الصرف المعلقة) Alert Banner 💰 */}
+        {isCurrentAdmin && pendingMoneyRequests && pendingMoneyRequests.length > 0 && (
+          <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-white p-4 sm:p-5 rounded-3xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 border-2 border-emerald-300 animate-pulse" dir="rtl">
+            <div className="flex items-center gap-3 text-right">
+              <div className="w-12 h-12 rounded-2xl bg-slate-950 text-emerald-300 flex items-center justify-center font-black text-lg shrink-0 shadow-lg shadow-black/20">
+                {pendingMoneyRequests.length}
+              </div>
+              <div>
+                <span className="font-black text-sm sm:text-base text-white block">
+                  📥 لديك ({pendingMoneyRequests.length}) طلب صرف أموال جديد من الإخوة!
+                </span>
+                <span className="text-xs font-bold text-emerald-100 mt-0.5 block">
+                  طلب الأخ ({pendingMoneyRequests[0].brotherName}) مبلغ {pendingMoneyRequests[0].amount} لـ [{pendingMoneyRequests[0].fieldName}] - ({pendingMoneyRequests[0].reason})
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setPendingRequestsModalOpen(true)}
+              className="w-full sm:w-auto px-5 py-3 bg-slate-950 hover:bg-slate-900 text-emerald-300 font-black text-xs sm:text-sm rounded-2xl shadow-xl transition active:scale-95 shrink-0 flex items-center justify-center gap-2 border border-emerald-400/40"
+            >
+              <Send className="w-4 h-4 -rotate-45" />
+              <span>مراجعة وصرف المبلغ الآن 💸</span>
             </button>
           </div>
         )}
