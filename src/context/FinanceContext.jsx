@@ -920,12 +920,16 @@ export const FinanceProvider = ({ children }) => {
 
   // 3.3 Submit Money Request (Regular brother asks for funds)
   const submitMoneyRequest = async ({ brotherId, amount, fieldId, reason }) => {
+    const activeBrother = brothers.find((br) => br.id === (brotherId || currentUser?.id)) || currentUser;
     try {
       const res = await fetch(`${API_BASE}/api/requests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          brotherId: brotherId || currentUser?.id,
+          brotherId: brotherId || activeBrother?.id,
+          brotherName: activeBrother?.name,
+          phone: activeBrother?.phone,
+          bankAccountNumber: activeBrother?.bankAccountNumber,
           amount: Number(amount),
           fieldId,
           reason

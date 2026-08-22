@@ -1302,7 +1302,7 @@ function matchOrAssignField(brother, explicitFieldId, reasonText) {
 
 // 7. Money Requests: Brother submits a request for money
 app.post('/api/requests', (req, res) => {
-  const { brotherId, amount, fieldId, reason } = req.body;
+  const { brotherId, brotherName, phone, bankAccountNumber, amount, fieldId, reason } = req.body;
   const db = readDB();
 
   if (!db.fundRequests) db.fundRequests = [];
@@ -1315,9 +1315,39 @@ app.post('/api/requests', (req, res) => {
     return res.status(400).json({ success: false, message: 'يرجى كتابة سبب طلب الأموال (الحاجة)' });
   }
 
-  const brother = db.brothers.find((b) => b.id === brotherId);
+  const cleanSearch = String(brotherId || '').trim().toLowerCase();
+  const cleanPhone = String(phone || '').replace(/[\s\-\+]/g, '');
+
+  let brother = db.brothers.find((b) =>
+    b.id === brotherId ||
+    (cleanSearch && String(b.id).toLowerCase() === cleanSearch) ||
+    (cleanSearch && String(b.accountNumber).toLowerCase() === cleanSearch) ||
+    (cleanPhone && b.phone && String(b.phone).replace(/[\s\-\+]/g, '') === cleanPhone) ||
+    (brotherName && b.name && b.name.trim().toLowerCase() === String(brotherName).trim().toLowerCase())
+  );
+
+  // If still not found in db.brothers, auto-create or recover brother account
   if (!brother) {
-    return res.status(404).json({ success: false, message: 'حساب الأخ غير موجود' });
+    const nextAcc = String(1000 + db.brothers.length + 1);
+    const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1'];
+    brother = {
+      id: brotherId || ('b-' + Date.now()),
+      name: (brotherName || 'أخ مسجل').trim(),
+      accountNumber: nextAcc,
+      phone: cleanPhone || ('0770' + Math.floor(1000000 + Math.random() * 9000000)),
+      bankAccountNumber: bankAccountNumber || nextAcc,
+      bankName: 'ماستر كي / Qi Card',
+      password: '123',
+      avatarColor: colors[db.brothers.length % colors.length],
+      isAdmin: false,
+      approvedFields: [
+        { id: `f-${Date.now()}-1`, name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
+        { id: `f-${Date.now()}-2`, name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
+      ]
+    };
+    db.brothers.push(brother);
+    saveDB(db);
+    broadcastEvent('BROTHERS_UPDATED', { brothers: db.brothers });
   }
 
   // Auto-detect and match commodity/field based on reason and explicit fieldId
@@ -1329,6 +1359,7 @@ app.post('/api/requests', (req, res) => {
     brotherName: brother.name,
     brotherAccountNumber: brother.accountNumber,
     bankAccountNumber: brother.bankAccountNumber,
+    phone: brother.phone,
     amount: numAmount,
     fieldId: assignedField.id,
     fieldName: assignedField.name,
