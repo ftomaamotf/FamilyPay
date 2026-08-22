@@ -48,12 +48,28 @@ export const BrothersCards = ({
   const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
   const canSend = canCurrentUserSend ? canCurrentUserSend() : isCurrentAdmin;
 
-  // Set default selected brother to active Admin or first brother
+  // Set default selected brother to current logged in user, or active Admin
   React.useEffect(() => {
     if (!selectedBrotherId && brothers.length > 0) {
-      setSelectedBrotherId(activeAdminId || brothers[0].id);
+      const defaultId = currentUser?.id && brothers.some(b => b.id === currentUser.id)
+        ? currentUser.id
+        : (activeAdminId || brothers[0].id);
+      setSelectedBrotherId(defaultId);
     }
-  }, [brothers, activeAdminId]);
+  }, [brothers, currentUser, activeAdminId]);
+
+  const dynamicFieldSpent = (fieldId, fieldName) => {
+    if (!selectedBrother) return 0;
+    return transfers
+      .filter((t) =>
+        (t.recipientId === selectedBrother.id ||
+         (selectedBrother.accountNumber && String(t.accountNumber) === String(selectedBrother.accountNumber)) ||
+         (selectedBrother.bankAccountNumber && String(t.recipientAccountNumber) === String(selectedBrother.bankAccountNumber)) ||
+         (selectedBrother.name && t.recipientName && t.recipientName.trim().toLowerCase() === selectedBrother.name.trim().toLowerCase())) &&
+        (t.fieldId === fieldId || (t.fieldName && fieldName && t.fieldName.includes(fieldName.split(' ')[0])))
+      )
+      .reduce((sum, t) => sum + (t.amount || 0), 0);
+  };
 
   const copyAccountNumber = (brother) => {
     const acc = brother.bankAccountNumber || brother.accountNumber;
@@ -441,7 +457,8 @@ export const BrothersCards = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {selectedBrother.approvedFields?.map((f) => {
                 const limit = f.limit || 0;
-                const spent = f.spent || 0;
+                const calculatedSpent = dynamicFieldSpent(f.id, f.name);
+                const spent = Math.max(f.spent || 0, calculatedSpent);
                 const percent = limit > 0 ? Math.min(100, Math.round((spent / limit) * 100)) : 0;
 
                 return (
