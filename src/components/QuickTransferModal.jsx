@@ -111,14 +111,14 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
         <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-gradient-to-l from-emerald-800 via-teal-900 to-slate-900 text-white">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5" />
+              <Send className="w-5 h-5 -rotate-45" />
             </div>
             <div>
               <h3 className="font-black text-base sm:text-lg">
-                تحويل مالي محمي برمز أمان الصندوق
+                تحويل مالي مباشر من بطاقة الصندوق 💸
               </h3>
               <p className="text-xs text-emerald-200">
-                حماية من التحويل العشوائي واشتراط كتابة الحاجة
+                توثيق فوري للحاجة وخصم المبلغ وإشعار الإخوة
               </p>
             </div>
           </div>
@@ -422,11 +422,11 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                 }`}
               >
                 {loading ? (
-                  <span>جاري التحقق الأمني وبث الإشعار...</span>
+                  <span>جاري تنفيذ التحويل وتحديث الحسابات...</span>
                 ) : (
                   <>
-                    <ShieldCheck className="w-5 h-5 text-emerald-200" />
-                    <span>تأكيد التحويل المحمي وإشعار الإخوة الـ 6</span>
+                    <Send className="w-5 h-5 -rotate-45" />
+                    <span>تأكيد التحويل الآن وإشعار الإخوة 🚀</span>
                   </>
                 )}
               </button>
