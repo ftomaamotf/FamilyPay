@@ -1431,7 +1431,25 @@ app.post('/api/requests/:requestId/approve', (req, res) => {
   sendingCard.lastUpdated = new Date().toISOString();
 
   // Find recipient and ensure amount goes exactly to the matched commodity field
-  const recipient = db.brothers.find((b) => b.id === reqItem.brotherId);
+  let recipient = db.brothers.find((b) =>
+    b.id === reqItem.brotherId ||
+    (reqItem.phone && b.phone && String(b.phone).replace(/[\s\-\+]/g, '') === String(reqItem.phone).replace(/[\s\-\+]/g, '')) ||
+    (reqItem.brotherAccountNumber && String(b.accountNumber) === String(reqItem.brotherAccountNumber)) ||
+    (reqItem.bankAccountNumber && String(b.bankAccountNumber) === String(reqItem.bankAccountNumber)) ||
+    (reqItem.brotherName && b.name && b.name.trim().toLowerCase() === String(reqItem.brotherName).trim().toLowerCase())
+  );
+
+  let realBrotherName = (recipient && recipient.name && recipient.name !== 'أخ مسجل')
+    ? recipient.name
+    : (reqItem.brotherName && reqItem.brotherName !== 'أخ مسجل')
+    ? reqItem.brotherName
+    : (recipient?.name || 'الأخ');
+
+  if (recipient && recipient.name === 'أخ مسجل' && reqItem.brotherName && reqItem.brotherName !== 'أخ مسجل') {
+    recipient.name = reqItem.brotherName;
+    realBrotherName = reqItem.brotherName;
+  }
+
   let finalField = null;
   if (recipient) {
     finalField = matchOrAssignField(recipient, targetFieldId || reqItem.fieldId, reqItem.reason);
@@ -1443,10 +1461,10 @@ app.post('/api/requests/:requestId/approve', (req, res) => {
     id: 'tx-' + Date.now(),
     senderId: db.activeAdminId,
     senderName: 'الأدمن (موافقة على طلب)',
-    recipientId: reqItem.brotherId,
-    recipientName: reqItem.brotherName,
-    recipientAccountNumber: reqItem.bankAccountNumber || reqItem.brotherAccountNumber,
-    accountNumber: reqItem.brotherAccountNumber,
+    recipientId: recipient ? recipient.id : reqItem.brotherId,
+    recipientName: realBrotherName,
+    recipientAccountNumber: recipient ? (recipient.bankAccountNumber || recipient.accountNumber) : (reqItem.bankAccountNumber || reqItem.brotherAccountNumber),
+    accountNumber: recipient ? recipient.accountNumber : reqItem.brotherAccountNumber,
     amount: reqItem.amount,
     fieldId: finalField ? finalField.id : reqItem.fieldId,
     fieldName: finalField ? finalField.name : reqItem.fieldName,
@@ -1461,6 +1479,7 @@ app.post('/api/requests/:requestId/approve', (req, res) => {
   db.transfers.unshift(newTransfer);
   reqItem.status = 'approved';
   reqItem.approvedAt = new Date().toISOString();
+  reqItem.brotherName = realBrotherName;
   if (finalField) {
     reqItem.fieldId = finalField.id;
     reqItem.fieldName = finalField.name;
@@ -1468,8 +1487,12 @@ app.post('/api/requests/:requestId/approve', (req, res) => {
 
   const notif = {
     id: 'notif-' + Date.now(),
-    title: `✅ تمت الموافقة على طلب (${finalField ? finalField.name : reqItem.fieldName}): ${reqItem.amount} ${db.currency.symbol}`,
-    message: `وافق الأدمن على طلب الأخ (${reqItem.brotherName}) بمبلغ ${reqItem.amount} ${db.currency.symbol} وتم إيداعه لبند [${finalField ? finalField.name : reqItem.fieldName}] لحاجة: (${reqItem.reason}).`,
+    title: `💰 تحويل مالي: ${reqItem.amount} ${db.currency.symbol}`,
+    message: `تم تحويل ${reqItem.amount} ${db.currency.symbol} إلى حساب الأخ (${realBrotherName}) رقم (${newTransfer.recipientAccountNumber}) لحاجة [${finalField ? finalField.name : reqItem.fieldName}]. المتبقي في بطاقة الصندوق: ${sendingCard.balance} ${db.currency.symbol}`,
+    transferId: newTransfer.id,
+    recipientId: newTransfer.recipientId,
+    amount: reqItem.amount,
+    reason: reqItem.reason,
     timestamp: new Date().toISOString(),
     readBy: []
   };

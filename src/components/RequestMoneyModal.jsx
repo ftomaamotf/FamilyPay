@@ -59,7 +59,10 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialFieldId = null }) =>
     setSuccessMsg('');
 
     const res = await submitMoneyRequest({
-      brotherId: currentBrother.id,
+      brotherId: currentBrother?.id || currentUser?.id,
+      brotherName: currentBrother?.name || currentUser?.name,
+      phone: currentBrother?.phone || currentUser?.phone,
+      bankAccountNumber: currentBrother?.bankAccountNumber || currentUser?.bankAccountNumber,
       amount: numAmount,
       fieldId,
       reason: reason.trim()
