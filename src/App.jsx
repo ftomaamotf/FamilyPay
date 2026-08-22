@@ -92,8 +92,11 @@ function MainApp() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col transition-colors duration-200">
       
-      {/* Realtime Toast Notifications with Audio Chime */}
-      <NotificationToast />
+      {/* Realtime Toast Notifications with Audio Chime & Direct Action Buttons */}
+      <NotificationToast
+        onOpenPendingRequests={() => setPendingRequestsModalOpen(true)}
+        onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
+      />
 
       {/* Top Navigation */}
       <Navbar
@@ -179,7 +182,10 @@ function MainApp() {
           onOpenSecurityModal={() => setSecurityModalOpen(true)}
         />
 
-        <LiveCountersBar onOpenGuestApprovals={() => setGuestApprovalsOpen(true)} />
+        <LiveCountersBar
+          onOpenPendingRequests={() => setPendingRequestsModalOpen(true)}
+          onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
+        />
 
         {/* View Switcher */}
         {activeTab === 'dashboard' && (

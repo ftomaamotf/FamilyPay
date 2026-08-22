@@ -11,10 +11,12 @@ import {
   X,
   CheckCircle2,
   Clock,
-  ArrowDownLeft
+  ArrowDownLeft,
+  Send,
+  UserCheck
 } from 'lucide-react';
 
-export const LiveCountersBar = () => {
+export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals }) => {
   const {
     sendingCard,
     monthlyFundTotal,
@@ -147,25 +149,57 @@ export const LiveCountersBar = () => {
 
           {notifications.length > 0 ? (
             <div className="space-y-2.5">
-              {notifications.map((n) => (
-                <div
-                  key={n.id}
-                  className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-750 border border-slate-100 dark:border-slate-700 text-xs"
-                >
-                  <div className="flex items-center justify-between font-bold text-slate-800 dark:text-white">
-                    <span className="flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-                      {n.title}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-normal">
-                      {formatArabicDate(n.timestamp)}
-                    </span>
+              {notifications.map((n) => {
+                const isMoneyReq = n.title?.includes('طلب أموال') || n.message?.includes('طلب الأخ');
+                const isGuestReq = n.title?.includes('ضيف') || n.message?.includes('الضيف');
+
+                return (
+                  <div
+                    key={n.id}
+                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-750 border border-slate-100 dark:border-slate-700 text-xs space-y-2"
+                  >
+                    <div className="flex items-center justify-between font-bold text-slate-800 dark:text-white">
+                      <span className="flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                        {n.title}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-normal">
+                        {formatArabicDate(n.timestamp)}
+                      </span>
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                      {n.message}
+                    </p>
+
+                    {/* Interactive Action Buttons for Admin inside Notification Drawer */}
+                    {isCurrentAdmin && isMoneyReq && (
+                      <button
+                        onClick={() => {
+                          setIsNotifsOpen(false);
+                          if (onOpenPendingRequests) onOpenPendingRequests();
+                        }}
+                        className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5 active:scale-98"
+                      >
+                        <Send className="w-3.5 h-3.5 -rotate-45" />
+                        <span>قبول وصرف هذا الطلب الآن 💸</span>
+                      </button>
+                    )}
+
+                    {isCurrentAdmin && isGuestReq && (
+                      <button
+                        onClick={() => {
+                          setIsNotifsOpen(false);
+                          if (onOpenGuestApprovals) onOpenGuestApprovals();
+                        }}
+                        className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5 active:scale-98"
+                      >
+                        <UserCheck className="w-3.5 h-3.5" />
+                        <span>مراجعة وقبول الضيف بكلمة المرور 🔑</span>
+                      </button>
+                    )}
                   </div>
-                  <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                    {n.message}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-center text-xs text-slate-400 py-6">لا توجد إشعارات مسجلة</p>
