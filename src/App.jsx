@@ -57,16 +57,8 @@ function MainApp() {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [joinQrOpen, setJoinQrOpen] = useState(false);
-
-  // 1. If not logged in, show AuthScreen
-  if (!currentUser) {
-    return <AuthScreen onLoginSuccess={() => setActiveTab('dashboard')} />;
-  }
-
-  // 2. If in Guest Mode, show Dedicated Isolated Guest Portal (No access to Admin/Dashboard)
-  if (currentUser.isGuest) {
-    return <GuestPortalView />;
-  }
+  const [requestMoneyBrotherId, setRequestMoneyBrotherId] = useState(null);
+  const [requestMoneyFieldId, setRequestMoneyFieldId] = useState(null);
 
   const handleOpenTransfer = (recipientId = null, fieldId = null) => {
     setTransferRecipientId(recipientId);
@@ -78,9 +70,6 @@ function MainApp() {
     setEditingBrotherFields(brother);
     setFieldsModalOpen(true);
   };
-
-  const [requestMoneyBrotherId, setRequestMoneyBrotherId] = useState(null);
-  const [requestMoneyFieldId, setRequestMoneyFieldId] = useState(null);
 
   const handleOpenRequestMoney = (brother = null, field = null) => {
     setRequestMoneyBrotherId(brother?.id || currentUser?.id);
@@ -97,6 +86,16 @@ function MainApp() {
     setBrotherToEdit(brother);
     setAddBrotherModalOpen(true);
   };
+
+  // 1. If not logged in, show AuthScreen
+  if (!currentUser) {
+    return <AuthScreen onLoginSuccess={() => setActiveTab('dashboard')} />;
+  }
+
+  // 2. If in Guest Mode, show Dedicated Isolated Guest Portal (No access to Admin/Dashboard)
+  if (currentUser.isGuest) {
+    return <GuestPortalView />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col transition-colors duration-200">
