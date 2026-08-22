@@ -17,7 +17,8 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialFieldId = null }) =>
   const { currentUser, brothers, submitMoneyRequest, settings } = useFinance();
   const currency = settings.currencySymbol;
 
-  const currentBrother = brothers.find((b) => b.id === currentUser?.id) || currentUser;
+  const [selectedRequesterId, setSelectedRequesterId] = useState(currentUser?.id || '');
+  const currentBrother = brothers.find((b) => b.id === selectedRequesterId) || brothers.find((b) => b.id === currentUser?.id) || currentUser;
 
   const [fieldId, setFieldId] = useState(initialFieldId || '');
   const [amount, setAmount] = useState('');
@@ -25,6 +26,12 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialFieldId = null }) =>
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  useEffect(() => {
+    if (currentUser?.id && !selectedRequesterId) {
+      setSelectedRequesterId(currentUser.id);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     if (initialFieldId) setFieldId(initialFieldId);
@@ -110,6 +117,33 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialFieldId = null }) =>
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-4 text-xs">
           
+          {/* If multiple brothers, allow selecting brother */}
+          {brothers.length > 1 && (
+            <div>
+              <label className="block font-black text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1">
+                <User className="w-3.5 h-3.5 text-emerald-500" />
+                <span>اختيار الأخ صاحب الطلب *:</span>
+              </label>
+              <select
+                value={selectedRequesterId}
+                onChange={(e) => {
+                  setSelectedRequesterId(e.target.value);
+                  const br = brothers.find((b) => b.id === e.target.value);
+                  if (br?.approvedFields?.length > 0) {
+                    setFieldId(br.approvedFields[0].id);
+                  }
+                }}
+                className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-emerald-500/40 rounded-2xl px-3 py-2.5 text-xs font-black text-slate-800 dark:text-slate-100 outline-none focus:border-emerald-500 shadow-sm"
+              >
+                {brothers.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} (حساب: #{b.accountNumber}) {b.isAdmin ? '👑 الأدمن' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* User Details Preview */}
           <div className="p-3.5 bg-slate-50 dark:bg-slate-750 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <div className="flex items-center gap-2">

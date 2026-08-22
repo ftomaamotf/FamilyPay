@@ -106,19 +106,19 @@ export const BrothersCards = ({
       }
       if (sortBy === 'highest_spent') {
         const aSpent = transfers
-          .filter((t) => t.recipientId === a.id)
+          .filter((t) => t.recipientId === a.id || (a.name && t.recipientName && t.recipientName.trim().toLowerCase() === a.name.trim().toLowerCase()))
           .reduce((acc, t) => acc + (t.amount || 0), 0);
         const bSpent = transfers
-          .filter((t) => t.recipientId === b.id)
+          .filter((t) => t.recipientId === b.id || (b.name && t.recipientName && t.recipientName.trim().toLowerCase() === b.name.trim().toLowerCase()))
           .reduce((acc, t) => acc + (t.amount || 0), 0);
         return bSpent - aSpent;
       }
       if (sortBy === 'lowest_spent') {
         const aSpent = transfers
-          .filter((t) => t.recipientId === a.id)
+          .filter((t) => t.recipientId === a.id || (a.name && t.recipientName && t.recipientName.trim().toLowerCase() === a.name.trim().toLowerCase()))
           .reduce((acc, t) => acc + (t.amount || 0), 0);
         const bSpent = transfers
-          .filter((t) => t.recipientId === b.id)
+          .filter((t) => t.recipientId === b.id || (b.name && t.recipientName && t.recipientName.trim().toLowerCase() === b.name.trim().toLowerCase()))
           .reduce((acc, t) => acc + (t.amount || 0), 0);
         return aSpent - bSpent;
       }
@@ -260,8 +260,13 @@ export const BrothersCards = ({
               const isSelected = b.id === selectedBrotherId;
               const isCopied = copiedId === b.id;
 
-              // Total spent for this brother
-              const brotherTransfers = transfers.filter((t) => t.recipientId === b.id);
+              // Total spent for this brother (sum of all transfers received by this specific brother)
+              const brotherTransfers = transfers.filter((t) =>
+                t.recipientId === b.id ||
+                (b.accountNumber && String(t.accountNumber) === String(b.accountNumber)) ||
+                (b.bankAccountNumber && String(t.recipientAccountNumber) === String(b.bankAccountNumber)) ||
+                (b.name && t.recipientName && t.recipientName.trim().toLowerCase() === b.name.trim().toLowerCase())
+              );
               const totalReceived = brotherTransfers.reduce((acc, t) => acc + (t.amount || 0), 0);
 
               return (
