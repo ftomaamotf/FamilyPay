@@ -15,7 +15,8 @@ import {
   Edit2,
   Share2,
   Trash2,
-  QrCode
+  QrCode,
+  Inbox
 } from 'lucide-react';
 
 export const BrothersCards = ({
