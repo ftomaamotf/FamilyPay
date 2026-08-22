@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>الصندوق والحسابات المشتركة</title>
     
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
     <!-- PWA & Mobile Web App Meta -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#059669" />
@@ -24,8 +28,11 @@
     <script type="module" src="/src/main.jsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          for (let reg of regs) reg.update();
+        });
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration error:', err));
+          navigator.serviceWorker.register('/sw.js?v=' + Date.now()).catch(err => console.log('SW registration error:', err));
         });
       }
     </script>
