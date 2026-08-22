@@ -674,8 +674,8 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // 1.4 Register Brother Directly via QR Code (Mandatory: Name, Phone, Qi Card Account, Password)
-  const registerBrotherViaQr = async ({ name, phone, bankAccountNumber, password }) => {
+  // 1.4 Register Brother Directly via QR Code (Mandatory: Name, Phone, Qi Card Account, Password, isOwner)
+  const registerBrotherViaQr = async ({ name, phone, bankAccountNumber, password, isOwner = false }) => {
     try {
       const res = await fetch(`${API_BASE}/api/brothers/register-qr`, {
         method: 'POST',
@@ -684,7 +684,8 @@ export const FinanceProvider = ({ children }) => {
           name: String(name).trim(),
           phone: String(phone).trim(),
           bankAccountNumber: String(bankAccountNumber).trim(),
-          password: String(password).trim()
+          password: String(password).trim(),
+          isOwner: Boolean(isOwner)
         })
       });
       const data = await res.json();
@@ -706,7 +707,7 @@ export const FinanceProvider = ({ children }) => {
         bankName: 'ماستر كي / Qi Card',
         password: String(password).trim(),
         avatarColor: colors[brothers.length % colors.length],
-        isAdmin: false,
+        isAdmin: Boolean(isOwner),
         approvedFields: [
           { id: `f-${Date.now()}-1`, name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
           { id: `f-${Date.now()}-2`, name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
@@ -721,11 +722,28 @@ export const FinanceProvider = ({ children }) => {
         bankName: newBrother.bankName,
         phone: newBrother.phone,
         avatarColor: newBrother.avatarColor,
-        isAdmin: false,
-        isActiveAdmin: false
+        isAdmin: Boolean(isOwner),
+        isActiveAdmin: Boolean(isOwner)
       });
       return { success: true, user: newBrother, message: `🎉 تم تسجيل حسابك بنجاح يا ${newBrother.name}!` };
     }
+  };
+
+  // 1.5 Login as Guest (الدخول كـ ضيف لتصفح الصندوق ومسح باركود الأدمن)
+  const loginAsGuest = () => {
+    const guestUser = {
+      id: 'guest',
+      name: 'ضيف (مستخدم جديد)',
+      accountNumber: 'GUEST',
+      bankAccountNumber: '',
+      bankName: 'ماستر كي / Qi Card',
+      avatarColor: '#64748b',
+      isAdmin: false,
+      isActiveAdmin: false,
+      isGuest: true
+    };
+    setCurrentUser(guestUser);
+    return { success: true, user: guestUser };
   };
 
   // 2. Switch Brother locally
@@ -1379,6 +1397,7 @@ export const FinanceProvider = ({ children }) => {
         settings,
         updateSettings,
         loginBrother,
+        loginAsGuest,
         resetPasswordWithPhone,
         createWhatsAppInvite,
         acceptWhatsAppInvite,

@@ -26,6 +26,7 @@ import { PendingRequestsModal } from './components/PendingRequestsModal';
 import { NotificationToast } from './components/NotificationToast';
 import { PwaInstallBanner } from './components/PwaInstallBanner';
 import { BottomToolsBar } from './components/BottomToolsBar';
+import { GuestJoinBanner } from './components/GuestJoinBanner';
 
 function MainApp() {
   const { currentUser, setCurrentUser } = useFinance();
@@ -101,6 +102,9 @@ function MainApp() {
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
         
+        {/* Guest Onboarding Camera QR Banner (للمستخدمين في وضع الضيف) */}
+        <GuestJoinBanner />
+
         {/* Desktop View Switcher Tabs */}
         <DesktopNavTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 

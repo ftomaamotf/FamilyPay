@@ -463,6 +463,9 @@ app.post('/api/brothers/register-qr', (req, res) => {
     return res.status(400).json({ success: false, message: `رقم الهاتف (${cleanPhone}) مسجل مسبقاً باسم (${existingPhone.name})` });
   }
 
+  const isOwner = Boolean(req.body.isOwner);
+  const isFirstUser = db.brothers.length === 0;
+  const makeAdmin = isOwner || isFirstUser;
   const nextAccNumber = String(1000 + db.brothers.length + 1);
   const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1'];
   const avatarColor = colors[db.brothers.length % colors.length];
@@ -476,12 +479,16 @@ app.post('/api/brothers/register-qr', (req, res) => {
     bankName: 'ماستر كي / Qi Card',
     password: String(password).trim(),
     avatarColor,
-    isAdmin: false,
+    isAdmin: makeAdmin,
     approvedFields: [
       { id: `f-${Date.now()}-1`, name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
       { id: `f-${Date.now()}-2`, name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
     ]
   };
+
+  if (makeAdmin && (!db.activeAdminId || isFirstUser)) {
+    db.activeAdminId = newBrother.id;
+  }
 
   db.brothers.push(newBrother);
 

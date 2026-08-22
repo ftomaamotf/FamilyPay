@@ -21,21 +21,21 @@ import {
   KeyRound,
   Smartphone,
   Camera,
-  QrCode
+  Crown
 } from 'lucide-react';
 
 export const AuthScreen = ({ onLoginSuccess }) => {
   const {
     brothers,
     loginBrother,
+    loginAsGuest,
     resetPasswordWithPhone,
-    addBrother,
     acceptWhatsAppInvite,
     registerBrotherViaQr
   } = useFinance();
   
-  // Tab state: 'login' | 'invite' | 'register'
-  const [activeTab, setActiveTab] = useState('login');
+  // View modes: 'welcome' | 'register_owner' | 'login' | 'invite'
+  const [viewMode, setViewMode] = useState('welcome');
   const [showCameraScanner, setShowCameraScanner] = useState(false);
 
   // Auto-detect ?action=register from URL when scanned via phone camera
@@ -43,8 +43,8 @@ export const AuthScreen = ({ onLoginSuccess }) => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('action') === 'register' || urlParams.get('action') === 'join') {
-        setActiveTab('register');
-        setRegMsg('👋 أهلاً بك! تم فتح استمارة انضمام الأخوة. يرجى إدخال اسمك ورقم هاتفك وبطاقتك لإكمال التسجيل.');
+        setViewMode('register_owner');
+        setRegMsg('👋 أهلاً بك! تم فتح استمارة التسجيل. يرجى إدخال اسمك ورقم هاتفك وبطاقتك لإكمال التسجيل.');
       }
     }
   }, []);
@@ -66,7 +66,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
   const [inviteMsg, setInviteMsg] = useState('');
   const [inviteSuccess, setInviteSuccess] = useState(false);
 
-  // New User Registration state (Mandatory 4 fields)
+  // New Owner / User Registration state (Mandatory 4 fields)
   const [regName, setRegName] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regBankAccount, setRegBankAccount] = useState('');
@@ -137,7 +137,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     if (!regName.trim()) {
-      setRegMsg('⚠️ الاسم الكامل إجباري لإتمام التسجيل');
+      setRegMsg('⚠️ الاسم الكامل (الاسم الثلاثي) إجباري لإتمام التسجيل');
       return;
     }
     if (!regPhone.trim()) {
@@ -145,7 +145,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
       return;
     }
     if (!regBankAccount.trim()) {
-      setRegMsg('⚠️ رقم بطاقة الكي كارد / ماستر كي إجباري لاستلام التحويلات');
+      setRegMsg('⚠️ رقم بطاقة ماستر كي / Qi Card إجباري لاستلام وإرسال الحوالات');
       return;
     }
     if (!regPassword.trim()) {
@@ -160,13 +160,14 @@ export const AuthScreen = ({ onLoginSuccess }) => {
       name: regName.trim(),
       phone: regPhone.trim(),
       bankAccountNumber: regBankAccount.trim(),
-      password: regPassword.trim()
+      password: regPassword.trim(),
+      isOwner: true
     });
     setRegLoading(false);
 
     if (res.success) {
       setRegSuccess(true);
-      setRegMsg(`🎉 أهلاً بك يا ${regName.trim()}! تم إنشاء وتفعيل حسابك بنجاح.`);
+      setRegMsg(`🎉 أهلاً بك يا ${regName.trim()}! تم تسجيلك كصاحب الصندوق وفتح البرنامج.`);
       setTimeout(() => {
         if (onLoginSuccess) onLoginSuccess();
       }, 1000);
@@ -177,8 +178,13 @@ export const AuthScreen = ({ onLoginSuccess }) => {
   };
 
   const handleScanSuccess = (decodedText) => {
-    setActiveTab('register');
-    setRegMsg('✅ تم التعرف على باركود الانضمام بنجاح! يرجى إدخال اسمك ورقم هاتفك وبطاقتك لإكمال التسجيل.');
+    setViewMode('register_owner');
+    setRegMsg('✅ تم التعرف على باركود الانضمام بنجاح! يرجى إدخال بياناتك لإكمال التسجيل.');
+  };
+
+  const handleGuestLogin = () => {
+    loginAsGuest();
+    if (onLoginSuccess) onLoginSuccess();
   };
 
   const handleResetSubmit = async (e) => {
@@ -219,66 +225,244 @@ export const AuthScreen = ({ onLoginSuccess }) => {
             الصندوق والحسابات المشتركة
           </h1>
           <p className="text-xs text-slate-400">
-            النظام المالي لإدارة ومصروفات الصندوق المشترك
+            النظام المالي السحابي لإدارة المصروفات والتحويلات
           </p>
         </div>
 
-        {/* 📷 Scan Join QR Code Button (زر فتح الكاميرا لمسح باركود إضافة الأخوة) */}
-        <button
-          type="button"
-          onClick={() => setShowCameraScanner(true)}
-          className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 transition active:scale-95 border border-emerald-400/40 animate-pulse"
-        >
-          <Camera className="w-5 h-5" />
-          <span>مسح باركود إضافة الأخوة بالكاميرا 📷📲</span>
-        </button>
+        {/* ======================================================== */}
+        {/* 🌟 VIEW 1: WELCOME SCREEN (تسجيل صاحب الصندوق | ضيف) 🌟 */}
+        {/* ======================================================== */}
+        {viewMode === 'welcome' && (
+          <div className="space-y-4 pt-2">
+            
+            {/* Option 1: Register as Fund Owner / صاحب الصندوق */}
+            <button
+              type="button"
+              onClick={() => { setViewMode('register_owner'); setRegMsg(''); }}
+              className="w-full p-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-xl shadow-emerald-600/20 flex items-center justify-between transition active:scale-95 group border border-emerald-400/40 text-right"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center text-amber-300 shrink-0">
+                  <Crown className="w-6 h-6 fill-amber-300" />
+                </div>
+                <div>
+                  <span className="block text-sm font-black text-white">
+                    تسجيل حساب (صاحب الصندوق) 👑
+                  </span>
+                  <span className="text-[11px] text-emerald-100 font-medium">
+                    أنا صاحب الصندوق ومن يرسل الأموال
+                  </span>
+                </div>
+              </div>
+              <ArrowRight className="w-5 h-5 rotate-180 group-hover:-translate-x-1 transition text-emerald-200" />
+            </button>
 
-        {/* Tab Switcher: 3 Tabs (Login | WhatsApp Invite | Register) */}
-        <div className="flex bg-slate-950 p-1 rounded-2xl border border-slate-800 text-[11px] font-bold">
-          <button
-            type="button"
-            onClick={() => { setActiveTab('login'); setErrorMsg(''); }}
-            className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-1 ${
-              activeTab === 'login'
-                ? 'bg-emerald-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <LogIn className="w-3.5 h-3.5" />
-            <span>تسجيل الدخول</span>
-          </button>
+            {/* Option 2: Enter as Guest / ضيف (مباشرة أسفل كلمة تسجيل) */}
+            <button
+              type="button"
+              onClick={handleGuestLogin}
+              className="w-full p-4 rounded-2xl bg-slate-850 hover:bg-slate-800 text-white font-black text-sm shadow-lg border border-slate-700/80 flex items-center justify-between transition active:scale-95 group text-right"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 shrink-0">
+                  <User className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="block text-sm font-black text-white">
+                    الدخول كـ (ضيف) 👤
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-medium">
+                    للانضمام لصندوق الأدمن بمسح الباركود بالكاميرا بالداخل
+                  </span>
+                </div>
+              </div>
+              <ArrowRight className="w-5 h-5 rotate-180 group-hover:-translate-x-1 transition text-slate-400" />
+            </button>
 
-          <button
-            type="button"
-            onClick={() => { setActiveTab('invite'); setInviteMsg(''); }}
-            className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-1 ${
-              activeTab === 'invite'
-                ? 'bg-teal-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Share2 className="w-3.5 h-3.5 text-emerald-300" />
-            <span>دعوة واتساب 💬</span>
-          </button>
+            {/* In-app Camera QR Quick Scan */}
+            <button
+              type="button"
+              onClick={() => setShowCameraScanner(true)}
+              className="w-full py-3 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-emerald-400 font-bold text-xs border border-emerald-500/30 flex items-center justify-center gap-2 transition"
+            >
+              <Camera className="w-4 h-4" />
+              <span>مسح باركود الأدمن مباشرة بالكاميرا 📷</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => { setActiveTab('register'); setRegMsg(''); }}
-            className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-1 ${
-              activeTab === 'register'
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <UserPlus className="w-3.5 h-3.5" />
-            <span>انضمام أخ جديد ➕</span>
-          </button>
-        </div>
+            {/* Option 3: Already have an account -> Login */}
+            <div className="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => { setViewMode('login'); setErrorMsg(''); }}
+                className="text-xs font-bold text-slate-300 hover:text-white transition flex items-center gap-1.5"
+              >
+                <LogIn className="w-4 h-4 text-emerald-400" />
+                <span>تسجيل الدخول لحساب مسجل مسبقاً 🔑</span>
+              </button>
 
-        {/* TAB 1: LOGIN (تسجيل الدخول بالبريد الإلكتروني أو رقم الهاتف وكلمة المرور) */}
-        {activeTab === 'login' && (
+              <button
+                type="button"
+                onClick={() => { setViewMode('invite'); setInviteMsg(''); }}
+                className="text-xs font-bold text-teal-400 hover:text-teal-300 transition flex items-center gap-1"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>دعوة واتساب 💬</span>
+              </button>
+            </div>
+
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* 🌟 VIEW 2: REGISTER OWNER FORM (صاحب الصندوق) 🌟 */}
+        {/* ======================================================== */}
+        {viewMode === 'register_owner' && (
+          <form onSubmit={handleRegisterSubmit} className="space-y-3.5 text-xs">
+            
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <div className="flex items-center gap-2 text-amber-400 font-black text-sm">
+                <Crown className="w-4 h-4 fill-amber-400" />
+                <span>تسجيل حساب (صاحب الصندوق / مدير مالي)</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewMode('welcome')}
+                className="text-[11px] text-slate-400 hover:text-white font-bold"
+              >
+                العودة ⬅️
+              </button>
+            </div>
+
+            <div className="p-3 bg-amber-950/40 border border-amber-800/60 rounded-2xl text-[11px] text-amber-200">
+              أدخل معلوماتك الشخصية لإنشاء الصندوق وتكون أنت المسؤول المالي الرئيسي:
+            </div>
+
+            {/* 1. Full Name */}
+            <div>
+              <label className="block font-bold text-slate-300 mb-1">
+                1. اسمك الثلاثي الكامل <span className="text-rose-400 font-black">*</span>:
+              </label>
+              <div className="relative">
+                <User className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  required
+                  value={regName}
+                  onChange={(e) => setRegName(e.target.value)}
+                  placeholder="مثال: عبدالله عجمي"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-emerald-500 font-bold"
+                />
+              </div>
+            </div>
+
+            {/* 2. Phone */}
+            <div>
+              <label className="block font-bold text-slate-300 mb-1">
+                2. رقم هاتفك للتواصل والدخول <span className="text-rose-400 font-black">*</span>:
+              </label>
+              <div className="relative">
+                <Phone className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="tel"
+                  required
+                  value={regPhone}
+                  onChange={(e) => setRegPhone(e.target.value)}
+                  placeholder="مثال: 07702206214"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-left font-bold"
+                  dir="ltr"
+                />
+              </div>
+            </div>
+
+            {/* 3. Password */}
+            <div>
+              <label className="block font-bold text-slate-300 mb-1">
+                3. كلمة المرور الخاصة بحسابك <span className="text-rose-400 font-black">*</span>:
+              </label>
+              <div className="relative">
+                <Lock className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="password"
+                  required
+                  value={regPassword}
+                  onChange={(e) => setRegPassword(e.target.value)}
+                  placeholder="أدخل كلمة مرور قوية لحماية الصندوق"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono font-bold"
+                />
+              </div>
+            </div>
+
+            {/* 4. Bank Account Number / Qi Card */}
+            <div>
+              <label className="block font-bold text-emerald-400 mb-1">
+                4. رقم حسابك المصرفي (ماستر كي / Qi Card) <span className="text-rose-400 font-black">*</span>:
+              </label>
+              <div className="relative">
+                <CreditCard className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-400" />
+                <input
+                  type="text"
+                  required
+                  value={regBankAccount}
+                  onChange={(e) => setRegBankAccount(e.target.value)}
+                  placeholder="مثال: 9256869125"
+                  className="w-full bg-slate-950 border border-emerald-500/80 rounded-2xl pr-10 pl-4 py-3 text-xs text-emerald-300 outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-left font-bold"
+                  dir="ltr"
+                />
+              </div>
+            </div>
+
+            {regMsg && (
+              <div className={`p-3 rounded-2xl border text-xs font-bold text-center ${
+                regSuccess
+                  ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800'
+                  : 'bg-rose-950/60 text-rose-300 border-rose-800'
+              }`}>
+                {regMsg}
+              </div>
+            )}
+
+            <div className="pt-2 flex gap-2">
+              <button
+                type="submit"
+                disabled={regLoading}
+                className="flex-1 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-50"
+              >
+                <Crown className="w-4 h-4 fill-slate-950" />
+                <span>{regLoading ? 'جاري إنشاء الصندوق...' : 'تأكيد التسجيل والدخول كصاحب الصندوق 🚀'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setViewMode('welcome')}
+                className="px-4 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl"
+              >
+                إلغاء
+              </button>
+            </div>
+
+          </form>
+        )}
+
+        {/* ======================================================== */}
+        {/* 🌟 VIEW 3: LOGIN FORM (تسجيل الدخول للمسجلين مسبقاً) 🌟 */}
+        {/* ======================================================== */}
+        {viewMode === 'login' && (
           <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs pt-1">
             
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <div className="flex items-center gap-2 text-emerald-400 font-black text-sm">
+                <LogIn className="w-4 h-4" />
+                <span>تسجيل الدخول لحسابك</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewMode('welcome')}
+                className="text-[11px] text-slate-400 hover:text-white font-bold"
+              >
+                الرئيسية ⬅️
+              </button>
+            </div>
+
             {/* Email or Phone Input */}
             <div>
               <label className="block font-bold text-slate-300 mb-1.5 text-xs">
@@ -343,32 +527,46 @@ export const AuthScreen = ({ onLoginSuccess }) => {
               </div>
             )}
 
-            <div className="pt-2">
+            <div className="pt-2 flex gap-2">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-50"
+                className="flex-1 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-50"
               >
                 <LogIn className="w-4 h-4" />
                 <span>{loading ? 'جاري التحقق...' : 'تسجيل الدخول 🚀'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setViewMode('welcome')}
+                className="px-4 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl"
+              >
+                إلغاء
               </button>
             </div>
 
           </form>
         )}
 
-        {/* TAB 2: ACCEPT WHATSAPP INVITATION (انضمام عبر دعوة واتساب) */}
-        {activeTab === 'invite' && (
+        {/* ======================================================== */}
+        {/* 🌟 VIEW 4: ACCEPT WHATSAPP INVITATION 🌟 */}
+        {/* ======================================================== */}
+        {viewMode === 'invite' && (
           <form onSubmit={handleInviteSubmit} className="space-y-3.5 text-xs">
             
-            <div className="p-3.5 bg-teal-950/50 border border-teal-800/80 rounded-2xl text-[11px] text-teal-300 space-y-1">
-              <span className="font-bold block flex items-center gap-1.5">
-                <Share2 className="w-3.5 h-3.5" />
-                <span>وصلتك دعوة من الأدمن عبر الواتساب؟</span>
-              </span>
-              <p className="text-slate-300">
-                أدخل رمز الأمان السري المشترك المرسل لك في رسالة الواتساب لتأكيد هويتك وتعيين كلمة مرورك الخاصة.
-              </p>
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <div className="flex items-center gap-2 text-teal-400 font-black text-sm">
+                <Share2 className="w-4 h-4" />
+                <span>الانضمام عبر دعوة واتساب</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewMode('welcome')}
+                className="text-[11px] text-slate-400 hover:text-white font-bold"
+              >
+                الرئيسية ⬅️
+              </button>
             </div>
 
             {/* Shared Secret PIN from WhatsApp */}
@@ -429,7 +627,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
             {/* Bank Account */}
             <div>
               <label className="block font-bold text-slate-300 mb-1">
-                رقم بطاقتك أو حسابك المصرفي (لاستلام الحوالات):
+                رقم بطاقتك أو حسابك المصرفي:
               </label>
               <div className="relative">
                 <CreditCard className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -472,126 +670,22 @@ export const AuthScreen = ({ onLoginSuccess }) => {
               </div>
             )}
 
-            <div className="pt-2">
+            <div className="pt-2 flex gap-2">
               <button
                 type="submit"
                 disabled={inviteLoading}
-                className="w-full py-3.5 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-teal-500/30 flex items-center justify-center gap-2 transition active:scale-95"
+                className="flex-1 py-3.5 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-teal-500/30 flex items-center justify-center gap-2 transition active:scale-95"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                <span>{inviteLoading ? 'جاري التحقق والتفعيل...' : 'تأكيد الانضمام والدخول فوراً'}</span>
+                <span>{inviteLoading ? 'جاري التحقق...' : 'تأكيد الانضمام والدخول 🚀'}</span>
               </button>
-            </div>
 
-          </form>
-        )}
-
-        {/* TAB 3: REGISTER NEW BROTHER (تسجيل حساب أخ جديد عبر الباركود) */}
-        {activeTab === 'register' && (
-          <form onSubmit={handleRegisterSubmit} className="space-y-3.5 text-xs">
-            
-            <div className="p-3 bg-indigo-950/60 border border-indigo-800/80 rounded-2xl text-[11px] text-indigo-300 space-y-1">
-              <span className="font-bold block flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>استمارة انضمام وتسجيل أخ جديد بالصندوق 📋</span>
-              </span>
-              <p className="text-slate-300">
-                يرجى إدخال بياناتك بدقة لإضافتك في الصندوق، وسيفتح حسابك وتدخل للتطبيق فوراً!
-              </p>
-            </div>
-
-            {/* 1. Full Name (Mandatory) */}
-            <div>
-              <label className="block font-bold text-slate-300 mb-1">
-                1. اسمك الكامل (الاسم الثلاثي) <span className="text-rose-400 font-black">*</span>:
-              </label>
-              <div className="relative">
-                <User className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  required
-                  value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  placeholder="مثال: علي عبدالله عجمي"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-                />
-              </div>
-            </div>
-
-            {/* 2. Phone Number (Mandatory) */}
-            <div>
-              <label className="block font-bold text-slate-300 mb-1">
-                2. رقم هاتفك للتواصل وتسجيل الدخول <span className="text-rose-400 font-black">*</span>:
-              </label>
-              <div className="relative">
-                <Phone className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="tel"
-                  required
-                  value={regPhone}
-                  onChange={(e) => setRegPhone(e.target.value)}
-                  placeholder="مثال: 07701234567"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-left font-bold"
-                  dir="ltr"
-                />
-              </div>
-            </div>
-
-            {/* 3. Bank Account Number / Qi Card (Mandatory) */}
-            <div>
-              <label className="block font-bold text-emerald-400 mb-1">
-                3. رقم بطاقة ماستر كي / Qi Card (لاستلام الحوالات) <span className="text-rose-400 font-black">*</span>:
-              </label>
-              <div className="relative">
-                <CreditCard className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-400" />
-                <input
-                  type="text"
-                  required
-                  value={regBankAccount}
-                  onChange={(e) => setRegBankAccount(e.target.value)}
-                  placeholder="أدخل رقم حساب أو بطاقة الكي كارد (مثال: 9256869125)"
-                  className="w-full bg-slate-950 border border-emerald-500/80 rounded-2xl pr-10 pl-4 py-3 text-xs text-emerald-300 outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-left font-bold"
-                  dir="ltr"
-                />
-              </div>
-            </div>
-
-            {/* 4. Password (Mandatory) */}
-            <div>
-              <label className="block font-bold text-slate-300 mb-1">
-                4. تعيين كلمة المرور الخاصة بحسابك <span className="text-rose-400 font-black">*</span>:
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="password"
-                  required
-                  value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  placeholder="اكتب كلمة مرور قوية لتسجيل الدخول مستقبلاً"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold"
-                />
-              </div>
-            </div>
-
-            {regMsg && (
-              <div className={`p-3 rounded-2xl border text-xs font-bold text-center ${
-                regSuccess
-                  ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800'
-                  : 'bg-rose-950/60 text-rose-300 border-rose-800'
-              }`}>
-                {regMsg}
-              </div>
-            )}
-
-            <div className="pt-2">
               <button
-                type="submit"
-                disabled={regLoading}
-                className="w-full py-3.5 bg-gradient-to-r from-indigo-500 via-purple-600 to-indigo-600 hover:from-indigo-400 hover:to-purple-500 text-white font-black text-sm rounded-2xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-50"
+                type="button"
+                onClick={() => setViewMode('welcome')}
+                className="px-4 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl"
               >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{regLoading ? 'جاري إنشاء الحساب والتفعيل...' : 'تفعيل الحساب والدخول للبرنامج فوراً 🚀'}</span>
+                إلغاء
               </button>
             </div>
 
@@ -601,7 +695,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
         {/* Footer Note */}
         <div className="text-center text-[11px] text-slate-500 flex items-center justify-center gap-1.5 pt-2 border-t border-slate-800/80">
           <Globe className="w-3.5 h-3.5 text-emerald-500" />
-          <span>يفتح مباشرة من أي هاتف أو كمبيوتر عبر الإنترنت</span>
+          <span>يفتح مباشرة من أي هاتف أو كمبيوتر عبر السحابة</span>
         </div>
 
       </div>
@@ -617,74 +711,62 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                   <KeyRound className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base">استعادة وتعيين كلمة المرور</h3>
-                  <p className="text-[11px] text-slate-400">عبر البريد الإلكتروني أو رقم الهاتف المسجل</p>
+                  <h3 className="font-extrabold text-sm sm:text-base">استعادة وتعيين كلمة المرور</h3>
+                  <p className="text-[11px] text-slate-400">التحقق عبر رقم الهاتف المسجل</p>
                 </div>
               </div>
+
               <button
                 onClick={() => setShowForgotModal(false)}
-                className="p-1 text-slate-400 hover:text-white"
+                className="p-1 rounded-full text-slate-400 hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleResetSubmit} className="space-y-3.5 text-xs">
-              
-              {/* Email or Phone */}
+            <form onSubmit={handleResetSubmit} className="space-y-3 text-xs">
               <div>
                 <label className="block font-bold text-slate-300 mb-1">
-                  البريد الإلكتروني أو رقم الهاتف:
+                  البريد الإلكتروني أو اسم المستخدم:
                 </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    required
-                    value={resetIdentifier}
-                    onChange={(e) => setResetIdentifier(e.target.value)}
-                    placeholder="مثال: abdullah.ajmi@gmail.com أو 07702206214"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pr-10 pl-3 py-2.5 text-xs text-white outline-none focus:ring-2 focus:ring-emerald-500 font-sans"
-                    dir="ltr"
-                  />
-                </div>
+                <input
+                  type="text"
+                  required
+                  value={resetIdentifier}
+                  onChange={(e) => setResetIdentifier(e.target.value)}
+                  placeholder="أدخل بريدك الإلكتروني"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                  dir="ltr"
+                />
               </div>
 
-              {/* Registered Phone Confirmation */}
               <div>
                 <label className="block font-bold text-slate-300 mb-1">
-                  رقم الهاتف المسجل لتأكيد الهوية:
+                  رقم الهاتف المسجل للحساب:
                 </label>
-                <div className="relative">
-                  <Phone className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="tel"
-                    required
-                    value={resetPhone}
-                    onChange={(e) => setResetPhone(e.target.value)}
-                    placeholder="مثال: 07702206214"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pr-10 pl-3 py-2.5 text-xs text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-left"
-                    dir="ltr"
-                  />
-                </div>
+                <input
+                  type="tel"
+                  required
+                  value={resetPhone}
+                  onChange={(e) => setResetPhone(e.target.value)}
+                  placeholder="مثال: 07702206214"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                  dir="ltr"
+                />
               </div>
 
-              {/* New Password */}
               <div>
                 <label className="block font-bold text-slate-300 mb-1">
                   كلمة المرور الجديدة المطلوبة:
                 </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="password"
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="اكتب كلمة المرور الجديدة"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pr-10 pl-3 py-2.5 text-xs text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
-                  />
-                </div>
+                <input
+                  type="password"
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="اكتب كلمة المرور الجديدة"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                />
               </div>
 
               {resetMsg && (
