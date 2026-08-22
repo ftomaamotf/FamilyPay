@@ -434,6 +434,88 @@ app.post('/api/invitations/accept', (req, res) => {
   });
 });
 
+// 2.4 QR Registration (New Brother registers via QR Code with mandatory Name, Phone, Qi Card, Password)
+app.post('/api/brothers/register-qr', (req, res) => {
+  const { name, phone, bankAccountNumber, password } = req.body;
+  const db = readDB();
+
+  if (!name || !String(name).trim()) {
+    return res.status(400).json({ success: false, message: '⚠️ الاسم الكامل إجباري لإتمام التسجيل' });
+  }
+  if (!phone || !String(phone).trim()) {
+    return res.status(400).json({ success: false, message: '⚠️ رقم الهاتف إجباري لتسجيل الدخول والتواصل' });
+  }
+  if (!bankAccountNumber || !String(bankAccountNumber).trim()) {
+    return res.status(400).json({ success: false, message: '⚠️ رقم الحساب المصرفي (ماستر كي / Qi Card) إجباري للتحويل المالي' });
+  }
+  if (!password || !String(password).trim()) {
+    return res.status(400).json({ success: false, message: '⚠️ كلمة المرور إجبارية لحماية حسابك' });
+  }
+
+  const cleanPhone = String(phone).replace(/[\s\-\+]/g, '');
+  const cleanBankAcc = String(bankAccountNumber).trim();
+
+  // Check duplicate phone
+  const existingPhone = db.brothers.find(
+    (b) => b.phone && String(b.phone).replace(/[\s\-\+]/g, '') === cleanPhone
+  );
+  if (existingPhone) {
+    return res.status(400).json({ success: false, message: `رقم الهاتف (${cleanPhone}) مسجل مسبقاً باسم (${existingPhone.name})` });
+  }
+
+  const nextAccNumber = String(1000 + db.brothers.length + 1);
+  const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1'];
+  const avatarColor = colors[db.brothers.length % colors.length];
+
+  const newBrother = {
+    id: 'b-' + Date.now(),
+    name: name.trim(),
+    accountNumber: nextAccNumber,
+    phone: cleanPhone,
+    bankAccountNumber: cleanBankAcc,
+    bankName: 'ماستر كي / Qi Card',
+    password: String(password).trim(),
+    avatarColor,
+    isAdmin: false,
+    approvedFields: [
+      { id: `f-${Date.now()}-1`, name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
+      { id: `f-${Date.now()}-2`, name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
+    ]
+  };
+
+  db.brothers.push(newBrother);
+
+  // Add notification to Admin
+  const notif = {
+    id: 'notif-' + Date.now(),
+    title: '🎉 انضمام أخ جديد عبر الباركود',
+    message: `انضم الأخ (${newBrother.name}) برقم هاتف (${newBrother.phone}) وحساب كي كارد (${newBrother.bankAccountNumber})`,
+    timestamp: new Date().toISOString(),
+    readBy: []
+  };
+  db.notifications.unshift(notif);
+  saveDB(db);
+
+  broadcastEvent('BROTHERS_UPDATED', { brothers: db.brothers });
+  broadcastEvent('NEW_TRANSFER_ALERT', { notif });
+
+  res.json({
+    success: true,
+    user: {
+      id: newBrother.id,
+      name: newBrother.name,
+      accountNumber: newBrother.accountNumber,
+      bankAccountNumber: newBrother.bankAccountNumber,
+      bankName: newBrother.bankName,
+      phone: newBrother.phone,
+      avatarColor: newBrother.avatarColor,
+      isAdmin: false,
+      isActiveAdmin: false
+    },
+    message: `🎉 أهلاً بك يا ${newBrother.name}! تم تسجيل حسابك برقم #${newBrother.accountNumber} وفتح التطبيق بنجاح.`
+  });
+});
+
 // 3. Fund Security: Toggle Freeze / Lock Main Card
 app.post('/api/security/toggle-freeze', (req, res) => {
   const { adminPin, requestingBrotherId } = req.body;

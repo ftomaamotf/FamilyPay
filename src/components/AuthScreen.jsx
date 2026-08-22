@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFinance } from '../context/FinanceContext';
+import { CameraQrScannerModal } from './CameraQrScannerModal';
 import {
   Lock,
   Mail,
@@ -18,7 +19,9 @@ import {
   Share2,
   CheckCircle2,
   KeyRound,
-  Smartphone
+  Smartphone,
+  Camera,
+  QrCode
 } from 'lucide-react';
 
 export const AuthScreen = ({ onLoginSuccess }) => {
@@ -27,11 +30,24 @@ export const AuthScreen = ({ onLoginSuccess }) => {
     loginBrother,
     resetPasswordWithPhone,
     addBrother,
-    acceptWhatsAppInvite
+    acceptWhatsAppInvite,
+    registerBrotherViaQr
   } = useFinance();
   
   // Tab state: 'login' | 'invite' | 'register'
   const [activeTab, setActiveTab] = useState('login');
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
+
+  // Auto-detect ?action=register from URL when scanned via phone camera
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('action') === 'register' || urlParams.get('action') === 'join') {
+        setActiveTab('register');
+        setRegMsg('👋 أهلاً بك! تم فتح استمارة انضمام الأخوة. يرجى إدخال اسمك ورقم هاتفك وبطاقتك لإكمال التسجيل.');
+      }
+    }
+  }, []);
 
   // Login form state
   const [identifier, setIdentifier] = useState(''); // Email or Phone Number
@@ -50,9 +66,8 @@ export const AuthScreen = ({ onLoginSuccess }) => {
   const [inviteMsg, setInviteMsg] = useState('');
   const [inviteSuccess, setInviteSuccess] = useState(false);
 
-  // New User Registration state
+  // New User Registration state (Mandatory 4 fields)
   const [regName, setRegName] = useState('');
-  const [regEmail, setRegEmail] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regBankAccount, setRegBankAccount] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -121,48 +136,49 @@ export const AuthScreen = ({ onLoginSuccess }) => {
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    if (!regName.trim() || !regEmail.trim() || !regPhone.trim() || !regPassword.trim()) {
-      setRegMsg('يرجى ملء جميع الحقول المطلوبة');
+    if (!regName.trim()) {
+      setRegMsg('⚠️ الاسم الكامل إجباري لإتمام التسجيل');
+      return;
+    }
+    if (!regPhone.trim()) {
+      setRegMsg('⚠️ رقم الهاتف إجباري لتسجيل الدخول والتواصل');
+      return;
+    }
+    if (!regBankAccount.trim()) {
+      setRegMsg('⚠️ رقم بطاقة الكي كارد / ماستر كي إجباري لاستلام التحويلات');
+      return;
+    }
+    if (!regPassword.trim()) {
+      setRegMsg('⚠️ كلمة المرور إجبارية لحماية حسابك');
       return;
     }
 
     setRegLoading(true);
     setRegMsg('');
 
-    const nextAccNumber = String(1000 + brothers.length + 1);
-    const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1'];
-    const avatarColor = colors[brothers.length % colors.length];
-
-    const newBrotherData = {
+    const res = await registerBrotherViaQr({
       name: regName.trim(),
-      email: regEmail.trim().toLowerCase(),
-      accountNumber: nextAccNumber,
       phone: regPhone.trim(),
-      bankAccountNumber: regBankAccount.trim() || nextAccNumber,
-      bankName: 'ماستر كي / Qi Card',
-      password: regPassword.trim(),
-      avatarColor,
-      isAdmin: brothers.length === 0,
-      approvedFields: [
-        { id: `f-${Date.now()}-1`, name: 'مصاريف عامة 🛒', limit: 1000, spent: 0 },
-        { id: `f-${Date.now()}-2`, name: 'بنزين ونقل ⛽', limit: 500, spent: 0 }
-      ]
-    };
-
-    const res = await addBrother(newBrotherData);
+      bankAccountNumber: regBankAccount.trim(),
+      password: regPassword.trim()
+    });
     setRegLoading(false);
 
     if (res.success) {
       setRegSuccess(true);
-      setRegMsg(`🎉 تم إنشاء حسابك بنجاح! بريدك هو: ${regEmail.trim()}`);
-      setTimeout(async () => {
-        await loginBrother(regEmail.trim(), regPassword.trim());
+      setRegMsg(`🎉 أهلاً بك يا ${regName.trim()}! تم إنشاء وتفعيل حسابك بنجاح.`);
+      setTimeout(() => {
         if (onLoginSuccess) onLoginSuccess();
-      }, 1200);
+      }, 1000);
     } else {
       setRegSuccess(false);
       setRegMsg(res.message || 'حدث خطأ أثناء إنشاء الحساب');
     }
+  };
+
+  const handleScanSuccess = (decodedText) => {
+    setActiveTab('register');
+    setRegMsg('✅ تم التعرف على باركود الانضمام بنجاح! يرجى إدخال اسمك ورقم هاتفك وبطاقتك لإكمال التسجيل.');
   };
 
   const handleResetSubmit = async (e) => {
@@ -207,6 +223,16 @@ export const AuthScreen = ({ onLoginSuccess }) => {
           </p>
         </div>
 
+        {/* 📷 Scan Join QR Code Button (زر فتح الكاميرا لمسح باركود إضافة الأخوة) */}
+        <button
+          type="button"
+          onClick={() => setShowCameraScanner(true)}
+          className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 transition active:scale-95 border border-emerald-400/40 animate-pulse"
+        >
+          <Camera className="w-5 h-5" />
+          <span>مسح باركود إضافة الأخوة بالكاميرا 📷📲</span>
+        </button>
+
         {/* Tab Switcher: 3 Tabs (Login | WhatsApp Invite | Register) */}
         <div className="flex bg-slate-950 p-1 rounded-2xl border border-slate-800 text-[11px] font-bold">
           <button
@@ -245,7 +271,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
             }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
-            <span>مستخدم جديد</span>
+            <span>انضمام أخ جديد ➕</span>
           </button>
         </div>
 
@@ -460,14 +486,24 @@ export const AuthScreen = ({ onLoginSuccess }) => {
           </form>
         )}
 
-        {/* TAB 3: REGISTER NEW BROTHER (تسجيل حساب جديد) */}
+        {/* TAB 3: REGISTER NEW BROTHER (تسجيل حساب أخ جديد عبر الباركود) */}
         {activeTab === 'register' && (
           <form onSubmit={handleRegisterSubmit} className="space-y-3.5 text-xs">
             
-            {/* Full Name */}
+            <div className="p-3 bg-indigo-950/60 border border-indigo-800/80 rounded-2xl text-[11px] text-indigo-300 space-y-1">
+              <span className="font-bold block flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>استمارة انضمام وتسجيل أخ جديد بالصندوق 📋</span>
+              </span>
+              <p className="text-slate-300">
+                يرجى إدخال بياناتك بدقة لإضافتك في الصندوق، وسيفتح حسابك وتدخل للتطبيق فوراً!
+              </p>
+            </div>
+
+            {/* 1. Full Name (Mandatory) */}
             <div>
               <label className="block font-bold text-slate-300 mb-1">
-                الاسم الكامل *:
+                1. اسمك الكامل (الاسم الثلاثي) <span className="text-rose-400 font-black">*</span>:
               </label>
               <div className="relative">
                 <User className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -476,35 +512,16 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                   required
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
-                  placeholder="مثال: علي عجمي"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="مثال: علي عبدالله عجمي"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
                 />
               </div>
             </div>
 
-            {/* Email */}
+            {/* 2. Phone Number (Mandatory) */}
             <div>
               <label className="block font-bold text-slate-300 mb-1">
-                البريد الإلكتروني *:
-              </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="email"
-                  required
-                  value={regEmail}
-                  onChange={(e) => setRegEmail(e.target.value)}
-                  placeholder="مثال: ali.ajmi@gmail.com"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-indigo-500 font-sans"
-                  dir="ltr"
-                />
-              </div>
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="block font-bold text-slate-300 mb-1">
-                رقم الهاتف (لاستعادة كلمة المرور) *:
+                2. رقم هاتفك للتواصل وتسجيل الدخول <span className="text-rose-400 font-black">*</span>:
               </label>
               <div className="relative">
                 <Phone className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -514,34 +531,35 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                   value={regPhone}
                   onChange={(e) => setRegPhone(e.target.value)}
                   placeholder="مثال: 07701234567"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-left"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-left font-bold"
                   dir="ltr"
                 />
               </div>
             </div>
 
-            {/* Bank Account */}
+            {/* 3. Bank Account Number / Qi Card (Mandatory) */}
             <div>
-              <label className="block font-bold text-slate-300 mb-1">
-                رقم الحساب المصرفي / الماستر كي (لاستلام الحوالات):
+              <label className="block font-bold text-emerald-400 mb-1">
+                3. رقم بطاقة ماستر كي / Qi Card (لاستلام الحوالات) <span className="text-rose-400 font-black">*</span>:
               </label>
               <div className="relative">
-                <CreditCard className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <CreditCard className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-400" />
                 <input
                   type="text"
+                  required
                   value={regBankAccount}
                   onChange={(e) => setRegBankAccount(e.target.value)}
-                  placeholder="مثال: 880011223344503"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-left"
+                  placeholder="أدخل رقم حساب أو بطاقة الكي كارد (مثال: 9256869125)"
+                  className="w-full bg-slate-950 border border-emerald-500/80 rounded-2xl pr-10 pl-4 py-3 text-xs text-emerald-300 outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-left font-bold"
                   dir="ltr"
                 />
               </div>
             </div>
 
-            {/* Password */}
+            {/* 4. Password (Mandatory) */}
             <div>
               <label className="block font-bold text-slate-300 mb-1">
-                كلمة المرور للدخول *:
+                4. تعيين كلمة المرور الخاصة بحسابك <span className="text-rose-400 font-black">*</span>:
               </label>
               <div className="relative">
                 <Lock className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -550,8 +568,8 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                   required
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
-                  placeholder="اكتب كلمة مرور قوية لحسابك"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                  placeholder="اكتب كلمة مرور قوية لتسجيل الدخول مستقبلاً"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold"
                 />
               </div>
             </div>
@@ -570,10 +588,10 @@ export const AuthScreen = ({ onLoginSuccess }) => {
               <button
                 type="submit"
                 disabled={regLoading}
-                className="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-black text-sm rounded-2xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 transition active:scale-95"
+                className="w-full py-3.5 bg-gradient-to-r from-indigo-500 via-purple-600 to-indigo-600 hover:from-indigo-400 hover:to-purple-500 text-white font-black text-sm rounded-2xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-50"
               >
-                <UserPlus className="w-4 h-4" />
-                <span>{regLoading ? 'جاري إنشاء الحساب...' : 'إنشاء حسابي والدخول فوراً'}</span>
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{regLoading ? 'جاري إنشاء الحساب والتفعيل...' : 'تفعيل الحساب والدخول للبرنامج فوراً 🚀'}</span>
               </button>
             </div>
 
@@ -706,6 +724,13 @@ export const AuthScreen = ({ onLoginSuccess }) => {
           </div>
         </div>
       )}
+
+      {/* Camera QR Code Live Scanner Modal */}
+      <CameraQrScannerModal
+        isOpen={showCameraScanner}
+        onClose={() => setShowCameraScanner(false)}
+        onScanSuccess={handleScanSuccess}
+      />
 
     </div>
   );

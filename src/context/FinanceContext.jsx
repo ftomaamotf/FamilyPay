@@ -674,6 +674,60 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
+  // 1.4 Register Brother Directly via QR Code (Mandatory: Name, Phone, Qi Card Account, Password)
+  const registerBrotherViaQr = async ({ name, phone, bankAccountNumber, password }) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/brothers/register-qr`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: String(name).trim(),
+          phone: String(phone).trim(),
+          bankAccountNumber: String(bankAccountNumber).trim(),
+          password: String(password).trim()
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.user) {
+        setCurrentUser(data.user);
+      }
+      return data;
+    } catch {
+      // Local fallback
+      const cleanPhone = String(phone).replace(/[\s\-\+]/g, '');
+      const nextAcc = String(1000 + brothers.length + 1);
+      const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1'];
+      const newBrother = {
+        id: 'b-' + Date.now(),
+        name: name.trim(),
+        accountNumber: nextAcc,
+        phone: cleanPhone,
+        bankAccountNumber: String(bankAccountNumber).trim() || nextAcc,
+        bankName: 'ماستر كي / Qi Card',
+        password: String(password).trim(),
+        avatarColor: colors[brothers.length % colors.length],
+        isAdmin: false,
+        approvedFields: [
+          { id: `f-${Date.now()}-1`, name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
+          { id: `f-${Date.now()}-2`, name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
+        ]
+      };
+      setBrothers((prev) => [...prev, newBrother]);
+      setCurrentUser({
+        id: newBrother.id,
+        name: newBrother.name,
+        accountNumber: newBrother.accountNumber,
+        bankAccountNumber: newBrother.bankAccountNumber,
+        bankName: newBrother.bankName,
+        phone: newBrother.phone,
+        avatarColor: newBrother.avatarColor,
+        isAdmin: false,
+        isActiveAdmin: false
+      });
+      return { success: true, user: newBrother, message: `🎉 تم تسجيل حسابك بنجاح يا ${newBrother.name}!` };
+    }
+  };
+
   // 2. Switch Brother locally
   const switchBrotherProfile = (brotherId) => {
     const found = brothers.find((b) => b.id === brotherId);
@@ -1328,6 +1382,7 @@ export const FinanceProvider = ({ children }) => {
         resetPasswordWithPhone,
         createWhatsAppInvite,
         acceptWhatsAppInvite,
+        registerBrotherViaQr,
         switchBrotherProfile,
         transferAdminRole,
         transferPermissions,

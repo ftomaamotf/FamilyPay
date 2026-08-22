@@ -14,8 +14,8 @@ import {
   UserPlus,
   Edit2,
   Share2,
-  Inbox,
-  Trash2
+  Trash2,
+  QrCode
 } from 'lucide-react';
 
 export const BrothersCards = ({
@@ -24,6 +24,7 @@ export const BrothersCards = ({
   onOpenAddBrother,
   onOpenEditBrother,
   onOpenWhatsAppInvite,
+  onOpenJoinQr,
   onOpenRequestMoney
 }) => {
   const {
@@ -160,6 +161,17 @@ export const BrothersCards = ({
             </button>
           )}
 
+          {/* Admin Join QR Code Button (باركود إضافة أخ جديد) */}
+          {isCurrentAdmin && onOpenJoinQr && (
+            <button
+              onClick={onOpenJoinQr}
+              className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 font-black text-xs rounded-2xl shadow-sm flex items-center gap-1.5 transition active:scale-95 border border-amber-400"
+            >
+              <QrCode className="w-4 h-4" />
+              <span>باركود إضافة أخ جديد 📷</span>
+            </button>
+          )}
+
           {/* Admin Add New Brother Button */}
           {isCurrentAdmin && (
             <button
@@ -167,7 +179,7 @@ export const BrothersCards = ({
               className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white font-extrabold text-xs rounded-2xl shadow-sm flex items-center gap-1.5 transition active:scale-95"
             >
               <UserPlus className="w-4 h-4" />
-              <span>إضافة حساب / أخ جديد</span>
+              <span>إضافة حساب يدوي</span>
             </button>
           )}
 

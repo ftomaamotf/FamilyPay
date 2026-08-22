@@ -19,6 +19,7 @@ import { AddEditBrotherModal } from './components/AddEditBrotherModal';
 import { FundSecurityModal } from './components/FundSecurityModal';
 import { SettingsModal } from './components/SettingsModal';
 import { QrShareModal } from './components/QrShareModal';
+import { JoinBrotherQrModal } from './components/JoinBrotherQrModal';
 import { WhatsAppInviteModal } from './components/WhatsAppInviteModal';
 import { RequestMoneyModal } from './components/RequestMoneyModal';
 import { PendingRequestsModal } from './components/PendingRequestsModal';
@@ -48,6 +49,7 @@ function MainApp() {
   const [editingBrotherFields, setEditingBrotherFields] = useState(null);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [joinQrOpen, setJoinQrOpen] = useState(false);
 
   // If not logged in, show AuthScreen
   if (!currentUser) {
@@ -134,6 +136,7 @@ function MainApp() {
             onOpenAddBrother={handleOpenAddBrother}
             onOpenEditBrother={handleOpenEditBrother}
             onOpenWhatsAppInvite={() => setWhatsAppInviteOpen(true)}
+            onOpenJoinQr={() => setJoinQrOpen(true)}
             onOpenRequestMoney={() => setRequestMoneyModalOpen(true)}
           />
         )}
@@ -237,6 +240,11 @@ function MainApp() {
       <QrShareModal
         isOpen={qrModalOpen}
         onClose={() => setQrModalOpen(false)}
+      />
+
+      <JoinBrotherQrModal
+        isOpen={joinQrOpen}
+        onClose={() => setJoinQrOpen(false)}
       />
 
     </div>
