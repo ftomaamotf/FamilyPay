@@ -246,179 +246,183 @@ export const BrothersCards = ({
 
       </div>
 
-      {/* 🔴 THE CIRCULAR USERS & ADMIN HUB (دوائر الأسماء مع أرقام الصرف الكلي والنسخ المطول) 🔴 */}
-      <div className="bg-gradient-to-b from-slate-900/90 to-slate-950/90 p-5 rounded-3xl border border-slate-800 shadow-xl">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-xs font-black text-emerald-400 flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4" />
-            <span>دوائر المستخدمين: اضغط للتحديد • اضغط مطولاً لنسخ رقم الحساب 📋</span>
-          </span>
-          <span className="text-[11px] text-slate-400 font-bold hidden sm:inline-block">
-            ضغطة مطولة = نسخ الحساب
-          </span>
-        </div>
+      {/* 🔴 2-COLUMN LAYOUT: Vertical Circles Hub on the Right + Details on the Left 🔴 */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start" dir="rtl">
 
-        {/* Horizontal / Grid of Interactive Circles (Right-Aligned with Full Padding) */}
-        <div className="flex items-start justify-start gap-4 sm:gap-6 overflow-x-auto px-3 pt-3 pb-3 scrollbar-thin scrollbar-thumb-slate-700" dir="rtl">
-          {sortedBrothers.map((b) => {
-            const isSenderAdmin = b.id === activeAdminId;
-            const isMe = b.id === currentUser?.id;
-            const isSelected = b.id === selectedBrotherId;
-            const isCopied = copiedId === b.id;
+        {/* 1. RIGHT SIDEBAR: Vertical Circles Hub (شريط الدوائر العمودي على جهة اليمين) */}
+        <div className="w-full lg:w-56 xl:w-64 shrink-0 bg-gradient-to-b from-slate-900/95 to-slate-950/95 p-4 rounded-3xl border border-slate-800 shadow-xl space-y-3">
+          <div className="text-center pb-2 border-b border-slate-800/80">
+            <span className="text-xs font-black text-emerald-400 flex items-center justify-center gap-1">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>دوائر الإخوة والأدمن</span>
+            </span>
+            <span className="text-[10px] text-slate-400 block mt-0.5">
+              ضغطة مطولة = نسخ الحساب 📋
+            </span>
+          </div>
 
-            // Total spent for this brother
-            const brotherTransfers = transfers.filter((t) => t.recipientId === b.id);
-            const totalReceived = brotherTransfers.reduce((acc, t) => acc + (t.amount || 0), 0);
+          {/* Vertical Stack of Interactive Circles */}
+          <div className="flex flex-row lg:flex-col items-center justify-start gap-4 sm:gap-5 overflow-x-auto lg:overflow-y-auto max-h-[620px] p-2 scrollbar-thin scrollbar-thumb-slate-700">
+            {sortedBrothers.map((b) => {
+              const isSenderAdmin = b.id === activeAdminId;
+              const isMe = b.id === currentUser?.id;
+              const isSelected = b.id === selectedBrotherId;
+              const isCopied = copiedId === b.id;
 
-            return (
-              <div
-                key={b.id}
-                className="flex flex-col items-center shrink-0"
-              >
-                <button
-                  onClick={() => setSelectedBrotherId(b.id)}
-                  onMouseDown={() => handleTouchStart(b)}
-                  onMouseUp={handleTouchEnd}
-                  onMouseLeave={handleTouchEnd}
-                  onTouchStart={() => handleTouchStart(b)}
-                  onTouchEnd={handleTouchEnd}
-                  title={`اضغط لتحديد ${b.name} • اضغط مطولاً لنسخ رقم الحساب`}
-                  className={`flex flex-col items-center group transition-all duration-200 outline-none select-none relative ${
-                    isSelected ? 'scale-105' : 'opacity-85 hover:opacity-100 hover:scale-102'
-                  }`}
+              // Total spent for this brother
+              const brotherTransfers = transfers.filter((t) => t.recipientId === b.id);
+              const totalReceived = brotherTransfers.reduce((acc, t) => acc + (t.amount || 0), 0);
+
+              return (
+                <div
+                  key={b.id}
+                  className="flex flex-col items-center shrink-0 w-auto lg:w-full"
                 >
-                  {/* Outer Circular Ring */}
-                  <div
-                    className={`relative p-1 rounded-full transition-all duration-300 ${
-                      isCopied
-                        ? 'ring-4 ring-emerald-400 scale-110 shadow-xl shadow-emerald-400/50'
-                        : isSelected
-                        ? 'ring-4 ring-emerald-500 ring-offset-4 ring-offset-slate-950 shadow-lg shadow-emerald-500/30'
-                        : 'ring-2 ring-slate-700 group-hover:ring-slate-500'
+                  <button
+                    onClick={() => setSelectedBrotherId(b.id)}
+                    onMouseDown={() => handleTouchStart(b)}
+                    onMouseUp={handleTouchEnd}
+                    onMouseLeave={handleTouchEnd}
+                    onTouchStart={() => handleTouchStart(b)}
+                    onTouchEnd={handleTouchEnd}
+                    title={`اضغط لتحديد ${b.name} • اضغط مطولاً لنسخ رقم الحساب`}
+                    className={`flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full ${
+                      isSelected ? 'scale-105' : 'opacity-85 hover:opacity-100 hover:scale-102'
                     }`}
                   >
-                    {/* The Inner Avatar Circle */}
+                    {/* Outer Circular Ring */}
                     <div
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-black shadow-inner relative overflow-hidden"
-                      style={{ backgroundColor: b.avatarColor || '#10b981' }}
+                      className={`relative p-1 rounded-full transition-all duration-300 ${
+                        isCopied
+                          ? 'ring-4 ring-emerald-400 scale-110 shadow-xl shadow-emerald-400/50'
+                          : isSelected
+                          ? 'ring-4 ring-emerald-500 ring-offset-4 ring-offset-slate-950 shadow-lg shadow-emerald-500/30'
+                          : 'ring-2 ring-slate-700 group-hover:ring-slate-500'
+                      }`}
                     >
-                      {isCopied ? (
-                        <Check className="w-8 h-8 text-white animate-pulse" />
-                      ) : (
-                        <span>{b.name[0]}</span>
+                      {/* The Inner Avatar Circle */}
+                      <div
+                        className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-black shadow-inner relative overflow-hidden"
+                        style={{ backgroundColor: b.avatarColor || '#10b981' }}
+                      >
+                        {isCopied ? (
+                          <Check className="w-8 h-8 text-white animate-pulse" />
+                        ) : (
+                          <span>{b.name[0]}</span>
+                        )}
+
+                        {/* Gradient Overlay for luxury effect */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/20 pointer-events-none" />
+                      </div>
+
+                      {/* Admin Crown Badge */}
+                      {isSenderAdmin && (
+                        <div
+                          title="الأدمن الرئيسي"
+                          className="absolute -top-2 -right-1 w-6 h-6 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center shadow-md border-2 border-slate-950 font-black animate-bounce"
+                        >
+                          <Crown className="w-3.5 h-3.5 fill-slate-950" />
+                        </div>
                       )}
 
-                      {/* Gradient Overlay for luxury effect */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/20 pointer-events-none" />
+                      {/* 'You' Badge */}
+                      {isMe && !isSenderAdmin && (
+                        <div className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[9px] font-black shadow border border-slate-950">
+                          أنت
+                        </div>
+                      )}
                     </div>
 
-                    {/* Admin Crown Badge */}
-                    {isSenderAdmin && (
-                      <div
-                        title="الأدمن الرئيسي"
-                        className="absolute -top-2 -right-1 w-7 h-7 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center shadow-md border-2 border-slate-950 font-black animate-bounce"
-                      >
-                        <Crown className="w-4 h-4 fill-slate-950" />
-                      </div>
-                    )}
-
-                    {/* 'You' Badge */}
-                    {isMe && !isSenderAdmin && (
-                      <div className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[9px] font-black shadow border border-slate-950">
-                        أنت
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Brother Name */}
-                  <span
-                    className={`mt-2 text-xs sm:text-sm font-black truncate max-w-[90px] text-center ${
-                      isSelected ? 'text-emerald-400' : 'text-slate-200 group-hover:text-white'
-                    }`}
-                  >
-                    {b.name}
-                  </span>
-
-                  {/* Total Spent Pill Badge (تحت الدائرة مباشرة) */}
-                  <div
-                    className={`mt-1 px-2.5 py-1 rounded-full text-[11px] font-black font-mono shadow-sm flex items-center gap-1 transition-all ${
-                      isCopied
-                        ? 'bg-emerald-400 text-slate-950 font-bold scale-105'
-                        : isSelected
-                        ? 'bg-emerald-500 text-slate-950 scale-105'
-                        : 'bg-slate-800 text-emerald-400 border border-slate-700 group-hover:bg-slate-700'
-                    }`}
-                  >
-                    <span>{isCopied ? 'تم نسخ الحساب!' : formatMoney(totalReceived, currency)}</span>
-                  </div>
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 📋 THE EXPANDED DETAILS CARD FOR SELECTED BROTHER (Cleaned Up) 📋 */}
-      {selectedBrother && (
-        <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-800 border-2 border-emerald-500/40 dark:border-emerald-500/30 shadow-2xl space-y-6 animate-fadeIn">
-          
-          {/* Selected Brother Clean Header Banner */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-700">
-            <div className="flex items-center gap-4">
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-md shrink-0 ring-4 ring-emerald-500/20"
-                style={{ backgroundColor: selectedBrother.avatarColor || '#10b981' }}
-              >
-                {selectedBrother.name[0]}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-black text-xl text-slate-800 dark:text-white">
-                    {selectedBrother.name}
-                  </h4>
-                  {selectedBrother.id === activeAdminId && (
-                    <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700 flex items-center gap-1">
-                      <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                      الأدمن الرئيسي
+                    {/* Brother Name */}
+                    <span
+                      className={`mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center ${
+                        isSelected ? 'text-emerald-400' : 'text-slate-200 group-hover:text-white'
+                      }`}
+                    >
+                      {b.name}
                     </span>
-                  )}
-                  {selectedBrother.id === currentUser?.id && (
-                    <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
-                      حسابك الحالي
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 mt-1 text-xs text-slate-400 font-bold">
-                  {selectedBrother.phone && (
-                    <span>هاتف: {selectedBrother.phone}</span>
-                  )}
-                  <span>• {selectedBrother.bankName || 'ماستر كي / Qi Card'}</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Admin Quick Edit & Sliders Icons */}
-            {isCurrentAdmin && (
-              <div className="flex items-center gap-2 self-end sm:self-auto">
-                <button
-                  onClick={() => onOpenEditBrother(selectedBrother)}
-                  title="تعديل بيانات الأخ"
-                  className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl transition flex items-center gap-1.5 text-xs font-bold"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                  <span>تعديل الاسم والبيانات</span>
-                </button>
-                <button
-                  onClick={() => onOpenFieldsModal(selectedBrother)}
-                  title="تعديل السلع والحقول المعتمدة"
-                  className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 rounded-xl border border-emerald-200 dark:border-emerald-800 transition flex items-center gap-1.5 text-xs font-bold"
-                >
-                  <Sliders className="w-3.5 h-3.5" />
-                  <span>تعديل السلع وسجل الطلبات</span>
-                </button>
-              </div>
-            )}
+                    {/* Total Spent Pill Badge */}
+                    <div
+                      className={`mt-1 px-3 py-1 rounded-full text-[11px] font-black font-mono shadow-sm flex items-center gap-1 transition-all ${
+                        isCopied
+                          ? 'bg-emerald-400 text-slate-950 font-bold scale-105'
+                          : isSelected
+                          ? 'bg-emerald-500 text-slate-950 scale-105'
+                          : 'bg-slate-800 text-emerald-400 border border-slate-700 group-hover:bg-slate-700'
+                      }`}
+                    >
+                      <span>{isCopied ? 'تم نسخ الحساب!' : formatMoney(totalReceived, currency)}</span>
+                    </div>
+                  </button>
+                </div>
+              );
+            })}
           </div>
+        </div>
+
+        {/* 2. LEFT AREA: The Expanded Details Card for Selected Brother */}
+        <div className="flex-1 w-full min-w-0">
+          {selectedBrother && (
+            <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-800 border-2 border-emerald-500/40 dark:border-emerald-500/30 shadow-2xl space-y-6 animate-fadeIn">
+              
+              {/* Selected Brother Clean Header Banner */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-4">
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-md shrink-0 ring-4 ring-emerald-500/20"
+                    style={{ backgroundColor: selectedBrother.avatarColor || '#10b981' }}
+                  >
+                    {selectedBrother.name[0]}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-black text-xl text-slate-800 dark:text-white">
+                        {selectedBrother.name}
+                      </h4>
+                      {selectedBrother.id === activeAdminId && (
+                        <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700 flex items-center gap-1">
+                          <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                          الأدمن الرئيسي
+                        </span>
+                      )}
+                      {selectedBrother.id === currentUser?.id && (
+                        <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                          حسابك الحالي
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-400 font-bold">
+                      {selectedBrother.phone && (
+                        <span>هاتف: {selectedBrother.phone}</span>
+                      )}
+                      <span>• {selectedBrother.bankName || 'ماستر كي / Qi Card'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Admin Quick Edit & Sliders Icons */}
+                {isCurrentAdmin && (
+                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                    <button
+                      onClick={() => onOpenEditBrother(selectedBrother)}
+                      title="تعديل بيانات الأخ"
+                      className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl transition flex items-center gap-1.5 text-xs font-bold"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>تعديل البيانات</span>
+                    </button>
+                    <button
+                      onClick={() => onOpenFieldsModal(selectedBrother)}
+                      title="تعديل السلع والحقول المعتمدة"
+                      className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 rounded-xl border border-emerald-200 dark:border-emerald-800 transition flex items-center gap-1.5 text-xs font-bold"
+                    >
+                      <Sliders className="w-3.5 h-3.5" />
+                      <span>تعديل السلع</span>
+                    </button>
+                  </div>
+                )}
+              </div>
 
           {/* Approved Commodities & Fields with Spent Progress Bars & 1-Click Delete */}
           <div>
@@ -537,6 +541,10 @@ export const BrothersCards = ({
         </div>
       )}
 
+      </div>
+
     </div>
-  );
+
+  </div>
+);
 };

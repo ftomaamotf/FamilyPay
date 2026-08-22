@@ -24,6 +24,7 @@ import { RequestMoneyModal } from './components/RequestMoneyModal';
 import { PendingRequestsModal } from './components/PendingRequestsModal';
 import { NotificationToast } from './components/NotificationToast';
 import { PwaInstallBanner } from './components/PwaInstallBanner';
+import { BottomToolsBar } from './components/BottomToolsBar';
 
 function MainApp() {
   const { currentUser, setCurrentUser } = useFinance();
@@ -152,6 +153,13 @@ function MainApp() {
         )}
 
       </main>
+
+      {/* Bottom Tools & Settings Bar (تنزيل شريط الإعدادات في الأسفل) */}
+      <BottomToolsBar
+        onOpenQrModal={() => setQrModalOpen(true)}
+        onOpenSettings={() => setSettingsModalOpen(true)}
+        onLogout={() => setCurrentUser(null)}
+      />
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav

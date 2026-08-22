@@ -167,42 +167,6 @@ export const Navbar = ({
               </button>
             )}
 
-            {/* QR Share Button */}
-            <button
-              onClick={onOpenQrModal}
-              title="فتح على الهاتف / رمز QR"
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-            >
-              <QrCode className="w-4 h-4" />
-            </button>
-
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={() => updateSettings({ darkMode: !settings.darkMode })}
-              title="الوضع الليلي"
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-            >
-              {settings.darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
-            </button>
-
-            {/* Settings */}
-            <button
-              onClick={onOpenSettings}
-              title="الإعدادات والنسخ الاحتياطي"
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-            >
-              <Settings className="w-4 h-4" />
-            </button>
-
-            {/* Switch / Logout */}
-            <button
-              onClick={onLogout}
-              title="تبديل الحساب / تسجيل الخروج"
-              className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-
           </div>
 
         </div>
