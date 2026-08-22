@@ -35,15 +35,26 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
   const selectedRecipient = brothers.find((b) => b.id === recipientId) || brothers[0];
 
   useEffect(() => {
-    if (initialRecipientId) setRecipientId(initialRecipientId);
-    if (initialFieldId) setFieldId(initialFieldId);
-    else if (selectedRecipient?.approvedFields?.length > 0) {
-      setFieldId(selectedRecipient.approvedFields[0].id);
+    if (isOpen) {
+      if (initialRecipientId) {
+        setRecipientId(initialRecipientId);
+      } else if (brothers.length > 0) {
+        const found = brothers.find((b) => b.id !== currentUser?.id) || brothers[0];
+        setRecipientId(found.id);
+      }
+      if (initialFieldId) {
+        setFieldId(initialFieldId);
+      } else {
+        const target = brothers.find((b) => b.id === (initialRecipientId || recipientId)) || brothers[0];
+        if (target?.approvedFields?.length > 0) {
+          setFieldId(target.approvedFields[0].id);
+        }
+      }
+      setCompletedTransfer(null);
+      setSecurityPin('');
+      setErrorMsg('');
     }
-    setCompletedTransfer(null);
-    setSecurityPin('');
-    setErrorMsg('');
-  }, [initialRecipientId, initialFieldId, selectedRecipient, isOpen]);
+  }, [isOpen, initialRecipientId, initialFieldId]);
 
   if (!isOpen) return null;
 

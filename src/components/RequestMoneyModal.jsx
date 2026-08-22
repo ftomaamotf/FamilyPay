@@ -30,22 +30,25 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
   const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
-    if (initialBrotherId) {
-      setSelectedRequesterId(initialBrotherId);
-    } else if (currentUser?.id && !selectedRequesterId) {
-      setSelectedRequesterId(currentUser.id);
+    if (isOpen) {
+      if (initialBrotherId) {
+        setSelectedRequesterId(initialBrotherId);
+      } else if (currentUser?.id) {
+        setSelectedRequesterId(currentUser.id);
+      }
+      if (initialFieldId) {
+        setFieldId(initialFieldId);
+      } else {
+        const br = brothers.find((b) => b.id === (initialBrotherId || currentUser?.id)) || currentUser;
+        if (br?.approvedFields?.length > 0) {
+          setFieldId(br.approvedFields[0].id);
+        }
+      }
+      setErrorMsg('');
+      setSuccessMsg('');
+      setPassword('');
     }
-  }, [initialBrotherId, currentUser]);
-
-  useEffect(() => {
-    if (initialFieldId) setFieldId(initialFieldId);
-    else if (currentBrother?.approvedFields?.length > 0) {
-      setFieldId(currentBrother.approvedFields[0].id);
-    }
-    setErrorMsg('');
-    setSuccessMsg('');
-    setPassword('');
-  }, [initialFieldId, currentBrother, isOpen]);
+  }, [isOpen, initialBrotherId, initialFieldId]);
 
   if (!isOpen) return null;
 
