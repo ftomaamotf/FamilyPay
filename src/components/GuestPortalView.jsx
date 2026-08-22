@@ -25,8 +25,8 @@ import {
 export const GuestPortalView = () => {
   const { currentUser, setCurrentUser, registerBrotherViaQr } = useFinance();
   
-  // Steps: 'landing' | 'scanner' | 'register' | 'waiting'
-  const [step, setStep] = useState('landing');
+  // Steps: 'scanner' (default immediate camera) | 'register' | 'waiting'
+  const [step, setStep] = useState('scanner');
 
   // Scanner state
   const [scannerError, setScannerError] = useState('');
@@ -107,7 +107,7 @@ export const GuestPortalView = () => {
       console.error('All live camera methods failed:', err);
       setIsLiveRunning(false);
       setScannerError(
-        'لم يتم تشغيل بث الفيديو المباشر في المتصفح. اضغط على الزر الأخضر "تصوير بكاميرا الهاتف 📸" لفتح الكاميرا والتقاط الباركود فوراً.'
+        'لم يتم تشغيل بث الفيديو المباشر في المتصفح. اضغط على الزر الأخضر "تصوير بكاميرا الهاتف 📸" لفتح كاميرا جهازك فوراً والتقاط الباركود.'
       );
     }
   };
@@ -137,7 +137,7 @@ export const GuestPortalView = () => {
     }
   };
 
-  // Start scanner whenever step becomes 'scanner'
+  // Start camera automatically on mount
   useEffect(() => {
     let timer = null;
     if (step === 'scanner') {
@@ -235,7 +235,7 @@ export const GuestPortalView = () => {
           <div>
             <h2 className="font-black text-sm text-white">الصندوق والحسابات المشتركة</h2>
             <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-              👤 وضع الضيف (غير منضم بعد)
+              👤 وضع الضيف (الانضمام عبر الكاميرا)
             </span>
           </div>
         </div>
@@ -250,69 +250,7 @@ export const GuestPortalView = () => {
       </header>
 
       {/* ======================================================== */}
-      {/* 🌟 STEP 1: GUEST LANDING VIEW 🌟 */}
-      {/* ======================================================== */}
-      {step === 'landing' && (
-        <main className="w-full max-w-lg my-auto py-4 relative z-10 animate-fadeIn">
-          <div className="bg-slate-900/90 rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-800 text-center space-y-6">
-            
-            <div className="space-y-3">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border-2 border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/10">
-                <Camera className="w-10 h-10 animate-pulse" />
-              </div>
-
-              <div className="space-y-1">
-                <h1 className="text-xl sm:text-2xl font-black text-white">
-                  أهلاً بك في صندوق العائلة 🌟
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-300 font-medium max-w-sm mx-auto leading-relaxed">
-                  أنت الآن داخل التطبيق كـ <strong className="text-amber-400 font-extrabold">(ضيف)</strong>.
-                  للانضمام إلى الصندوق واعتماد اسمك واستلام الحوالات من صاحب الصندوق (الأدمن):
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-right space-y-1.5">
-              <div className="flex items-center gap-2 text-emerald-300 font-bold text-xs">
-                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>خطوة واحدة للانضمام:</span>
-              </div>
-              <p className="text-[11px] text-emerald-200/80 leading-relaxed font-medium">
-                اضغط على زر الكاميرا أدناه لمسح باركود الأدمن، ثم أدخل اسمك ورقم بطاقتك لتصل الموافقة إلى الأدمن فوراً!
-              </p>
-            </div>
-
-            <div className="space-y-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setStep('scanner')}
-                className="w-full py-4 px-6 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-base rounded-2xl shadow-xl shadow-emerald-600/30 flex items-center justify-center gap-2.5 transition active:scale-95 border border-emerald-400/40"
-              >
-                <Camera className="w-6 h-6 animate-pulse" />
-                <span>فتح الكاميرا ومسح باركود الأدمن 📷</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setStep('register')}
-                className="w-full py-3 px-4 bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white font-bold text-xs rounded-2xl border border-slate-700 transition flex items-center justify-center gap-2"
-              >
-                <Edit3 className="w-4 h-4 text-teal-400" />
-                <span>إدخال البيانات يدوياً بدون كاميرا 📝</span>
-              </button>
-            </div>
-
-            <div className="pt-2 border-t border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-center gap-1.5">
-              <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>بياناتك ومخصصاتك مشروطة بموافقة الأدمن بكلمة المرور 🔑</span>
-            </div>
-
-          </div>
-        </main>
-      )}
-
-      {/* ======================================================== */}
-      {/* 🌟 STEP 2: FULLSCREEN DEDICATED SCANNER VIEW 🌟 */}
+      {/* 🌟 STEP 1: FULLSCREEN DIRECT CAMERA SCANNER VIEW 🌟 */}
       {/* ======================================================== */}
       {step === 'scanner' && (
         <main className="w-full max-w-lg my-auto py-2 flex flex-col justify-between flex-1 relative z-10 animate-fadeIn">
@@ -320,19 +258,20 @@ export const GuestPortalView = () => {
           {/* Header */}
           <div className="flex items-center justify-between pb-3 text-white">
             <div className="flex items-center gap-2">
-              <Camera className="w-5 h-5 text-emerald-400" />
-              <h3 className="font-black text-sm sm:text-base">مسح باركود الأدمن</h3>
+              <Camera className="w-5 h-5 text-emerald-400 animate-pulse" />
+              <h3 className="font-black text-sm sm:text-base">مسح باركود الأدمن للانضمام 📷</h3>
             </div>
             <button
-              onClick={() => setStep('landing')}
-              className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800"
+              onClick={() => setCurrentUser(null)}
+              className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs font-bold flex items-center gap-1"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
+              <span>إلغاء</span>
             </button>
           </div>
 
           {/* Clean Viewport Box */}
-          <div className="relative w-full h-[340px] sm:h-[380px] bg-black rounded-3xl overflow-hidden border-2 border-emerald-500/60 shadow-2xl flex items-center justify-center my-auto">
+          <div className="relative w-full h-[320px] sm:h-[370px] bg-black rounded-3xl overflow-hidden border-2 border-emerald-500/60 shadow-2xl flex items-center justify-center my-auto">
             <div id={containerId} className="w-full h-full object-cover" />
 
             {isLiveRunning && (
@@ -350,7 +289,7 @@ export const GuestPortalView = () => {
             {isDecoding && (
               <div className="absolute inset-0 bg-slate-950/80 flex items-center justify-center gap-2 text-white font-bold text-xs">
                 <span className="w-5 h-5 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin" />
-                <span>جاري تحليل الباركود...</span>
+                <span>جاري قراءة وتحليل الباركود...</span>
               </div>
             )}
           </div>
@@ -386,7 +325,7 @@ export const GuestPortalView = () => {
               <button
                 type="button"
                 onClick={() => galleryInputRef.current?.click()}
-                className="py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-800 flex items-center justify-center gap-1.5"
+                className="py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-800 flex items-center justify-center gap-1.5 transition active:scale-95"
               >
                 <ImageIcon className="w-4 h-4 text-emerald-400" />
                 <span>من المعرض 🖼️</span>
@@ -403,27 +342,19 @@ export const GuestPortalView = () => {
               <button
                 type="button"
                 onClick={() => setStep('register')}
-                className="py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-800 flex items-center justify-center gap-1.5"
+                className="py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-800 flex items-center justify-center gap-1.5 transition active:scale-95"
               >
                 <Edit3 className="w-4 h-4 text-teal-400" />
                 <span>إدخال يدوي 📝</span>
               </button>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setStep('landing')}
-              className="w-full py-2 text-center text-xs font-bold text-slate-400 hover:text-white"
-            >
-              العودة للرئيسية ⬅️
-            </button>
           </div>
 
         </main>
       )}
 
       {/* ======================================================== */}
-      {/* 🌟 STEP 3: GUEST REGISTRATION FORM 🌟 */}
+      {/* 🌟 STEP 2: GUEST REGISTRATION FORM 🌟 */}
       {/* ======================================================== */}
       {step === 'register' && (
         <main className="w-full max-w-lg my-auto py-4 relative z-10 animate-fadeIn">
@@ -432,14 +363,15 @@ export const GuestPortalView = () => {
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <div className="flex items-center gap-2 text-emerald-400 font-black text-sm">
                 <Sparkles className="w-4 h-4" />
-                <span>إكمال بيانات الانضمام للصندوق</span>
+                <span>إكمال بيانات الانضمام لصندوق العائلة</span>
               </div>
               <button
                 type="button"
-                onClick={() => setStep('landing')}
-                className="text-xs text-slate-400 hover:text-white font-bold"
+                onClick={() => setStep('scanner')}
+                className="text-xs text-slate-400 hover:text-white font-bold flex items-center gap-1"
               >
-                العودة ⬅️
+                <Camera className="w-3.5 h-3.5" />
+                <span>إعادة المسح</span>
               </button>
             </div>
 
@@ -542,7 +474,7 @@ export const GuestPortalView = () => {
 
                 <button
                   type="button"
-                  onClick={() => setStep('landing')}
+                  onClick={() => setStep('scanner')}
                   className="px-4 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl"
                 >
                   إلغاء
@@ -556,7 +488,7 @@ export const GuestPortalView = () => {
       )}
 
       {/* ======================================================== */}
-      {/* 🌟 STEP 4: WAITING FOR ADMIN APPROVAL VIEW 🌟 */}
+      {/* 🌟 STEP 3: WAITING FOR ADMIN APPROVAL VIEW 🌟 */}
       {/* ======================================================== */}
       {step === 'waiting' && (
         <main className="w-full max-w-lg my-auto py-6 relative z-10 animate-fadeIn">

@@ -262,40 +262,30 @@ export const AuthScreen = ({ onLoginSuccess }) => {
             </button>
 
             {/* Option 2: Enter as Guest & Open Camera Scanner Directly (الخيار الثاني المدمج) */}
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => {
-                  loginAsGuest();
-                  setShowCameraScanner(true);
-                }}
-                className="w-full p-4 rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 hover:from-emerald-900 hover:to-slate-850 text-white font-black text-sm shadow-xl border-2 border-emerald-500/60 flex items-center justify-between transition active:scale-95 group text-right"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-400/40 flex items-center justify-center shrink-0 shadow-md">
-                    <Camera className="w-6 h-6 animate-pulse" />
-                  </div>
-                  <div>
-                    <span className="block text-sm font-black text-white flex items-center gap-1.5">
-                      <span>الدخول كـ (ضيف) ومسح باركود الأدمن</span>
-                      <span className="text-[10px] bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded-full font-mono font-bold">📷 كاميرا</span>
-                    </span>
-                    <span className="text-[11px] text-emerald-200/90 font-medium">
-                      يفتح الكاميرا مباشرة لمسح باركود الأدمن والانضمام للصندوق
-                    </span>
-                  </div>
+            <button
+              type="button"
+              onClick={() => {
+                loginAsGuest();
+                if (onLoginSuccess) onLoginSuccess();
+              }}
+              className="w-full p-4 rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 hover:from-emerald-900 hover:to-slate-850 text-white font-black text-sm shadow-xl border-2 border-emerald-500/60 flex items-center justify-between transition active:scale-95 group text-right"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-400/40 flex items-center justify-center shrink-0 shadow-md">
+                  <Camera className="w-6 h-6 animate-pulse" />
                 </div>
-                <ArrowRight className="w-5 h-5 rotate-180 group-hover:-translate-x-1 transition text-emerald-400" />
-              </button>
-
-              <button
-                type="button"
-                onClick={handleGuestLogin}
-                className="w-full py-1.5 text-center text-xs font-bold text-slate-400 hover:text-slate-200 transition"
-              >
-                أو الدخول للتصفح كـ (ضيف) بدون فتح الكاميرا 👤
-              </button>
-            </div>
+                <div>
+                  <span className="block text-sm font-black text-white flex items-center gap-1.5">
+                    <span>الدخول كـ (ضيف) ومسح باركود الأدمن</span>
+                    <span className="text-[10px] bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded-full font-mono font-bold">📷 كاميرا</span>
+                  </span>
+                  <span className="text-[11px] text-emerald-200/90 font-medium">
+                    يفتح الكاميرا مباشرة لمسح باركود الأدمن والانضمام للصندوق
+                  </span>
+                </div>
+              </div>
+              <ArrowRight className="w-5 h-5 rotate-180 group-hover:-translate-x-1 transition text-emerald-400" />
+            </button>
 
             {/* Option 3: Already have an account -> Login */}
             <div className="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2">
