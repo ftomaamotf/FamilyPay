@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview --host"
+    "preview": "vite preview --host",
+    "postinstall": "vite build",
+    "start": "node server.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
