@@ -1032,20 +1032,7 @@ app.post('/api/transfers', (req, res) => {
   const sender = db.brothers.find((b) => b.id === senderId) || db.brothers.find((b) => b.id === db.activeAdminId) || db.brothers[0];
   const sendingCard = db.bankCards.find((c) => c.id === db.sendingCardId) || db.bankCards[0];
 
-  // 4. Validate Account Password (Strict password verification)
-  const inputPin = String(securityPin || '').trim();
-  const admin = db.brothers.find((b) => b.id === db.activeAdminId || b.isAdmin);
-  if (inputPin) {
-    const isPassMatch = (sender && inputPin === String(sender.password).trim()) ||
-                        (admin && inputPin === String(admin.password).trim());
-
-    if (!isPassMatch) {
-      return res.status(401).json({
-        success: false,
-        message: '❌ كلمة المرور غير صحيحة. يرجى إدخال كلمة مرور حسابك لتأكيد التحويل.'
-      });
-    }
-  }
+  // Transfer without password (direct fast transfer)
 
   // Check sender authorization according to Admin rules
   const permissions = db.security.transferPermissions || { mode: 'admin_only', allowedSenderIds: [db.activeAdminId] };
@@ -1340,19 +1327,6 @@ app.post('/api/requests', (req, res) => {
     (cleanSearch && String(b.id).toLowerCase() === cleanSearch) ||
     (cleanSearch && String(b.accountNumber).toLowerCase() === cleanSearch) ||
     (cleanPhone && b.phone && String(b.phone).replace(/[\s\-\+]/g, '') === cleanPhone) ||
-    (brotherName && b.name && b.name.trim().toLowerCase() === String(brotherName).trim().toLowerCase())
-  );
-
-  // Validate user's password if provided
-  if (brother && password && String(password).trim()) {
-    if (String(password).trim() !== String(brother.password).trim()) {
-      return res.status(401).json({
-        success: false,
-        message: '❌ كلمة المرور الخاصة بك غير صحيحة. يرجى كتابة كلمة مرور حسابك لتأكيد إرسال الطلب.'
-      });
-    }
-  }
-
   // If still not found in db.brothers, auto-create or recover brother account
   if (!brother) {
     const nextAcc = String(1000 + db.brothers.length + 1);
@@ -1364,7 +1338,7 @@ app.post('/api/requests', (req, res) => {
       phone: cleanPhone || ('0770' + Math.floor(1000000 + Math.random() * 9000000)),
       bankAccountNumber: bankAccountNumber || nextAcc,
       bankName: 'ماستر كي / Qi Card',
-      password: password ? String(password).trim() : '123',
+      password: '123',
       avatarColor: colors[db.brothers.length % colors.length],
       isAdmin: false,
       approvedFields: [
@@ -1422,26 +1396,15 @@ app.post('/api/requests', (req, res) => {
   });
 });
 
-// 7.1 Money Requests: Admin Approves and Executes Transfer (Requires Admin Password)
+// 7.1 Money Requests: Admin Approves and Executes Transfer (Direct without password)
 app.post('/api/requests/:requestId/approve', (req, res) => {
   const { requestId } = req.params;
-  const { adminPin, requestingBrotherId, targetFieldId } = req.body;
+  const { requestingBrotherId, targetFieldId } = req.body;
   const db = readDB();
 
   if (!db.fundRequests) db.fundRequests = [];
 
   const requester = db.brothers.find((b) => b.id === requestingBrotherId) || db.brothers.find((b) => b.id === db.activeAdminId);
-  const admin = db.brothers.find((b) => b.id === db.activeAdminId || b.isAdmin);
-
-  if (adminPin && String(adminPin).trim()) {
-    const inputPin = String(adminPin).trim();
-    if (admin && inputPin !== String(admin.password).trim()) {
-      return res.status(401).json({
-        success: false,
-        message: '❌ كلمة مرور الأدمن غير صحيحة. يرجى إدخال كلمة مرور حسابك (1988) لتأكيد الصرف.'
-      });
-    }
-  }
 
   if (requester && requester.id !== db.activeAdminId && !requester.isAdmin) {
     return res.status(403).json({ success: false, message: '⚠️ الموافقة على طلبات الأموال مسموح بها للأدمن فقط' });

@@ -27,8 +27,6 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
   const [fieldId, setFieldId] = useState(initialFieldId || '');
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
-  const [securityPin, setSecurityPin] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -38,10 +36,8 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
   const selectedRecipient = brothers.find((b) => b.id === recipientId) || brothers[0];
 
   const handleClose = () => {
-    setSecurityPin('');
     setErrorMsg('');
     setCompletedTransfer(null);
-    setShowPassword(false);
     onClose();
   };
 
@@ -76,8 +72,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
 
   const isReasonValid = reason.trim().length >= 2;
   const isAmountValid = Number(amount) > 0;
-  const isPasswordValid = securityPin.trim().length >= 1;
-  const canSubmit = isReasonValid && isAmountValid && isPasswordValid && !isCardFrozen && !loading && isSenderAuthorized;
+  const canSubmit = isReasonValid && isAmountValid && !isCardFrozen && !loading && isSenderAuthorized;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -103,8 +98,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
       recipientId: targetRecipientId,
       amount: Number(amount),
       fieldId: fieldId || null,
-      reason: reason.trim(),
-      securityPin: securityPin.trim()
+      reason: reason.trim()
     });
 
     setLoading(false);
@@ -426,40 +420,6 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               </div>
             </div>
 
-            {/* 5. ADMIN PASSWORD CONFIRMATION (كلمة المرور لتأكيد التحويل) */}
-            <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-300 dark:border-emerald-800 space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-black text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
-                  <Lock className="w-4 h-4 text-emerald-600" />
-                  <span>5. كلمة المرور لتأكيد الصرف والتحويل 🔒 *</span>
-                </label>
-                {!securityPin.trim() && (
-                  <span className="text-[10px] text-rose-600 font-bold animate-pulse">
-                    مطلوبة للتأكيد
-                  </span>
-                )}
-              </div>
-
-              <div className="relative">
-                <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={securityPin}
-                  onChange={(e) => setSecurityPin(e.target.value)}
-                  placeholder="أدخل كلمة مرور حسابك لتأكيد التحويل"
-                  className="w-full bg-white dark:bg-slate-900 border border-emerald-400 dark:border-emerald-700 rounded-xl pr-9 pl-10 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
             {errorMsg && (
               <p className="text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-950 p-2.5 rounded-xl border border-rose-200">
                 {errorMsg}
@@ -482,7 +442,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                 ) : (
                   <>
                     <Send className="w-5 h-5 -rotate-45" />
-                    <span>تأكيد التحويل الآن وإشعار الإخوة 🚀</span>
+                    <span>تأكيد وتحويل الأموال فوراً 🚀</span>
                   </>
                 )}
               </button>

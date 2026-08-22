@@ -26,8 +26,6 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
   const [fieldId, setFieldId] = useState(initialFieldId || '');
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -49,7 +47,6 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       }
       setErrorMsg('');
       setSuccessMsg('');
-      setPassword('');
     }
   }, [isOpen, initialBrotherId, initialFieldId]);
 
@@ -71,10 +68,6 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       setErrorMsg('يرجى توضيح سبب طلب الأموال (الحاجة)');
       return;
     }
-    if (!password.trim()) {
-      setErrorMsg('🔒 يرجى إدخال كلمة مرور حسابك لتأكيد إرسال الطلب');
-      return;
-    }
 
     setLoading(true);
     setErrorMsg('');
@@ -87,8 +80,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       bankAccountNumber: currentBrother?.bankAccountNumber || currentUser?.bankAccountNumber,
       amount: numAmount,
       fieldId,
-      reason: reason.trim(),
-      password: password.trim()
+      reason: reason.trim()
     });
 
     setLoading(false);
@@ -282,39 +274,6 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
                 placeholder="اكتب سبب طلب المبلغ (مثلاً: بنزين للسيارة، حليب للأطفال، دكتور وصيدلية...)"
                 className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-xl pr-9 pl-3 py-2 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 leading-relaxed"
               />
-            </div>
-          </div>
-
-          {/* User Password Confirmation (كلمة المرور الخاصة بالمستخدم لتأكيد الطلب) */}
-          <div className="p-3 bg-teal-50/60 dark:bg-teal-950/30 rounded-2xl border border-teal-200 dark:border-teal-800/60 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="block font-black text-teal-900 dark:text-teal-300 text-xs flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-teal-600" />
-                <span>كلمة مرور حسابك لتأكيد إرسال الطلب 🔒 *:</span>
-              </label>
-              {!password.trim() && (
-                <span className="text-[10px] text-rose-600 font-bold animate-pulse">
-                  إجبارية
-                </span>
-              )}
-            </div>
-            <div className="relative">
-              <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="أدخل كلمة مرور حسابك لتأكيد طلب المال"
-                className="w-full bg-white dark:bg-slate-900 border border-teal-300 dark:border-teal-700 rounded-xl pr-9 pl-10 py-2.5 text-xs text-slate-900 dark:text-white font-mono outline-none focus:ring-2 focus:ring-teal-500"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
             </div>
           </div>
 

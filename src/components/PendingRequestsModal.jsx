@@ -31,8 +31,6 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
 
   const [selectedReq, setSelectedReq] = useState(null);
   const [targetFieldId, setTargetFieldId] = useState('');
-  const [adminPin, setAdminPin] = useState('');
-  const [showAdminPin, setShowAdminPin] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [actionType, setActionType] = useState(null); // 'approve' | 'reject'
   const [loading, setLoading] = useState(false);
@@ -42,7 +40,7 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const pendingRequests = fundRequests.filter((r) => r.status === 'pending');
-  const selectedBrother = selectedReq ? brothers.find((b) => b.id === selectedReq.brotherId) : null;
+  const selectedBrother = brothers.find((b) => b.id === selectedReq?.brotherId);
 
   const handleApprove = async (e) => {
     e.preventDefault();
@@ -50,21 +48,21 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
 
     setLoading(true);
     setMsg('');
+
     const res = await approveMoneyRequest({
       requestId: selectedReq.id,
-      adminPin: adminPin.trim() || fundPin,
       targetFieldId: targetFieldId || selectedReq.fieldId,
       requestDetails: selectedReq
     });
+
     setLoading(false);
 
     if (res.success) {
       setIsSuccess(true);
-      setMsg(res.message);
+      setMsg(res.message || 'تم تحويل الأموال بنجاح');
       setTimeout(() => {
         setSelectedReq(null);
         setActionType(null);
-        setAdminPin('');
         setTargetFieldId('');
         setMsg('');
       }, 1500);
@@ -261,39 +259,6 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                     </option>
                   ))}
                 </select>
-              </div>
-
-              {/* Admin Password Field */}
-              <div className="p-3 bg-emerald-50/60 dark:bg-emerald-950/30 rounded-2xl border border-emerald-300 dark:border-emerald-800 space-y-1.5 text-right">
-                <div className="flex items-center justify-between">
-                  <label className="block font-black text-emerald-900 dark:text-emerald-300 text-xs flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>كلمة مرور الأدمن لتأكيد التحويل 🔒 *:</span>
-                  </label>
-                  {!adminPin.trim() && (
-                    <span className="text-[10px] text-rose-600 font-bold animate-pulse">
-                      مطلوبة للتأكيد
-                    </span>
-                  )}
-                </div>
-                <div className="relative">
-                  <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type={showAdminPin ? 'text' : 'password'}
-                    required
-                    value={adminPin}
-                    onChange={(e) => setAdminPin(e.target.value)}
-                    placeholder="أدخل كلمة مرور حسابك (1988)"
-                    className="w-full bg-white dark:bg-slate-900 border border-emerald-400 dark:border-emerald-700 rounded-xl pr-9 pl-10 py-2 text-xs text-slate-900 dark:text-white font-mono outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowAdminPin(!showAdminPin)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
-                  >
-                    {showAdminPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
               </div>
 
               {msg && (
