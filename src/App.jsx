@@ -28,6 +28,7 @@ import { PwaInstallBanner } from './components/PwaInstallBanner';
 import { BottomToolsBar } from './components/BottomToolsBar';
 import { GuestJoinBanner } from './components/GuestJoinBanner';
 import { GuestJoinApprovalsModal } from './components/GuestJoinApprovalsModal';
+import { GuestPortalView } from './components/GuestPortalView';
 
 function MainApp() {
   const { currentUser, setCurrentUser } = useFinance();
@@ -54,9 +55,14 @@ function MainApp() {
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [joinQrOpen, setJoinQrOpen] = useState(false);
 
-  // If not logged in, show AuthScreen
+  // 1. If not logged in, show AuthScreen
   if (!currentUser) {
     return <AuthScreen onLoginSuccess={() => setActiveTab('dashboard')} />;
+  }
+
+  // 2. If in Guest Mode, show Dedicated Isolated Guest Portal (No access to Admin/Dashboard)
+  if (currentUser.isGuest) {
+    return <GuestPortalView />;
   }
 
   const handleOpenTransfer = (recipientId = null, fieldId = null) => {
