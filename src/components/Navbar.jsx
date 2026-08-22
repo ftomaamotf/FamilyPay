@@ -36,7 +36,8 @@ export const Navbar = ({
     updateSettings,
     unreadNotifsCount,
     canCurrentUserSend,
-    fundRequests
+    fundRequests,
+    guestRequests
   } = useFinance();
 
   const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
@@ -138,10 +139,14 @@ export const Navbar = ({
                   <button
                     onClick={onOpenGuestApprovals}
                     title="طلبات انضمام الضيوف (الموافقة بكلمة المرور)"
-                    className="flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-600 dark:text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-xl text-xs font-black shadow-sm transition active:scale-95"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black shadow-sm transition active:scale-95 ${
+                      guestRequests && guestRequests.length > 0
+                        ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 ring-2 ring-amber-300 animate-bounce'
+                        : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-600 dark:text-amber-300 border border-amber-500/40'
+                    }`}
                   >
                     <UserCheck className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">انضمام الضيوف</span>
+                    <span>انضمام الضيوف {guestRequests && guestRequests.length > 0 ? `(${guestRequests.length})` : ''}</span>
                   </button>
                 )}
 

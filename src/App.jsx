@@ -29,10 +29,12 @@ import { BottomToolsBar } from './components/BottomToolsBar';
 import { GuestJoinBanner } from './components/GuestJoinBanner';
 import { GuestJoinApprovalsModal } from './components/GuestJoinApprovalsModal';
 import { GuestPortalView } from './components/GuestPortalView';
+import { UserCheck } from 'lucide-react';
 
 function MainApp() {
-  const { currentUser, setCurrentUser } = useFinance();
+  const { currentUser, setCurrentUser, activeAdminId, guestRequests } = useFinance();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
 
   // Modals state
   const [transferModalOpen, setTransferModalOpen] = useState(false);
@@ -112,6 +114,32 @@ function MainApp() {
         
         {/* Guest Onboarding Camera QR Banner (للمستخدمين في وضع الضيف) */}
         <GuestJoinBanner />
+
+        {/* 🚨 Admin Pending Guest Join Requests Alert Banner 🚨 */}
+        {isCurrentAdmin && guestRequests && guestRequests.length > 0 && (
+          <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 p-4 sm:p-5 rounded-3xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 border-2 border-amber-300 animate-pulse" dir="rtl">
+            <div className="flex items-center gap-3 text-right">
+              <div className="w-12 h-12 rounded-2xl bg-slate-950 text-amber-400 flex items-center justify-center font-black text-lg shrink-0 shadow-lg shadow-black/20">
+                {guestRequests.length}
+              </div>
+              <div>
+                <span className="font-black text-sm sm:text-base text-slate-950 block">
+                  🔔 لديك ({guestRequests.length}) طلب انضمام ضيف جديد بانتظار موافقتك!
+                </span>
+                <span className="text-xs font-extrabold text-slate-900 mt-0.5 block">
+                  الأخ ({guestRequests[0].name}) بانتظار إدخال كلمة المرور لتفعيل حسابه في الصندوق
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setGuestApprovalsOpen(true)}
+              className="w-full sm:w-auto px-5 py-3 bg-slate-950 hover:bg-slate-900 text-amber-300 font-black text-xs sm:text-sm rounded-2xl shadow-xl transition active:scale-95 shrink-0 flex items-center justify-center gap-2 border border-amber-400/40"
+            >
+              <UserCheck className="w-4 h-4" />
+              <span>مراجعة واعتماد الطلب بكلمة المرور 🔑</span>
+            </button>
+          </div>
+        )}
 
         {/* Desktop View Switcher Tabs */}
         <DesktopNavTabs activeTab={activeTab} setActiveTab={setActiveTab} />

@@ -49,6 +49,21 @@ export const FinanceProvider = ({ children }) => {
     loadFromStorage('bait_finance_fund_requests', [])
   );
 
+  // Guest Join Requests (طلبات انضمام الضيوف المعلقة)
+  const [guestRequests, setGuestRequests] = useState([]);
+
+  const fetchGuestRequests = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/brothers/guest-requests`);
+      const data = await res.json();
+      if (data.success) {
+        setGuestRequests(data.requests || []);
+      }
+    } catch {
+      // offline silent
+    }
+  }, []);
+
   const toggleAdminBalanceVisibility = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/security/toggle-balance-visibility`, {
@@ -472,6 +487,9 @@ export const FinanceProvider = ({ children }) => {
 
           if (payload.type === 'GUEST_JOIN_REQUEST') {
             const { request, notif } = payload.data;
+            if (request) {
+              setGuestRequests((prev) => [request, ...prev.filter((r) => r.id !== request.id)]);
+            }
             if (notif) {
               setNotifications((prev) => [notif, ...prev]);
               setActiveAlert(notif);
@@ -481,6 +499,9 @@ export const FinanceProvider = ({ children }) => {
 
           if (payload.type === 'GUEST_APPROVED') {
             const { user, notif } = payload.data;
+            if (user) {
+              setGuestRequests((prev) => prev.filter((r) => r.phone !== user.phone));
+            }
             if (notif) {
               setNotifications((prev) => [notif, ...prev]);
               setActiveAlert(notif);
@@ -507,6 +528,13 @@ export const FinanceProvider = ({ children }) => {
       if (eventSource) eventSource.close();
     };
   }, [playChimeSound, currentUser]);
+
+  // Periodic polling for Admin to guarantee instantaneous guest request updates
+  useEffect(() => {
+    fetchGuestRequests();
+    const interval = setInterval(fetchGuestRequests, 2500);
+    return () => clearInterval(interval);
+  }, [fetchGuestRequests]);
 
   // Active Sending Card
   const sendingCard = useMemo(() => {
@@ -1435,6 +1463,8 @@ export const FinanceProvider = ({ children }) => {
         canCurrentUserSend,
         updateTransferPermissions,
         fundRequests,
+        guestRequests,
+        fetchGuestRequests,
         submitMoneyRequest,
         approveMoneyRequest,
         rejectMoneyRequest,
