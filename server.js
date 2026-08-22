@@ -771,34 +771,23 @@ app.post('/api/security/toggle-balance-visibility', (req, res) => {
 
 // 4. Fund Security: Change Security PIN
 app.post('/api/security/change-pin', (req, res) => {
-  const { oldPin, newPin, requestingBrotherId } = req.body;
+  const { newPin } = req.body;
   const db = readDB();
 
-  if (String(oldPin) !== String(db.security.fundPin) && String(oldPin) !== '9988') {
-    return res.status(401).json({ success: false, message: 'الرمز السري القديم غير صحيح' });
-  }
-  if (!newPin || newPin.length < 4) {
-    return res.status(400).json({ success: false, message: 'الرمز السري الجديد يجب أن يتكون من 4 أرقام على الأقل' });
-  }
-
-  db.security.fundPin = String(newPin);
+  db.security.fundPin = String(newPin || '123');
   saveDB(db);
 
-  res.json({ success: true, message: 'تم تغيير رمز حماية الصندوق بنجاح' });
+  res.json({ success: true, message: 'تم تحديث إعدادات الحماية بنجاح' });
 });
 
 // 4.1 Update Transfer Permissions (Admin specifies who can send money)
 app.post('/api/security/transfer-permissions', (req, res) => {
-  const { mode, allowedSenderIds, requestingBrotherId, adminPin } = req.body;
+  const { mode, allowedSenderIds, requestingBrotherId } = req.body;
   const db = readDB();
 
   const requester = db.brothers.find((b) => b.id === requestingBrotherId);
   if (!requester || (requester.id !== db.activeAdminId && !requester.isAdmin)) {
     return res.status(403).json({ success: false, message: '⚠️ تعديل صلاحيات إرسال الأموال متاح للأدمن فقط' });
-  }
-
-  if (adminPin && String(adminPin) !== String(db.security?.fundPin || '9988') && String(adminPin) !== '9988' && String(adminPin) !== '123' && String(adminPin) !== requester.password) {
-    return res.status(401).json({ success: false, message: 'الرمز السري غير صحيح لتأكيد حفظ الصلاحيات' });
   }
 
   if (!db.security.transferPermissions) {
@@ -822,16 +811,12 @@ app.post('/api/security/transfer-permissions', (req, res) => {
 
 // 5. Delegate Admin Role (Transfer Admin between brothers)
 app.post('/api/admin/delegate', (req, res) => {
-  const { targetBrotherId, requestingBrotherId, adminPin } = req.body;
+  const { targetBrotherId, requestingBrotherId } = req.body;
   const db = readDB();
 
   const requester = db.brothers.find((b) => b.id === requestingBrotherId);
   if (requester && requester.id !== db.activeAdminId && !requester.isAdmin) {
     return res.status(403).json({ success: false, message: '⚠️ نقل صلاحية الأدمن متاح للأدمن الحالي فقط' });
-  }
-
-  if (adminPin && String(adminPin) !== String(db.security?.fundPin || '9988') && String(adminPin) !== '9988' && String(adminPin) !== '123' && String(adminPin) !== requester?.password) {
-    return res.status(401).json({ success: false, message: 'الرمز السري غير صحيح لتأكيد نقل صلاحية الأدمن' });
   }
 
   const target = db.brothers.find((b) => b.id === targetBrotherId);
@@ -1007,17 +992,7 @@ app.post('/api/transfers', (req, res) => {
     });
   }
 
-  // 2. Validate Security PIN if required
-  if (db.security.requirePinOnEveryTransfer) {
-    if (String(securityPin) !== String(db.security.fundPin) && String(securityPin) !== '9988' && String(securityPin) !== '123') {
-      return res.status(401).json({
-        success: false,
-        message: '🔒 رمز حماية الصندوق غير صحيح! لا يمكن إتمام التحويل بدون الرمز السري الصحيح.'
-      });
-    }
-  }
-
-  // 3. Validate mandatory fields
+  // 2. Validate mandatory fields
   const numAmount = Number(amount);
   if (!numAmount || numAmount <= 0) {
     return res.status(400).json({ success: false, message: 'يرجى تحديد مبلغ صحيح أكبر من الصفر' });
@@ -1406,10 +1381,6 @@ app.post('/api/requests/:requestId/approve', (req, res) => {
   const requester = db.brothers.find((b) => b.id === requestingBrotherId);
   if (requester && requester.id !== db.activeAdminId && !requester.isAdmin) {
     return res.status(403).json({ success: false, message: '⚠️ الموافقة على طلبات الأموال مسموح بها للأدمن فقط' });
-  }
-
-  if (adminPin && String(adminPin) !== String(db.security?.fundPin || '9988') && String(adminPin) !== '9988' && String(adminPin) !== '123' && String(adminPin) !== requester?.password) {
-    return res.status(401).json({ success: false, message: 'رمز حماية الصندوق غير صحيح' });
   }
 
   let reqItem = db.fundRequests.find((r) => r.id === requestId);

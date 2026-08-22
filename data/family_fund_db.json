@@ -25,16 +25,28 @@
       "id": "card-1",
       "name": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
       "bankName": "ماستر كي / Qi Card",
-      "accountNumber": "7115069812",
-      "cardHolder": "صندوق عائلة عجمي المشترك",
-      "balance": 1000000,
+      "accountNumber": "9256869125",
+      "cardHolder": "عبدالله عجمي مطشر",
+      "balance": 986000,
       "isSendingCard": true,
       "isFrozen": false,
       "color": "#059669",
-      "lastUpdated": "2026-08-20T23:21:57.501Z"
+      "lastUpdated": "2026-08-22T14:40:00.000Z"
     },
     {
       "id": "card-2",
+      "name": "بطاقة ماستر كي - عبدالله عجمي مطشر",
+      "bankName": "ماستر كي / Qi Card",
+      "accountNumber": "9256869125",
+      "cardHolder": "عبدالله عجمي مطشر",
+      "balance": 1000000,
+      "isSendingCard": false,
+      "isFrozen": false,
+      "color": "#6366f1",
+      "lastUpdated": "2026-08-22T14:40:00.000Z"
+    },
+    {
+      "id": "card-3",
       "name": "بطاقة طوارئ العائلة",
       "bankName": "مصرف الرافدين / Qi Card",
       "accountNumber": "880000000000002",
@@ -49,7 +61,7 @@
   "brothers": [
     {
       "id": "b-2",
-      "name": "عبدالله عجمي",
+      "name": "عبدالله عجمي مطشر",
       "email": "abduallh_ajmi@yahoo.com",
       "accountNumber": "1002",
       "phone": "07702206214",
@@ -79,31 +91,75 @@
         },
         {
           "id": "f-1787246913231-83",
-          "name": "اطباء",
+          "name": "صيدلية وأطباء 🩺",
           "limit": 100000,
+          "spent": 0
+        }
+      ]
+    },
+    {
+      "id": "b-1787243535948",
+      "name": "محمد عجمي مطشر",
+      "email": "mohammed@familyfund.iq",
+      "accountNumber": "1003",
+      "phone": "07700000003",
+      "bankAccountNumber": "7145810946",
+      "password": "123",
+      "bankName": "ماستر كي / Qi Card",
+      "avatarColor": "#10b981",
+      "isAdmin": false,
+      "approvedFields": [
+        {
+          "id": "f-1787243536212-1",
+          "name": "مصاريف عامة 🛒",
+          "limit": 100000,
+          "spent": 0
+        },
+        {
+          "id": "f-1787243536212-2",
+          "name": "بنزين ومواصلات ⛽",
+          "limit": 150000,
+          "spent": 14000
+        },
+        {
+          "id": "f-1787243536212-3",
+          "name": "حليب ومواد غذائية 🥛",
+          "limit": 200000,
           "spent": 0
         }
       ]
     }
   ],
-  "transfers": [],
+  "transfers": [
+    {
+      "id": "tx-1787396340000",
+      "senderId": "b-2",
+      "senderName": "عبدالله عجمي مطشر (الأدمن)",
+      "recipientId": "b-1787243535948",
+      "recipientName": "محمد عجمي مطشر",
+      "recipientAccountNumber": "7145810946",
+      "accountNumber": "1003",
+      "amount": 14000,
+      "fieldId": "f-1787243536212-2",
+      "fieldName": "بنزين ومواصلات ⛽",
+      "reason": "بانزين سيارة",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-22T14:00:00.000Z",
+      "date": "2026-08-22"
+    }
+  ],
   "notifications": [
     {
-      "id": "notif-1787246809140",
-      "title": "💰 تحويل مالي: 16000 د.ع",
-      "message": "تم تحويل 16000 د.ع إلى حساب الأخ (عبدالله عجمي) رقم (9256869125) لحاجة [بنزين]. المتبقي في بطاقة الصندوق: 984000 د.ع",
-      "transferId": "tx-1787246809140",
-      "recipientId": "b-2",
-      "amount": 16000,
-      "reason": "بنزين",
-      "timestamp": "2026-08-20T17:26:49.140Z",
-      "readBy": []
-    },
-    {
-      "id": "notif-admin-change",
-      "title": "👑 تعيين أدمن جديد للصندوق",
-      "message": "تم تسليم إدارة الصندوق ومهمة الإرسال للأخ (عبدالله عجمي) - حساب رقم: #1002",
-      "timestamp": "2026-08-20T18:30:00.000Z",
+      "id": "notif-1787396340000",
+      "title": "💰 تحويل مالي: 14,000 د.ع",
+      "message": "تم تحويل 14,000 د.ع إلى حساب الأخ (محمد عجمي مطشر) رقم (7145810946) لحاجة [بانزين سيارة]. المتبقي في بطاقة الصندوق: 986,000 د.ع",
+      "transferId": "tx-1787396340000",
+      "recipientId": "b-1787243535948",
+      "amount": 14000,
+      "reason": "بانزين سيارة",
+      "timestamp": "2026-08-22T14:00:00.000Z",
       "readBy": []
     }
   ],
@@ -114,45 +170,16 @@
     {
       "id": "req-1787244666311",
       "brotherId": "b-1787243535948",
-      "brotherName": "محمد عجمي",
+      "brotherName": "محمد عجمي مطشر",
       "brotherAccountNumber": "1003",
       "bankAccountNumber": "7145810946",
-      "amount": 16000,
-      "fieldId": "f-1787243536212-1",
-      "fieldName": "مصاريف عامة 🛒",
-      "reason": "بانزين",
+      "amount": 14000,
+      "fieldId": "f-1787243536212-2",
+      "fieldName": "بنزين ومواصلات ⛽",
+      "reason": "بانزين سيارة",
       "status": "approved",
-      "createdAt": "2026-08-20T16:51:06.311Z",
-      "approvedAt": "2026-08-20T16:51:21.563Z"
-    },
-    {
-      "id": "req-1787244536807",
-      "brotherId": "b-1787243535948",
-      "brotherName": "محمد عجمي",
-      "brotherAccountNumber": "1003",
-      "bankAccountNumber": "7145810946",
-      "amount": 12000,
-      "fieldId": "f-1787243536212-1",
-      "fieldName": "مصاريف عامة 🛒",
-      "reason": "بانزين",
-      "status": "approved",
-      "createdAt": "2026-08-20T16:48:56.807Z",
-      "approvedAt": "2026-08-20T16:49:52.392Z"
-    },
-    {
-      "id": "req-1787243653415",
-      "brotherId": "b-1787243535948",
-      "brotherName": "محمد عجمي",
-      "brotherAccountNumber": "1003",
-      "bankAccountNumber": "7145810946",
-      "amount": 5000,
-      "fieldId": "f-1787243536212-1",
-      "fieldName": "مصاريف عامة 🛒",
-      "reason": "تمن",
-      "status": "rejected",
-      "createdAt": "2026-08-20T16:34:13.415Z",
-      "rejectedAt": "2026-08-20T16:35:04.591Z",
-      "rejectionReason": "اعتذر الأدمن عن تنفيذ الطلب حالياً"
+      "createdAt": "2026-08-22T13:50:00.000Z",
+      "approvedAt": "2026-08-22T14:00:00.000Z"
     }
   ]
 }

@@ -35,13 +35,9 @@ export const FundSecurityModal = ({ isOpen, onClose }) => {
   const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
 
   const handleToggleFreeze = async () => {
-    if (!adminPin) {
-      setMsg('يرجى إدخال رمز حماية الصندوق لتأكيد تغيير حالة القفل');
-      return;
-    }
     setLoading(true);
     setMsg('');
-    const res = await toggleCardFreeze(adminPin);
+    const res = await toggleCardFreeze();
     setLoading(false);
     if (res.success) {
       alert(res.message);

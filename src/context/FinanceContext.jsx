@@ -1025,10 +1025,7 @@ export const FinanceProvider = ({ children }) => {
   };
 
   // 4. Fund Security Actions
-  const toggleCardFreeze = async (adminPin) => {
-    if (String(adminPin) !== String(fundPin) && String(adminPin) !== '9988' && String(adminPin) !== '123') {
-      return { success: false, message: 'رمز حماية الصندوق غير صحيح' };
-    }
+  const toggleCardFreeze = async (adminPin = '') => {
     try {
       const res = await fetch(`${API_BASE}/api/security/toggle-freeze`, {
         method: 'POST',
