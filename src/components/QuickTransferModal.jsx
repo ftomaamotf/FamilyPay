@@ -14,7 +14,9 @@ import {
   Zap,
   Lock,
   KeyRound,
-  CheckCircle2
+  CheckCircle2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null, initialFieldId = null }) => {
@@ -26,6 +28,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
   const [securityPin, setSecurityPin] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -33,6 +36,14 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
 
   const isSenderAuthorized = canCurrentUserSend ? canCurrentUserSend() : true;
   const selectedRecipient = brothers.find((b) => b.id === recipientId) || brothers[0];
+
+  const handleClose = () => {
+    setSecurityPin('');
+    setErrorMsg('');
+    setCompletedTransfer(null);
+    setShowPassword(false);
+    onClose();
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -50,11 +61,8 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
           setFieldId(target.approvedFields[0].id);
         }
       }
-      setCompletedTransfer(null);
-      setSecurityPin('');
-      setErrorMsg('');
     }
-  }, [isOpen, initialRecipientId, initialFieldId]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -137,7 +145,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
             </div>
           </div>
 
-          <button onClick={onClose} className="p-1 rounded-full text-emerald-200 hover:text-white">
+          <button onClick={handleClose} className="p-1 rounded-full text-emerald-200 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -435,13 +443,20 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               <div className="relative">
                 <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={securityPin}
                   onChange={(e) => setSecurityPin(e.target.value)}
                   placeholder="أدخل كلمة مرور حسابك لتأكيد التحويل"
-                  className="w-full bg-white dark:bg-slate-900 border border-emerald-400 dark:border-emerald-700 rounded-xl pr-9 pl-3 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                  className="w-full bg-white dark:bg-slate-900 border border-emerald-400 dark:border-emerald-700 rounded-xl pr-9 pl-10 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
