@@ -13,7 +13,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
-  CreditCard
+  CreditCard,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export const PendingRequestsModal = ({ isOpen, onClose }) => {
@@ -30,6 +32,7 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
   const [selectedReq, setSelectedReq] = useState(null);
   const [targetFieldId, setTargetFieldId] = useState('');
   const [adminPin, setAdminPin] = useState('');
+  const [showAdminPin, setShowAdminPin] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [actionType, setActionType] = useState(null); // 'approve' | 'reject'
   const [loading, setLoading] = useState(false);
@@ -276,13 +279,20 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                 <div className="relative">
                   <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
-                    type="password"
+                    type={showAdminPin ? 'text' : 'password'}
                     required
                     value={adminPin}
                     onChange={(e) => setAdminPin(e.target.value)}
                     placeholder="أدخل كلمة مرور حسابك (1988)"
-                    className="w-full bg-white dark:bg-slate-900 border border-emerald-400 dark:border-emerald-700 rounded-xl pr-9 pl-3 py-2 text-xs text-slate-900 dark:text-white font-mono outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full bg-white dark:bg-slate-900 border border-emerald-400 dark:border-emerald-700 rounded-xl pr-9 pl-10 py-2 text-xs text-slate-900 dark:text-white font-mono outline-none focus:ring-2 focus:ring-emerald-500"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminPin(!showAdminPin)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                  >
+                    {showAdminPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 

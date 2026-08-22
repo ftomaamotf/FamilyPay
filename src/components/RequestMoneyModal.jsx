@@ -11,7 +11,9 @@ import {
   AlertCircle,
   Inbox,
   Sparkles,
-  Lock
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, initialFieldId = null }) => {
@@ -25,6 +27,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -298,13 +301,20 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             <div className="relative">
               <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="أدخل كلمة مرور حسابك لتأكيد طلب المال"
-                className="w-full bg-white dark:bg-slate-900 border border-teal-300 dark:border-teal-700 rounded-xl pr-9 pl-3 py-2.5 text-xs text-slate-900 dark:text-white font-mono outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full bg-white dark:bg-slate-900 border border-teal-300 dark:border-teal-700 rounded-xl pr-9 pl-10 py-2.5 text-xs text-slate-900 dark:text-white font-mono outline-none focus:ring-2 focus:ring-teal-500"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
