@@ -13,12 +13,12 @@ import {
   Sparkles
 } from 'lucide-react';
 
-export const RequestMoneyModal = ({ isOpen, onClose, initialFieldId = null }) => {
+export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, initialFieldId = null }) => {
   const { currentUser, brothers, submitMoneyRequest, settings } = useFinance();
   const currency = settings.currencySymbol;
 
-  const [selectedRequesterId, setSelectedRequesterId] = useState(currentUser?.id || '');
-  const currentBrother = brothers.find((b) => b.id === selectedRequesterId) || brothers.find((b) => b.id === currentUser?.id) || currentUser;
+  const [selectedRequesterId, setSelectedRequesterId] = useState(initialBrotherId || currentUser?.id || '');
+  const currentBrother = brothers.find((b) => b.id === selectedRequesterId) || brothers.find((b) => b.id === (initialBrotherId || currentUser?.id)) || currentUser;
 
   const [fieldId, setFieldId] = useState(initialFieldId || '');
   const [amount, setAmount] = useState('');
@@ -28,10 +28,12 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialFieldId = null }) =>
   const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
-    if (currentUser?.id && !selectedRequesterId) {
+    if (initialBrotherId) {
+      setSelectedRequesterId(initialBrotherId);
+    } else if (currentUser?.id && !selectedRequesterId) {
       setSelectedRequesterId(currentUser.id);
     }
-  }, [currentUser]);
+  }, [initialBrotherId, currentUser]);
 
   useEffect(() => {
     if (initialFieldId) setFieldId(initialFieldId);

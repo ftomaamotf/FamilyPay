@@ -79,6 +79,15 @@ function MainApp() {
     setFieldsModalOpen(true);
   };
 
+  const [requestMoneyBrotherId, setRequestMoneyBrotherId] = useState(null);
+  const [requestMoneyFieldId, setRequestMoneyFieldId] = useState(null);
+
+  const handleOpenRequestMoney = (brother = null, field = null) => {
+    setRequestMoneyBrotherId(brother?.id || currentUser?.id);
+    setRequestMoneyFieldId(field?.id || null);
+    setRequestMoneyModalOpen(true);
+  };
+
   const handleOpenAddBrother = () => {
     setBrotherToEdit(null);
     setAddBrotherModalOpen(true);
@@ -105,7 +114,7 @@ function MainApp() {
         onOpenSettings={() => setSettingsModalOpen(true)}
         onOpenQrModal={() => setQrModalOpen(true)}
         onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
-        onOpenRequestMoney={() => setRequestMoneyModalOpen(true)}
+        onOpenRequestMoney={(brother, field) => handleOpenRequestMoney(brother, field)}
         onOpenPendingRequests={() => setPendingRequestsModalOpen(true)}
         onLogout={() => setCurrentUser(null)}
       />
@@ -196,7 +205,7 @@ function MainApp() {
               onOpenEditBrother={handleOpenEditBrother}
               onOpenJoinQr={() => setJoinQrOpen(true)}
               onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
-              onOpenRequestMoney={() => setRequestMoneyModalOpen(true)}
+              onOpenRequestMoney={(brother, field) => handleOpenRequestMoney(brother, field)}
             />
             <TransfersHistory onOpenTransferModal={handleOpenTransfer} />
           </div>
@@ -209,7 +218,7 @@ function MainApp() {
             onOpenEditBrother={handleOpenEditBrother}
             onOpenJoinQr={() => setJoinQrOpen(true)}
             onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
-            onOpenRequestMoney={() => setRequestMoneyModalOpen(true)}
+            onOpenRequestMoney={(brother, field) => handleOpenRequestMoney(brother, field)}
           />
         )}
 
@@ -241,7 +250,7 @@ function MainApp() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenTransferModal={() => handleOpenTransfer()}
-        onOpenRequestMoney={() => setRequestMoneyModalOpen(true)}
+        onOpenRequestMoney={(brother, field) => handleOpenRequestMoney(brother, field)}
       />
 
       {/* Modals */}
@@ -258,7 +267,13 @@ function MainApp() {
 
       <RequestMoneyModal
         isOpen={requestMoneyModalOpen}
-        onClose={() => setRequestMoneyModalOpen(false)}
+        onClose={() => {
+          setRequestMoneyModalOpen(false);
+          setRequestMoneyBrotherId(null);
+          setRequestMoneyFieldId(null);
+        }}
+        initialBrotherId={requestMoneyBrotherId}
+        initialFieldId={requestMoneyFieldId}
       />
 
       <PendingRequestsModal

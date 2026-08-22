@@ -515,7 +515,7 @@ export const BrothersCards = ({
               </button>
             ) : (
               <button
-                onClick={() => onOpenRequestMoney && onOpenRequestMoney()}
+                onClick={() => onOpenRequestMoney && onOpenRequestMoney(selectedBrother)}
                 className="flex-1 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-teal-600/20 flex items-center justify-center gap-2 transition active:scale-98"
               >
                 <Inbox className="w-4 h-4" />
