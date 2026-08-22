@@ -10,6 +10,24 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     
+    <script>
+      // Immediate force purge of old caches and service workers
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (var i = 0; i < registrations.length; i++) {
+            registrations[i].unregister();
+          }
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (var i = 0; i < names.length; i++) {
+            caches.delete(names[i]);
+          }
+        });
+      }
+    </script>
+    
     <!-- PWA & Mobile Web App Meta -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#059669" />
@@ -26,15 +44,5 @@
   <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans antialiased select-none selection:bg-emerald-500 selection:text-white pb-20 md:pb-6">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(regs => {
-          for (let reg of regs) reg.update();
-        });
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=' + Date.now()).catch(err => console.log('SW registration error:', err));
-        });
-      }
-    </script>
   </body>
 </html>
