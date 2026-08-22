@@ -12,7 +12,8 @@ import {
   Lock,
   CheckCircle2,
   AlertCircle,
-  Sparkles
+  Sparkles,
+  CreditCard
 } from 'lucide-react';
 
 export const PendingRequestsModal = ({ isOpen, onClose }) => {
@@ -267,6 +268,20 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                   {msg}
                 </div>
               )}
+
+              {/* Qi Card Direct Quick Launcher */}
+              <button
+                type="button"
+                onClick={() => {
+                  const acc = selectedReq.bankAccountNumber || selectedReq.brotherAccountNumber;
+                  navigator.clipboard.writeText(acc);
+                  window.open('https://online.qi.iq', '_blank');
+                }}
+                className="w-full py-2 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 font-black text-xs rounded-xl shadow flex items-center justify-center gap-1.5 transition active:scale-95"
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>نسخ الحساب (#{selectedReq.bankAccountNumber || selectedReq.brotherAccountNumber}) وفتح تطبيق كي 📲</span>
+              </button>
 
               <div className="flex gap-2 pt-1">
                 <button

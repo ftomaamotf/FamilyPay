@@ -203,6 +203,18 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
 
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
               <button
+                onClick={() => {
+                  const acc = completedTransfer.recipientAccountNumber;
+                  navigator.clipboard.writeText(acc);
+                  window.open('https://online.qi.iq', '_blank');
+                }}
+                className="py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 font-black text-xs rounded-2xl shadow flex items-center justify-center gap-1.5 transition active:scale-95"
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>فتح تطبيق كي للتأكيد 📲</span>
+              </button>
+
+              <button
                 onClick={onClose}
                 className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow"
               >
@@ -300,6 +312,22 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                     <span>{copied ? 'تم النسخ' : 'نسخ'}</span>
                   </button>
                 </div>
+
+                {/* Direct Qi Card Quick Launcher */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const acc = selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber;
+                    navigator.clipboard.writeText(acc);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2500);
+                    window.open('https://online.qi.iq', '_blank');
+                  }}
+                  className="w-full mt-1 py-2 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 font-black text-[11px] rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95"
+                >
+                  <CreditCard className="w-3.5 h-3.5" />
+                  <span>نسخ رقم الحساب وفتح تطبيق ماستر كي / Qi Card 📲</span>
+                </button>
               </div>
             )}
 
