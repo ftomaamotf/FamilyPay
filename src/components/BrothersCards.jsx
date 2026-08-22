@@ -16,8 +16,10 @@ import {
   Share2,
   Trash2,
   QrCode,
-  Inbox
+  Inbox,
+  Edit3
 } from 'lucide-react';
+import { EditTransferModal } from './EditTransferModal';
 
 export const BrothersCards = ({
   onOpenTransferModal,
@@ -42,6 +44,7 @@ export const BrothersCards = ({
   const [sortBy, setSortBy] = useState('admin_first'); // 'admin_first', 'alphabetical', 'highest_spent', 'lowest_spent'
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBrotherId, setSelectedBrotherId] = useState(null);
+  const [editingTransfer, setEditingTransfer] = useState(null);
   const pressTimerRef = React.useRef(null);
   const currency = settings.currencySymbol;
 
@@ -510,11 +513,41 @@ export const BrothersCards = ({
                         )}
                       </div>
 
-                      <div className="text-[11px] font-mono">
+                      <div className="text-[11px] font-mono flex items-center gap-1.5">
                         <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">
                           المرسل: {formatMoney(spent, currency)}
                         </span>
                         <span className="text-slate-400 font-normal"> / {formatMoney(limit, currency)}</span>
+
+                        {isCurrentAdmin && spent > 0 && (
+                          <button
+                            onClick={() => {
+                              const matchedTx = transfers.find((t) =>
+                                isTransferStrictlyForBrother(t, selectedBrother) &&
+                                (t.fieldId === f.id || (t.fieldName && f.name && t.fieldName.includes(f.name.split(' ')[0])))
+                              );
+                              if (matchedTx) {
+                                setEditingTransfer(matchedTx);
+                              } else {
+                                setEditingTransfer({
+                                  id: 'tx-' + Date.now(),
+                                  recipientId: selectedBrother.id,
+                                  recipientName: selectedBrother.name,
+                                  recipientAccountNumber: selectedBrother.bankAccountNumber || selectedBrother.accountNumber,
+                                  amount: spent,
+                                  fieldId: f.id,
+                                  fieldName: f.name,
+                                  reason: `مصروفات سابقة لسلعة ${f.name}`
+                                });
+                              }
+                            }}
+                            className="px-1.5 py-0.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 rounded-md border border-emerald-200 dark:border-emerald-800 transition flex items-center gap-0.5 shadow-xs"
+                            title="تعديل هذا المبلغ المصروف"
+                          >
+                            <Edit3 className="w-3 h-3" />
+                            <span className="text-[9px] font-black">تعديل</span>
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -578,6 +611,13 @@ export const BrothersCards = ({
       )}
 
       </div>
+
+      {/* Edit Transfer / Spent Amount Modal */}
+      <EditTransferModal
+        isOpen={Boolean(editingTransfer)}
+        onClose={() => setEditingTransfer(null)}
+        transfer={editingTransfer}
+      />
 
     </div>
 

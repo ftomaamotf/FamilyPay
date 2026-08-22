@@ -12,16 +12,21 @@ import {
   User,
   CreditCard,
   Sparkles,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Edit3,
+  Trash2
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { EditTransferModal } from './EditTransferModal';
 
 export const TransfersHistory = ({ onOpenTransferModal }) => {
-  const { transfers, settings, brothers } = useFinance();
+  const { transfers, settings, brothers, currentUser, activeAdminId } = useFinance();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBrotherId, setSelectedBrotherId] = useState('all');
   const [copiedId, setCopiedId] = useState(null);
+  const [editingTransfer, setEditingTransfer] = useState(null);
 
+  const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
   const currency = settings.currencySymbol;
 
   const handleCopy = (id, text) => {
@@ -173,12 +178,26 @@ export const TransfersHistory = ({ onOpenTransferModal }) => {
                   </div>
                 </div>
 
-                {/* Right Amount */}
-                <div className="text-left shrink-0 self-end sm:self-center">
-                  <span className="text-base sm:text-xl font-black text-rose-600 dark:text-rose-400">
-                    - {formatMoney(t.amount, currency)}
-                  </span>
-                  <span className="text-[10px] text-slate-400 block">من {t.sendingCardName}</span>
+                {/* Right Amount & Actions */}
+                <div className="text-left shrink-0 self-end sm:self-center flex flex-col items-end gap-1.5">
+                  <div>
+                    <span className="text-base sm:text-xl font-black text-rose-600 dark:text-rose-400 block font-mono">
+                      - {formatMoney(t.amount, currency)}
+                    </span>
+                    <span className="text-[10px] text-slate-400 block">من {t.sendingCardName}</span>
+                  </div>
+
+                  {/* ✏️ Admin Edit Button for Spent Amount ✏️ */}
+                  {isCurrentAdmin && (
+                    <button
+                      onClick={() => setEditingTransfer(t)}
+                      className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 font-extrabold text-[11px] rounded-xl border border-emerald-300 dark:border-emerald-700 flex items-center gap-1 transition shadow-xs active:scale-95"
+                      title="تعديل المبلغ أو السبب أو البند"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                      <span>تعديل المبلغ ✏️</span>
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -189,6 +208,13 @@ export const TransfersHistory = ({ onOpenTransferModal }) => {
           </div>
         )}
       </div>
+
+      {/* Edit Transfer Modal */}
+      <EditTransferModal
+        isOpen={Boolean(editingTransfer)}
+        onClose={() => setEditingTransfer(null)}
+        transfer={editingTransfer}
+      />
 
     </div>
   );
