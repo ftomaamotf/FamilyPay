@@ -470,6 +470,24 @@ export const FinanceProvider = ({ children }) => {
             );
           }
 
+          if (payload.type === 'GUEST_JOIN_REQUEST') {
+            const { request, notif } = payload.data;
+            if (notif) {
+              setNotifications((prev) => [notif, ...prev]);
+              setActiveAlert(notif);
+              playChimeSound();
+            }
+          }
+
+          if (payload.type === 'GUEST_APPROVED') {
+            const { user, notif } = payload.data;
+            if (notif) {
+              setNotifications((prev) => [notif, ...prev]);
+              setActiveAlert(notif);
+              playChimeSound();
+            }
+          }
+
           if (payload.type === 'ARCHIVE_UPDATED') {
             if (payload.data.monthlyArchives) setMonthlyArchives(payload.data.monthlyArchives);
           }
@@ -1269,11 +1287,17 @@ export const FinanceProvider = ({ children }) => {
       const data = await res.json();
       if (data.success) {
         if (data.brothers) setBrothers(data.brothers);
+        if (currentUser?.id === brotherId) {
+          setCurrentUser(null);
+        }
         return { success: true, message: data.message };
       }
       return { success: false, message: data.message };
     } catch {
       setBrothers((prev) => prev.filter((b) => b.id !== brotherId));
+      if (currentUser?.id === brotherId) {
+        setCurrentUser(null);
+      }
       return { success: true, message: 'تم حذف الحساب بنجاح' };
     }
   };

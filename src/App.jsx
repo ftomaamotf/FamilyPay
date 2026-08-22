@@ -27,6 +27,7 @@ import { NotificationToast } from './components/NotificationToast';
 import { PwaInstallBanner } from './components/PwaInstallBanner';
 import { BottomToolsBar } from './components/BottomToolsBar';
 import { GuestJoinBanner } from './components/GuestJoinBanner';
+import { GuestJoinApprovalsModal } from './components/GuestJoinApprovalsModal';
 
 function MainApp() {
   const { currentUser, setCurrentUser } = useFinance();
@@ -39,6 +40,7 @@ function MainApp() {
 
   const [requestMoneyModalOpen, setRequestMoneyModalOpen] = useState(false);
   const [pendingRequestsModalOpen, setPendingRequestsModalOpen] = useState(false);
+  const [guestApprovalsOpen, setGuestApprovalsOpen] = useState(false);
 
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [cardsManagerOpen, setCardsManagerOpen] = useState(false);
@@ -90,7 +92,7 @@ function MainApp() {
         onOpenAdminModal={() => setAdminModalOpen(true)}
         onOpenSettings={() => setSettingsModalOpen(true)}
         onOpenQrModal={() => setQrModalOpen(true)}
-        onOpenWhatsAppInvite={() => setWhatsAppInviteOpen(true)}
+        onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
         onOpenRequestMoney={() => setRequestMoneyModalOpen(true)}
         onOpenPendingRequests={() => setPendingRequestsModalOpen(true)}
         onLogout={() => setCurrentUser(null)}
@@ -116,7 +118,7 @@ function MainApp() {
           onOpenSecurityModal={() => setSecurityModalOpen(true)}
         />
 
-        <LiveCountersBar />
+        <LiveCountersBar onOpenGuestApprovals={() => setGuestApprovalsOpen(true)} />
 
         {/* View Switcher */}
         {activeTab === 'dashboard' && (
@@ -124,9 +126,9 @@ function MainApp() {
             <BrothersCards
               onOpenTransferModal={handleOpenTransfer}
               onOpenFieldsModal={handleOpenFieldsEdit}
-              onOpenAddBrother={handleOpenAddBrother}
               onOpenEditBrother={handleOpenEditBrother}
-              onOpenWhatsAppInvite={() => setWhatsAppInviteOpen(true)}
+              onOpenJoinQr={() => setJoinQrOpen(true)}
+              onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
               onOpenRequestMoney={() => setRequestMoneyModalOpen(true)}
             />
             <TransfersHistory onOpenTransferModal={handleOpenTransfer} />
@@ -137,10 +139,9 @@ function MainApp() {
           <BrothersCards
             onOpenTransferModal={handleOpenTransfer}
             onOpenFieldsModal={handleOpenFieldsEdit}
-            onOpenAddBrother={handleOpenAddBrother}
             onOpenEditBrother={handleOpenEditBrother}
-            onOpenWhatsAppInvite={() => setWhatsAppInviteOpen(true)}
             onOpenJoinQr={() => setJoinQrOpen(true)}
+            onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
             onOpenRequestMoney={() => setRequestMoneyModalOpen(true)}
           />
         )}
@@ -249,6 +250,11 @@ function MainApp() {
       <JoinBrotherQrModal
         isOpen={joinQrOpen}
         onClose={() => setJoinQrOpen(false)}
+      />
+
+      <GuestJoinApprovalsModal
+        isOpen={guestApprovalsOpen}
+        onClose={() => setGuestApprovalsOpen(false)}
       />
 
     </div>

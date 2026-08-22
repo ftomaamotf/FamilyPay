@@ -150,36 +150,14 @@ export const BrothersCards = ({
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          {/* Admin Invite via WhatsApp Button */}
-          {isCurrentAdmin && onOpenWhatsAppInvite && (
-            <button
-              onClick={onOpenWhatsAppInvite}
-              className="px-3.5 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 text-white font-extrabold text-xs rounded-2xl shadow-sm flex items-center gap-1.5 transition active:scale-95"
-            >
-              <Share2 className="w-4 h-4" />
-              <span>دعوة أخ عبر واتساب 📲</span>
-            </button>
-          )}
-
-          {/* Admin Join QR Code Button (باركود إضافة أخ جديد) */}
+          {/* Admin Join QR Code Button (باركود إضافة أخ جديد - الطريقة المعتمدة الوحيدة) */}
           {isCurrentAdmin && onOpenJoinQr && (
             <button
               onClick={onOpenJoinQr}
-              className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 font-black text-xs rounded-2xl shadow-sm flex items-center gap-1.5 transition active:scale-95 border border-amber-400"
+              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 font-black text-xs rounded-2xl shadow-md flex items-center gap-1.5 transition active:scale-95 border border-amber-400"
             >
               <QrCode className="w-4 h-4" />
               <span>باركود إضافة أخ جديد 📷</span>
-            </button>
-          )}
-
-          {/* Admin Add New Brother Button */}
-          {isCurrentAdmin && (
-            <button
-              onClick={onOpenAddBrother}
-              className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white font-extrabold text-xs rounded-2xl shadow-sm flex items-center gap-1.5 transition active:scale-95"
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>إضافة حساب يدوي</span>
             </button>
           )}
 

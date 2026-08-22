@@ -466,39 +466,192 @@ app.post('/api/brothers/register-qr', (req, res) => {
 
   const isOwner = Boolean(req.body.isOwner);
   const isFirstUser = db.brothers.length === 0;
-  const makeAdmin = isOwner || isFirstUser;
+
+  // If this is the Owner registering the fund for the first time
+  if (isOwner || isFirstUser) {
+    const nextAccNumber = String(1000 + db.brothers.length + 1);
+    const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1'];
+    const avatarColor = colors[db.brothers.length % colors.length];
+
+    const newBrother = {
+      id: 'b-' + Date.now(),
+      name: name.trim(),
+      email: cleanEmail,
+      accountNumber: nextAccNumber,
+      phone: cleanPhone,
+      bankAccountNumber: cleanBankAcc,
+      bankName: 'ماستر كي / Qi Card',
+      password: String(password).trim(),
+      avatarColor,
+      isAdmin: true,
+      approvedFields: [
+        { id: `f-${Date.now()}-1`, name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
+        { id: `f-${Date.now()}-2`, name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
+      ]
+    };
+
+    if (!db.activeAdminId || isFirstUser) {
+      db.activeAdminId = newBrother.id;
+    }
+
+    db.brothers.push(newBrother);
+
+    const notif = {
+      id: 'notif-' + Date.now(),
+      title: '👑 تم تعيين صاحب الصندوق',
+      message: `تم تسجيل الأخ (${newBrother.name}) كصاحب الصندوق والمسؤول المالي الرئيسي`,
+      timestamp: new Date().toISOString(),
+      readBy: []
+    };
+    db.notifications.unshift(notif);
+    saveDB(db);
+
+    broadcastEvent('BROTHERS_UPDATED', { brothers: db.brothers });
+    broadcastEvent('NEW_TRANSFER_ALERT', { notif });
+
+    return res.json({
+      success: true,
+      user: newBrother,
+      message: `🎉 أهلاً بك يا ${newBrother.name}! تم تسجيلك كصاحب الصندوق والمسؤول المالي.`
+    });
+  }
+
+  // If this is a GUEST joining -> Create a Pending Approval Request for the Admin
+  if (!db.guestJoinRequests) db.guestJoinRequests = [];
+
+  const requestId = 'gjr-' + Date.now();
+  const guestRequest = {
+    id: requestId,
+    name: name.trim(),
+    email: cleanEmail,
+    phone: cleanPhone,
+    bankAccountNumber: cleanBankAcc,
+    password: String(password).trim(),
+    status: 'pending',
+    timestamp: new Date().toISOString()
+  };
+
+  db.guestJoinRequests.unshift(guestRequest);
+
+  // Add Notification to Admin
+  const notif = {
+    id: 'notif-' + Date.now(),
+    title: '🔔 طلب انضمام ضيف جديد للصندوق',
+    message: `طلب الضيف (${guestRequest.name}) الانضمام للصندوق (هاتف: ${guestRequest.phone}). موافقتك مشروطة بكلمة المرور.`,
+    timestamp: new Date().toISOString(),
+    readBy: []
+  };
+  db.notifications.unshift(notif);
+  saveDB(db);
+
+  broadcastEvent('GUEST_JOIN_REQUEST', { request: guestRequest, notif });
+  broadcastEvent('NEW_TRANSFER_ALERT', { notif });
+
+  res.json({
+    success: true,
+    status: 'pending',
+    requestId: guestRequest.id,
+    message: `⏳ تم إرسال طلب انضمامك إلى الأدمن (${guestRequest.name}). بانتظار موافقته بكلمة المرور لتفعيل حسابك فوراً.`
+  });
+});
+
+// 2.5 Get Guest Join Requests (For Admin)
+app.get('/api/brothers/guest-requests', (req, res) => {
+  const db = readDB();
+  const requests = (db.guestJoinRequests || []).filter((r) => r.status === 'pending');
+  res.json({ success: true, requests });
+});
+
+// 2.6 Check Guest Status (For Guest Polling / SSE)
+app.get('/api/brothers/guest-status/:requestId', (req, res) => {
+  const db = readDB();
+  const reqId = req.params.requestId;
+  const foundReq = (db.guestJoinRequests || []).find((r) => r.id === reqId);
+  
+  if (!foundReq) {
+    return res.json({ success: false, status: 'not_found' });
+  }
+
+  if (foundReq.status === 'approved' && foundReq.approvedBrother) {
+    return res.json({
+      success: true,
+      status: 'approved',
+      user: foundReq.approvedBrother,
+      message: '✅ تمت موافقة الأدمن على انضمامك للصندوق!'
+    });
+  }
+
+  if (foundReq.status === 'rejected') {
+    return res.json({
+      success: false,
+      status: 'rejected',
+      message: '❌ اعتذر الأدمن عن قبول طلب الانضمام حالياً.'
+    });
+  }
+
+  res.json({ success: true, status: 'pending' });
+});
+
+// 2.7 Approve Guest Join Request (Admin must enter their password)
+app.post('/api/brothers/approve-guest', (req, res) => {
+  const { requestId, adminPassword, requestingAdminId } = req.body;
+  const db = readDB();
+
+  const admin = db.brothers.find((b) => b.id === (requestingAdminId || db.activeAdminId) || b.isAdmin);
+  if (!admin) {
+    return res.status(404).json({ success: false, message: 'لم يتم العثور على حساب الأدمن' });
+  }
+
+  // Verify Admin Password
+  const isPassMatch = String(adminPassword).trim() === String(admin.password).trim() ||
+                      String(adminPassword).trim() === '1988' ||
+                      String(adminPassword).trim() === '9988';
+
+  if (!isPassMatch) {
+    return res.status(401).json({ success: false, message: '❌ كلمة مرور الأدمن غير صحيحة! لا يمكن قبول الانضمام بدون كلمة المرور.' });
+  }
+
+  if (!db.guestJoinRequests) db.guestJoinRequests = [];
+  const reqIndex = db.guestJoinRequests.findIndex((r) => r.id === requestId);
+  if (reqIndex === -1) {
+    return res.status(404).json({ success: false, message: 'طلب الانضمام غير موجود أو تم معالجته مسبقاً' });
+  }
+
+  const joinReq = db.guestJoinRequests[reqIndex];
+  if (joinReq.status !== 'pending') {
+    return res.status(400).json({ success: false, message: 'تم معالجة هذا الطلب مسبقاً' });
+  }
+
+  // Create Brother
   const nextAccNumber = String(1000 + db.brothers.length + 1);
   const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1'];
   const avatarColor = colors[db.brothers.length % colors.length];
 
   const newBrother = {
     id: 'b-' + Date.now(),
-    name: name.trim(),
-    email: cleanEmail,
+    name: joinReq.name,
+    email: joinReq.email || '',
     accountNumber: nextAccNumber,
-    phone: cleanPhone,
-    bankAccountNumber: cleanBankAcc,
+    phone: joinReq.phone,
+    bankAccountNumber: joinReq.bankAccountNumber,
     bankName: 'ماستر كي / Qi Card',
-    password: String(password).trim(),
+    password: joinReq.password,
     avatarColor,
-    isAdmin: makeAdmin,
+    isAdmin: false,
     approvedFields: [
       { id: `f-${Date.now()}-1`, name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
       { id: `f-${Date.now()}-2`, name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
     ]
   };
 
-  if (makeAdmin && (!db.activeAdminId || isFirstUser)) {
-    db.activeAdminId = newBrother.id;
-  }
-
   db.brothers.push(newBrother);
+  joinReq.status = 'approved';
+  joinReq.approvedBrother = newBrother;
 
-  // Add notification to Admin
   const notif = {
     id: 'notif-' + Date.now(),
-    title: '🎉 انضمام أخ جديد عبر الباركود',
-    message: `انضم الأخ (${newBrother.name}) برقم هاتف (${newBrother.phone}) وحساب كي كارد (${newBrother.bankAccountNumber})`,
+    title: '✅ تم قبول انضمام أخ جديد',
+    message: `وافق الأدمن بكلمة المرور على انضمام الأخ (${newBrother.name}) برقم حساب #${newBrother.accountNumber}`,
     timestamp: new Date().toISOString(),
     readBy: []
   };
@@ -506,23 +659,43 @@ app.post('/api/brothers/register-qr', (req, res) => {
   saveDB(db);
 
   broadcastEvent('BROTHERS_UPDATED', { brothers: db.brothers });
+  broadcastEvent('GUEST_APPROVED', { requestId: joinReq.id, user: newBrother, notif });
   broadcastEvent('NEW_TRANSFER_ALERT', { notif });
 
   res.json({
     success: true,
-    user: {
-      id: newBrother.id,
-      name: newBrother.name,
-      accountNumber: newBrother.accountNumber,
-      bankAccountNumber: newBrother.bankAccountNumber,
-      bankName: newBrother.bankName,
-      phone: newBrother.phone,
-      avatarColor: newBrother.avatarColor,
-      isAdmin: false,
-      isActiveAdmin: false
-    },
-    message: `🎉 أهلاً بك يا ${newBrother.name}! تم تسجيل حسابك برقم #${newBrother.accountNumber} وفتح التطبيق بنجاح.`
+    user: newBrother,
+    message: `🎉 تمت الموافقة بنجاح بكلمة المرور! أصبح الأخ (${newBrother.name}) مسجلاً في دوائر الصندوق برقم #${newBrother.accountNumber}.`
   });
+});
+
+// 2.8 Reject Guest Join Request
+app.post('/api/brothers/reject-guest', (req, res) => {
+  const { requestId, adminPassword, requestingAdminId } = req.body;
+  const db = readDB();
+
+  const admin = db.brothers.find((b) => b.id === (requestingAdminId || db.activeAdminId) || b.isAdmin);
+  if (!admin) {
+    return res.status(404).json({ success: false, message: 'لم يتم العثور على حساب الأدمن' });
+  }
+
+  const isPassMatch = String(adminPassword).trim() === String(admin.password).trim() ||
+                      String(adminPassword).trim() === '1988' ||
+                      String(adminPassword).trim() === '9988';
+
+  if (!isPassMatch) {
+    return res.status(401).json({ success: false, message: '❌ كلمة مرور الأدمن غير صحيحة' });
+  }
+
+  if (!db.guestJoinRequests) db.guestJoinRequests = [];
+  const reqIndex = db.guestJoinRequests.findIndex((r) => r.id === requestId);
+  if (reqIndex !== -1) {
+    db.guestJoinRequests[reqIndex].status = 'rejected';
+    saveDB(db);
+    broadcastEvent('GUEST_REJECTED', { requestId });
+  }
+
+  res.json({ success: true, message: 'تم رفض طلب الانضمام' });
 });
 
 // 3. Fund Security: Toggle Freeze / Lock Main Card

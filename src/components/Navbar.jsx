@@ -24,7 +24,7 @@ export const Navbar = ({
   onOpenAdminModal,
   onOpenSettings,
   onOpenQrModal,
-  onOpenWhatsAppInvite,
+  onOpenGuestApprovals,
   onOpenRequestMoney,
   onOpenPendingRequests,
   onLogout
@@ -133,7 +133,19 @@ export const Navbar = ({
                   <span>تحويل مالي</span>
                 </button>
 
-                {/* Pending Requests Badge Button for Admin */}
+                {/* Guest Approvals Badge Button for Admin */}
+                {onOpenGuestApprovals && (
+                  <button
+                    onClick={onOpenGuestApprovals}
+                    title="طلبات انضمام الضيوف (الموافقة بكلمة المرور)"
+                    className="flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-600 dark:text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-xl text-xs font-black shadow-sm transition active:scale-95"
+                  >
+                    <UserCheck className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">انضمام الضيوف</span>
+                  </button>
+                )}
+
+                {/* Pending Money Requests Badge Button for Admin */}
                 {pendingRequestsCount > 0 && onOpenPendingRequests && (
                   <button
                     onClick={onOpenPendingRequests}
@@ -152,18 +164,6 @@ export const Navbar = ({
               >
                 <Inbox className="w-3.5 h-3.5" />
                 <span>طلب أموال 📥</span>
-              </button>
-            )}
-
-            {/* WhatsApp Invite Button (Admin Only) */}
-            {isCurrentAdmin && onOpenWhatsAppInvite && (
-              <button
-                onClick={onOpenWhatsAppInvite}
-                title="دعوة أخ عبر واتساب 📲"
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 hover:bg-teal-100 transition text-xs font-bold"
-              >
-                <Share2 className="w-3.5 h-3.5" />
-                <span>دعوة واتساب</span>
               </button>
             )}
 
