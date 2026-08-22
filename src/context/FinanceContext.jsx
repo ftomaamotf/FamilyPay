@@ -973,7 +973,7 @@ export const FinanceProvider = ({ children }) => {
   };
 
   // 3.4 Admin Approves Money Request (Executes Transfer)
-  const approveMoneyRequest = async ({ requestId, adminPin, targetFieldId }) => {
+  const approveMoneyRequest = async ({ requestId, adminPin, targetFieldId, requestDetails }) => {
     try {
       const res = await fetch(`${API_BASE}/api/requests/${requestId}/approve`, {
         method: 'POST',
@@ -981,17 +981,24 @@ export const FinanceProvider = ({ children }) => {
         body: JSON.stringify({
           adminPin,
           requestingBrotherId: currentUser?.id,
-          targetFieldId
+          targetFieldId,
+          requestDetails
         })
       });
       return await res.json();
     } catch {
       // Local fallback
-      const req = fundRequests.find((r) => r.id === requestId);
+      const req = fundRequests.find((r) => r.id === requestId) || requestDetails;
       if (!req) return { success: false, message: 'الطلب غير موجود' };
       const updatedReq = { ...req, status: 'approved', approvedAt: new Date().toISOString() };
       setFundRequests((prev) => prev.map((r) => (r.id === requestId ? updatedReq : r)));
-      await executeTransfer(req.brotherId, req.amount, targetFieldId || req.fieldId, `[موافقة على طلب] ${req.reason}`, adminPin || fundPin);
+      await executeTransfer({
+        recipientId: req.brotherId,
+        amount: req.amount,
+        fieldId: targetFieldId || req.fieldId,
+        reason: `[موافقة على طلب] ${req.reason}`,
+        securityPin: adminPin || fundPin
+      });
       return { success: true, message: `تمت الموافقة وتحويل ${req.amount} بنجاح!` };
     }
   };

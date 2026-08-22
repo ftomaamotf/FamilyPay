@@ -1412,9 +1412,28 @@ app.post('/api/requests/:requestId/approve', (req, res) => {
     return res.status(401).json({ success: false, message: 'رمز حماية الصندوق غير صحيح' });
   }
 
-  const reqItem = db.fundRequests.find((r) => r.id === requestId);
+  let reqItem = db.fundRequests.find((r) => r.id === requestId);
+  if (!reqItem && req.body.requestDetails) {
+    const rd = req.body.requestDetails;
+    reqItem = {
+      id: requestId,
+      brotherId: rd.brotherId,
+      brotherName: rd.brotherName || 'الأخ المستلم',
+      brotherAccountNumber: rd.brotherAccountNumber,
+      bankAccountNumber: rd.bankAccountNumber,
+      phone: rd.phone,
+      amount: Number(rd.amount),
+      fieldId: rd.fieldId,
+      fieldName: rd.fieldName,
+      reason: rd.reason || 'مصروف معتمد',
+      status: 'pending',
+      createdAt: rd.createdAt || new Date().toISOString()
+    };
+    db.fundRequests.unshift(reqItem);
+  }
+
   if (!reqItem) {
-    return res.status(404).json({ success: false, message: 'طلب الأموال غير موجود' });
+    return res.status(404).json({ success: false, message: 'طلب الأموال غير موجود أو تمت معالجته مسبقاً' });
   }
   if (reqItem.status !== 'pending') {
     return res.status(400).json({ success: false, message: 'تمت معالجة هذا الطلب مسبقاً' });
@@ -1438,6 +1457,30 @@ app.post('/api/requests/:requestId/approve', (req, res) => {
     (reqItem.bankAccountNumber && String(b.bankAccountNumber) === String(reqItem.bankAccountNumber)) ||
     (reqItem.brotherName && b.name && b.name.trim().toLowerCase() === String(reqItem.brotherName).trim().toLowerCase())
   );
+
+  // If recipient is not yet in db.brothers, auto-create them so they have a circle on the dashboard
+  if (!recipient && (reqItem.brotherName || reqItem.brotherId)) {
+    const nextAccNumber = String(1000 + db.brothers.length + 1);
+    const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1'];
+    recipient = {
+      id: reqItem.brotherId || ('b-' + Date.now()),
+      name: reqItem.brotherName,
+      accountNumber: reqItem.brotherAccountNumber || nextAccNumber,
+      phone: reqItem.phone || '07700000000',
+      bankAccountNumber: reqItem.bankAccountNumber || reqItem.brotherAccountNumber || nextAccNumber,
+      bankName: 'ماستر كي / Qi Card',
+      password: '123',
+      avatarColor: colors[db.brothers.length % colors.length],
+      isAdmin: false,
+      approvedFields: [
+        { id: `f-${Date.now()}-1`, name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
+        { id: `f-${Date.now()}-2`, name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
+      ]
+    };
+    db.brothers.push(recipient);
+    saveDB(db);
+    broadcastEvent('BROTHERS_UPDATED', { brothers: db.brothers });
+  }
 
   let realBrotherName = (recipient && recipient.name && recipient.name !== 'أخ مسجل')
     ? recipient.name

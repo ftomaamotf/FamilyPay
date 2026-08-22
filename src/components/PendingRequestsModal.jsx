@@ -50,7 +50,8 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
     const res = await approveMoneyRequest({
       requestId: selectedReq.id,
       adminPin: adminPin.trim() || fundPin,
-      targetFieldId: targetFieldId || selectedReq.fieldId
+      targetFieldId: targetFieldId || selectedReq.fieldId,
+      requestDetails: selectedReq
     });
     setLoading(false);
 
