@@ -2,13 +2,15 @@
   "name": "home-accounting-app",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview --host",
     "postinstall": "vite build",
-    "start": "node server.js"
+    "start": "node server.js",
+    "desktop": "electron electron/main.cjs",
+    "desktop:build": "npm run build && electron-builder --win"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
@@ -34,6 +36,8 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.3",
     "postcss": "^8.5.3",
     "sharp": "^0.35.3",
     "tailwindcss": "^3.4.17",
