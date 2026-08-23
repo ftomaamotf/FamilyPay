@@ -27,11 +27,11 @@
       "bankName": "ماستر كي / Qi Card",
       "accountNumber": "9256869125",
       "cardHolder": "عبدالله عجمي مطشر",
-      "balance": 986000,
+      "balance": 1000000,
       "isSendingCard": true,
       "isFrozen": false,
       "color": "#059669",
-      "lastUpdated": "2026-08-22T14:40:00.000Z"
+      "lastUpdated": "2026-08-23T10:15:54.101Z"
     },
     {
       "id": "card-2",
@@ -119,7 +119,7 @@
           "id": "f-1787243536212-2",
           "name": "بنزين ومواصلات ⛽",
           "limit": 150000,
-          "spent": 14000
+          "spent": 0
         },
         {
           "id": "f-1787243536212-3",
@@ -130,26 +130,7 @@
       ]
     }
   ],
-  "transfers": [
-    {
-      "id": "tx-1787396340000",
-      "senderId": "b-2",
-      "senderName": "عبدالله عجمي مطشر (الأدمن)",
-      "recipientId": "b-1787243535948",
-      "recipientName": "محمد عجمي مطشر",
-      "recipientAccountNumber": "7145810946",
-      "accountNumber": "1003",
-      "amount": 14000,
-      "fieldId": "f-1787243536212-2",
-      "fieldName": "بنزين ومواصلات ⛽",
-      "reason": "بانزين سيارة",
-      "sendingCardId": "card-1",
-      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
-      "isSecurityVerified": true,
-      "timestamp": "2026-08-22T14:00:00.000Z",
-      "date": "2026-08-22"
-    }
-  ],
+  "transfers": [],
   "notifications": [
     {
       "id": "notif-1787396340000",

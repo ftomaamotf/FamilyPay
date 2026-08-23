@@ -1094,14 +1094,10 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // 5. Send Transfer (MANDATORY REASON + SECURITY PIN + DEDUCT + BROADCAST)
-  const executeTransfer = async ({ recipientId, amount, fieldId, reason, securityPin }) => {
+  // 5. Send Transfer (Direct without password)
+  const executeTransfer = async ({ recipientId, amount, fieldId, reason }) => {
     if (isCardFrozen) {
       return { success: false, message: '🔒 بطاقة الصندوق مجمدة ومقفلة أمنياً حالياً. يرجى إلغاء التجميد أولاً.' };
-    }
-
-    if (String(securityPin) !== String(fundPin) && String(securityPin) !== '9988' && String(securityPin) !== '123') {
-      return { success: false, message: '🔒 رمز حماية الصندوق غير صحيح! لا يمكن إتمام التحويل بدون الرمز السري.' };
     }
 
     const numAmount = Number(amount);
