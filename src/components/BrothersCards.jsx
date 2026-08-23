@@ -292,7 +292,7 @@ export const BrothersCards = ({
           <div className="text-center pb-2 border-b border-slate-800/80">
             <span className="text-xs font-black text-emerald-400 flex items-center justify-center gap-1">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>دوائر الإخوة والأدمن</span>
+              <span>دوائر المستخدمين والأدمن</span>
             </span>
             <span className="text-[10px] text-slate-400 block mt-0.5">
               ضغطة مطولة = نسخ الحساب 📋

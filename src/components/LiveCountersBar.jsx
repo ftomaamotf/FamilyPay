@@ -80,7 +80,7 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
             <div className="text-base sm:text-xl font-black text-rose-600 dark:text-rose-400">
               {formatMoney(totalSpentThisMonth, currency)}
             </div>
-            <span className="text-[10px] text-slate-400 font-medium">إجمالي تحويلات الإخوة</span>
+            <span className="text-[10px] text-slate-400 font-medium">إجمالي تحويلات المستخدمين</span>
           </div>
         </div>
 
@@ -106,7 +106,7 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
           className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm relative text-right transition hover:border-emerald-400 active:scale-98"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">إشعارات وتنبيهات الإخوة</span>
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">إشعارات وتنبيهات المستخدمين</span>
             <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center relative">
               <Bell className="w-3.5 h-3.5" />
               {unreadNotifsCount > 0 && (

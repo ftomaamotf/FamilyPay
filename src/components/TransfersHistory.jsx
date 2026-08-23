@@ -81,7 +81,7 @@ export const TransfersHistory = ({ onOpenTransferModal }) => {
             <span>سجل التحويلات المصرفية المباشرة</span>
           </h3>
           <p className="text-xs text-slate-400">
-            كافة المبالغ المحولة لأرقام حسابات الإخوة مع أسباب الصرف الإجبارية
+            كافة المبالغ المحولة لأرقام حسابات المستخدمين مع أسباب الصرف الإجبارية
           </p>
         </div>
 
@@ -112,7 +112,7 @@ export const TransfersHistory = ({ onOpenTransferModal }) => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="ابحث بالسبب (مثل: حليب، بنزين)، اسم الأخ، أو رقم الحساب..."
+            placeholder="ابحث بالسبب (مثل: حليب، بنزين)، اسم المستخدم، أو رقم الحساب..."
             className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pr-10 pl-3 py-2 text-xs text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-emerald-500"
           />
         </div>
@@ -123,10 +123,10 @@ export const TransfersHistory = ({ onOpenTransferModal }) => {
             onChange={(e) => setSelectedBrotherId(e.target.value)}
             className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white outline-none"
           >
-            <option value="all">جميع الإخوة الـ 6</option>
+            <option value="all">جميع المستخدمين</option>
             {brothers.map((b) => (
               <option key={b.id} value={b.id} className="dark:bg-slate-800">
-                الأخ: {b.name}
+                المستخدم: {b.name}
               </option>
             ))}
           </select>
