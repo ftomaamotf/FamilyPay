@@ -27,11 +27,11 @@
       "bankName": "ماستر كي / Qi Card",
       "accountNumber": "9256869125",
       "cardHolder": "عبدالله عجمي مطشر",
-      "balance": 1000000,
+      "balance": 995000,
       "isSendingCard": true,
       "isFrozen": false,
       "color": "#059669",
-      "lastUpdated": "2026-08-23T10:15:54.101Z"
+      "lastUpdated": "2026-08-23T10:27:07.910Z"
     },
     {
       "id": "card-2",
@@ -130,8 +130,38 @@
       ]
     }
   ],
-  "transfers": [],
+  "transfers": [
+    {
+      "id": "tx-1787480827910",
+      "senderId": "b-2",
+      "senderName": "عبدالله عجمي مطشر",
+      "recipientId": "b-1787243535948",
+      "recipientName": "محمد عجمي مطشر",
+      "recipientAccountNumber": "7145810946",
+      "accountNumber": "1003",
+      "amount": 5000,
+      "fieldId": "f-1",
+      "fieldName": "مصروف عام",
+      "reason": "تجربة توثيق تحويل مالي",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-23T10:27:07.910Z",
+      "date": "2026-08-23"
+    }
+  ],
   "notifications": [
+    {
+      "id": "notif-1787480827910",
+      "title": "💰 تحويل مالي: 5000 د.ع",
+      "message": "تم تحويل 5000 د.ع إلى حساب الأخ (محمد عجمي مطشر) رقم (7145810946) لحاجة [تجربة توثيق تحويل مالي]. المتبقي في بطاقة الصندوق: 995000 د.ع",
+      "transferId": "tx-1787480827910",
+      "recipientId": "b-1787243535948",
+      "amount": 5000,
+      "reason": "تجربة توثيق تحويل مالي",
+      "timestamp": "2026-08-23T10:27:07.910Z",
+      "readBy": []
+    },
     {
       "id": "notif-1787396340000",
       "title": "💰 تحويل مالي: 14,000 د.ع",
@@ -161,6 +191,24 @@
       "status": "approved",
       "createdAt": "2026-08-22T13:50:00.000Z",
       "approvedAt": "2026-08-22T14:00:00.000Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "t-1787480827910",
+      "type": "expense",
+      "amount": 5000,
+      "categoryId": "c-transfers",
+      "categoryName": "تحويل مالي (محمد عجمي مطشر) 💸",
+      "categoryIcon": "Send",
+      "memberId": "b-1787243535948",
+      "memberName": "محمد عجمي مطشر",
+      "paymentMethodId": "pm-qi",
+      "paymentMethodName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "date": "2026-08-23",
+      "description": "تحويل مالي مباشر: تجربة توثيق تحويل مالي (حساب #7145810946)",
+      "transferId": "tx-1787480827910",
+      "createdAt": "2026-08-23T10:27:07.910Z"
     }
   ]
 }
