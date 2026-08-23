@@ -16,7 +16,8 @@ import {
   Sparkles,
   Crown,
   Share2,
-  Inbox
+  Inbox,
+  MessageSquare
 } from 'lucide-react';
 
 export const Navbar = ({
