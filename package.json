@@ -8,7 +8,6 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview --host",
-    "postinstall": "vite build",
     "start": "node server.js",
     "desktop": "electron electron/main.cjs",
     "desktop:build": "npm run build && electron-builder --win"
