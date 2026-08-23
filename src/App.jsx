@@ -30,6 +30,7 @@ import { GuestJoinBanner } from './components/GuestJoinBanner';
 import { GuestJoinApprovalsModal } from './components/GuestJoinApprovalsModal';
 import { GuestPortalView } from './components/GuestPortalView';
 import { CircleChatModal } from './components/CircleChatModal';
+import { WalkieTalkieModal } from './components/WalkieTalkieModal';
 import { UserCheck, Send } from 'lucide-react';
 
 function MainApp() {
@@ -357,6 +358,8 @@ function MainApp() {
         onClose={() => setChatModalOpen(false)}
         initialRecipientId={chatRecipientId}
       />
+
+      <WalkieTalkieModal />
 
     </div>
   );

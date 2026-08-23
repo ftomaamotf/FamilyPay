@@ -11,7 +11,8 @@ import {
   Users,
   Crown,
   Smile,
-  CheckCheck
+  CheckCheck,
+  Radio
 } from 'lucide-react';
 import { useFinance } from '../context/FinanceContext';
 
@@ -123,7 +124,8 @@ export const CircleChatModal = ({ isOpen, onClose, initialRecipientId = 'all' })
     deleteMessage,
     currentUser,
     brothers = [],
-    activeAdminId
+    activeAdminId,
+    startIntercomCall
   } = useFinance();
 
   const [activeTab, setActiveTab] = useState(initialRecipientId || 'all');
@@ -308,12 +310,25 @@ export const CircleChatModal = ({ isOpen, onClose, initialRecipientId = 'all' })
 
         {/* Current Active Channel Status Bar */}
         <div className="px-4 py-2 bg-emerald-50/70 dark:bg-emerald-950/30 border-b border-emerald-100 dark:border-emerald-900/40 flex items-center justify-between text-xs font-bold text-emerald-800 dark:text-emerald-300">
-          <span>
-            {activeTab === 'all'
-              ? '🌐 أنت الآن في المحادثة العامة لجميع دوائر المستخدمين والأدمن'
-              : ('👤 محادثة مباشرة مع: ' + (selectedBrother?.name || 'المستخدم'))
-            }
-          </span>
+          <div className="flex items-center gap-2">
+            <span>
+              {activeTab === 'all'
+                ? '🌐 أنت الآن في المحادثة العامة لجميع دوائر المستخدمين والأدمن'
+                : ('👤 محادثة مباشرة مع: ' + (selectedBrother?.name || 'المستخدم'))
+              }
+            </span>
+            {activeTab !== 'all' && (
+              <button
+                type="button"
+                onClick={() => startIntercomCall(activeTab)}
+                className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-[11px] rounded-xl shadow-sm transition flex items-center gap-1 active:scale-95 border border-amber-400"
+                title="بدء مناداة وتحدث لاسلكي مباشر مع هذا المستخدم"
+              >
+                <Radio className="w-3 h-3" />
+                <span>مناداة 📻</span>
+              </button>
+            )}
+          </div>
           <span className="text-[10px] text-slate-400">
             {channelMessages.length} رسالة
           </span>

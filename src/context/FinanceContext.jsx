@@ -338,6 +338,12 @@ export const FinanceProvider = ({ children }) => {
   // Circle Chat & Voice Notes State
   const [messages, setMessages] = useState(() => loadFromStorage('bait_finance_messages', []));
 
+  // Live Intercom & Walkie-Talkie State
+  const [activeCall, setActiveCall] = useState(null);
+  const [incomingCall, setIncomingCall] = useState(null);
+  const [incomingVoiceBurst, setIncomingVoiceBurst] = useState(null);
+  const [isWalkieTalkieOpen, setIsWalkieTalkieOpen] = useState(false);
+
   // Sync to Storage
   useEffect(() => saveToStorage('bait_finance_current_user', currentUser), [currentUser]);
   useEffect(() => saveToStorage('bait_finance_bank_cards', bankCards), [bankCards]);
@@ -390,6 +396,55 @@ export const FinanceProvider = ({ children }) => {
       }
     } catch (e) {
       console.log('Message sound error:', e);
+    }
+  }, []);
+
+  // Intercom Walkie-Talkie Ringtone (Loud Radio Ring / Buzzer)
+  const playIntercomRingtone = useCallback(() => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = ctx.currentTime;
+
+      [0, 0.22, 0.44, 0.66].forEach((t) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(784, now + t); // G5
+        osc.frequency.setValueAtTime(987.77, now + t + 0.09); // B5
+        gain.gain.setValueAtTime(0.35, now + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.18);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + t);
+        osc.stop(now + t + 0.18);
+      });
+
+      if (window.navigator?.vibrate) {
+        window.navigator.vibrate([200, 100, 200, 100, 300]);
+      }
+    } catch (e) {
+      console.log('Intercom ringtone error:', e);
+    }
+  }, []);
+
+  // Walkie-Talkie Radio Chirp / Roger Beep
+  const playWalkieTalkieChirp = useCallback(() => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1100, now);
+      osc.frequency.setValueAtTime(1600, now + 0.04);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    } catch (e) {
+      console.log('Chirp sound error:', e);
     }
   }, []);
 
@@ -600,6 +655,61 @@ export const FinanceProvider = ({ children }) => {
             if (allMsgs) setMessages(allMsgs);
             else if (messageId) setMessages((prev) => prev.filter((m) => m.id !== messageId));
           }
+
+          // ================= Intercom & Walkie-Talkie Events =================
+          if (payload.type === 'INTERCOM_RINGING') {
+            const { call } = payload.data;
+            if (call && currentUser && call.receiverId === currentUser.id && call.status === 'ringing') {
+              setIncomingCall(call);
+              playIntercomRingtone();
+              if (Notification.permission === 'granted') {
+                new Notification(`📻 جهاز المناداة: مناداة مباشرة من ${call.callerName}`, {
+                  body: 'يطلب الأخ التحدث المباشر معك الآن.. اضغط للموافقة أو الرد.',
+                  icon: '/favicon.svg'
+                });
+              }
+            }
+          }
+
+          if (payload.type === 'INTERCOM_STATUS') {
+            const { call, action } = payload.data;
+            if (call) {
+              setActiveCall((prev) => {
+                if (prev && prev.id === call.id) return call;
+                if (currentUser && (call.callerId === currentUser.id || call.receiverId === currentUser.id)) {
+                  if (call.status === 'connected') return call;
+                }
+                return prev;
+              });
+
+              setIncomingCall((prev) => {
+                if (prev && prev.id === call.id) {
+                  return call.status === 'ringing' ? call : null;
+                }
+                return prev;
+              });
+
+              if (call.status === 'connected') {
+                setIsWalkieTalkieOpen(true);
+                playWalkieTalkieChirp();
+              } else if (call.status === 'rejected' || call.status === 'ended') {
+                playWalkieTalkieChirp();
+              }
+            }
+          }
+
+          if (payload.type === 'INTERCOM_VOICE_BURST') {
+            const { callId, senderId, audioData } = payload.data;
+            if (currentUser && senderId !== currentUser.id) {
+              setIncomingVoiceBurst(payload.data);
+              try {
+                const burstAudio = new Audio(audioData);
+                burstAudio.play().catch((e) => console.log('Burst autoplay note:', e));
+              } catch (e) {
+                console.log('Intercom audio burst error:', e);
+              }
+            }
+          }
         } catch (err) {
           console.error('Error parsing SSE event:', err);
         }
@@ -615,7 +725,7 @@ export const FinanceProvider = ({ children }) => {
     return () => {
       if (eventSource) eventSource.close();
     };
-  }, [playChimeSound, currentUser]);
+  }, [playChimeSound, playMessageNotificationSound, playIntercomRingtone, playWalkieTalkieChirp, currentUser]);
 
   // Periodic polling for Admin and Brothers to guarantee instantaneous real-time sync
   useEffect(() => {
@@ -1604,6 +1714,127 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
+  // 11. Live Intercom & Walkie-Talkie Methods
+  const startIntercomCall = async (targetBrotherId) => {
+    const activeUser = currentUser || { id: 'guest', name: 'مستخدم' };
+    const receiver = brothers.find((b) => b.id === targetBrotherId) || { name: 'المستخدم' };
+    try {
+      const res = await fetch(`${API_BASE}/api/intercom/call`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          callerId: activeUser.id,
+          callerName: activeUser.name,
+          callerAvatar: activeUser.avatarColor || '#10b981',
+          receiverId: targetBrotherId,
+          receiverName: receiver.name
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.call) {
+        setActiveCall(data.call);
+        setIsWalkieTalkieOpen(true);
+        playWalkieTalkieChirp();
+      }
+      return data;
+    } catch {
+      const localCall = {
+        id: 'call-' + Date.now(),
+        callerId: activeUser.id,
+        callerName: activeUser.name,
+        callerAvatar: activeUser.avatarColor || '#10b981',
+        receiverId: targetBrotherId,
+        receiverName: receiver.name,
+        status: 'ringing',
+        createdAt: new Date().toISOString()
+      };
+      setActiveCall(localCall);
+      setIsWalkieTalkieOpen(true);
+      return { success: true, call: localCall };
+    }
+  };
+
+  const acceptIntercomCall = async (callId) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/intercom/respond`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          callId,
+          action: 'accept',
+          userId: currentUser?.id
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.call) {
+        setActiveCall(data.call);
+        setIncomingCall(null);
+        setIsWalkieTalkieOpen(true);
+        playWalkieTalkieChirp();
+      }
+      return data;
+    } catch {
+      if (incomingCall) {
+        const connectedCall = { ...incomingCall, status: 'connected' };
+        setActiveCall(connectedCall);
+        setIncomingCall(null);
+        setIsWalkieTalkieOpen(true);
+      }
+      return { success: true };
+    }
+  };
+
+  const rejectIntercomCall = async (callId) => {
+    try {
+      await fetch(`${API_BASE}/api/intercom/respond`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          callId,
+          action: 'reject',
+          userId: currentUser?.id
+        })
+      });
+    } catch {}
+    setIncomingCall(null);
+  };
+
+  const endIntercomCall = async (callId) => {
+    try {
+      await fetch(`${API_BASE}/api/intercom/respond`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          callId: callId || activeCall?.id,
+          action: 'end',
+          userId: currentUser?.id
+        })
+      });
+    } catch {}
+    setActiveCall(null);
+    setIsWalkieTalkieOpen(false);
+    playWalkieTalkieChirp();
+  };
+
+  const sendIntercomVoiceBurst = async ({ callId, audioData, duration }) => {
+    const activeUser = currentUser || { id: 'guest', name: 'مستخدم' };
+    try {
+      await fetch(`${API_BASE}/api/intercom/voice-burst`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          callId: callId || activeCall?.id,
+          senderId: activeUser.id,
+          senderName: activeUser.name,
+          audioData,
+          duration: duration || 0
+        })
+      });
+    } catch (e) {
+      console.log('Voice burst send error:', e);
+    }
+  };
+
   const markAllNotifsAsRead = () => {
     if (!currentUser) return;
     setNotifications((prev) =>
@@ -1679,7 +1910,21 @@ export const FinanceProvider = ({ children }) => {
         messages,
         sendMessage,
         deleteMessage,
-        playMessageNotificationSound
+        playMessageNotificationSound,
+        activeCall,
+        setActiveCall,
+        incomingCall,
+        setIncomingCall,
+        incomingVoiceBurst,
+        isWalkieTalkieOpen,
+        setIsWalkieTalkieOpen,
+        startIntercomCall,
+        acceptIntercomCall,
+        rejectIntercomCall,
+        endIntercomCall,
+        sendIntercomVoiceBurst,
+        playIntercomRingtone,
+        playWalkieTalkieChirp
       }}
     >
       {children}

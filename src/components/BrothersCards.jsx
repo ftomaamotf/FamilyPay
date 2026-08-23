@@ -18,7 +18,8 @@ import {
   QrCode,
   Inbox,
   Edit3,
-  MessageSquare
+  MessageSquare,
+  Radio
 } from 'lucide-react';
 import { EditTransferModal } from './EditTransferModal';
 
@@ -40,7 +41,8 @@ export const BrothersCards = ({
     settings,
     canCurrentUserSend,
     updateBrotherFields,
-    deleteBrother
+    deleteBrother,
+    startIntercomCall
   } = useFinance();
   const [copiedId, setCopiedId] = useState(null);
   const [copiedToast, setCopiedToast] = useState(null);
@@ -616,6 +618,17 @@ export const BrothersCards = ({
                 <span>محادثة وبصمة صوت 🎙️</span>
               </button>
             )}
+
+            {/* Walkie-Talkie / Live Intercom Button */}
+            <button
+              type="button"
+              onClick={() => startIntercomCall(selectedBrother.id)}
+              className="px-4 py-3 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700 font-extrabold text-xs sm:text-sm rounded-2xl transition flex items-center gap-1.5 active:scale-98 shadow-sm"
+              title="بدء مناداة وتحدث مباشر مع هذا المستخدم عبر جهاز اللاسلكي"
+            >
+              <Radio className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span>مناداة وتحدث مباشر 📻</span>
+            </button>
 
             {isCurrentAdmin && (
               <button

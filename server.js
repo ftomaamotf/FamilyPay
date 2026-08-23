@@ -1742,6 +1742,108 @@ app.delete('/api/messages/:id', (req, res) => {
   res.json({ success: true, messages: db.messages });
 });
 
+// ================= 9. Realtime Walkie-Talkie & Live Intercom System =================
+const activeIntercomCalls = {}; // in-memory map of callId -> callData
+
+// 9.1 Start Intercom Call (طلب المناداة المباشرة)
+app.post('/api/intercom/call', (req, res) => {
+  const { callerId, callerName, callerAvatar, receiverId, receiverName } = req.body;
+  const db = readDB();
+
+  const caller = db.brothers.find((b) => b.id === callerId) || { name: callerName || 'مستخدم', avatarColor: callerAvatar || '#10b981' };
+  const receiver = db.brothers.find((b) => b.id === receiverId) || { name: receiverName || 'مستخدم', avatarColor: '#3b82f6' };
+
+  const callId = 'call-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+  const callData = {
+    id: callId,
+    callerId,
+    callerName: caller.name,
+    callerAvatar: caller.avatarColor || '#10b981',
+    receiverId,
+    receiverName: receiver.name,
+    receiverAvatar: receiver.avatarColor || '#3b82f6',
+    status: 'ringing', // 'ringing', 'connected', 'rejected', 'ended'
+    createdAt: new Date().toISOString()
+  };
+
+  activeIntercomCalls[callId] = callData;
+
+  // Broadcast ringing alert to all clients via SSE
+  broadcastEvent('INTERCOM_RINGING', { call: callData });
+
+  res.json({
+    success: true,
+    message: `جاري الاتصال والمناداة على الأخ (${receiver.name})... 📻`,
+    call: callData
+  });
+});
+
+// 9.2 Respond to Intercom Call (موافقة / رفض / إنهاء)
+app.post('/api/intercom/respond', (req, res) => {
+  const { callId, action, userId } = req.body; // action: 'accept' | 'reject' | 'end' | 'cancel'
+  const callData = activeIntercomCalls[callId];
+
+  if (!callData) {
+    return res.status(404).json({ success: false, message: 'جلسة المناداة غير موجودة أو انتهت' });
+  }
+
+  if (action === 'accept') {
+    callData.status = 'connected';
+    callData.connectedAt = new Date().toISOString();
+  } else if (action === 'reject') {
+    callData.status = 'rejected';
+    callData.endedAt = new Date().toISOString();
+  } else if (action === 'end' || action === 'cancel') {
+    callData.status = 'ended';
+    callData.endedAt = new Date().toISOString();
+  }
+
+  activeIntercomCalls[callId] = callData;
+
+  // Broadcast update to all clients
+  broadcastEvent('INTERCOM_STATUS', { call: callData, action, userId });
+
+  // Cleanup after a few seconds if closed
+  if (['rejected', 'ended'].includes(callData.status)) {
+    setTimeout(() => {
+      delete activeIntercomCalls[callId];
+    }, 8000);
+  }
+
+  res.json({ success: true, call: callData });
+});
+
+// 9.3 Send Voice Stream / Burst over Intercom (البث الصوتي المباشر)
+app.post('/api/intercom/voice-burst', (req, res) => {
+  const { callId, senderId, senderName, audioData, duration } = req.body;
+  const callData = activeIntercomCalls[callId];
+
+  if (!callData || callData.status !== 'connected') {
+    return res.status(400).json({ success: false, message: 'جلسة المناداة غير متصلة' });
+  }
+
+  const burstPayload = {
+    callId,
+    senderId,
+    senderName,
+    audioData,
+    duration: duration || 0,
+    timestamp: new Date().toISOString()
+  };
+
+  // Broadcast instantly to receiver
+  broadcastEvent('INTERCOM_VOICE_BURST', burstPayload);
+
+  res.json({ success: true });
+});
+
+// 9.4 Get Active Call Status
+app.get('/api/intercom/status/:callId', (req, res) => {
+  const { callId } = req.params;
+  const callData = activeIntercomCalls[callId];
+  res.json({ success: true, call: callData || null });
+});
+
 // Serve frontend build in production with no-cache headers
 const distPath = path.join(__dirname, 'dist');
 if (fs.existsSync(distPath)) {
