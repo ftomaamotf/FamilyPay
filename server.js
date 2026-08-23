@@ -1099,6 +1099,26 @@ app.post('/api/transfers', (req, res) => {
 
   db.transfers.unshift(newTransfer);
 
+  // Also document as a recorded transaction in general ledger
+  if (!db.transactions) db.transactions = [];
+  const newTransaction = {
+    id: 't-' + Date.now(),
+    type: 'expense',
+    amount: numAmount,
+    categoryId: 'c-transfers',
+    categoryName: `تحويل مالي (${recipient.name}) 💸`,
+    categoryIcon: 'Send',
+    memberId: recipient.id,
+    memberName: recipient.name,
+    paymentMethodId: 'pm-qi',
+    paymentMethodName: sendingCard.name || 'ماستر كي / Qi Card',
+    date: new Date().toISOString().split('T')[0],
+    description: `تحويل مالي مباشر: ${reason.trim()} (حساب #${newTransfer.recipientAccountNumber})`,
+    transferId: newTransfer.id,
+    createdAt: new Date().toISOString()
+  };
+  db.transactions.unshift(newTransaction);
+
   const newNotification = {
     id: 'notif-' + Date.now(),
     title: `💰 تحويل مالي: ${numAmount} ${db.currency.symbol}`,
@@ -1116,19 +1136,27 @@ app.post('/api/transfers', (req, res) => {
 
   broadcastEvent('NEW_TRANSFER', {
     transfer: newTransfer,
+    transaction: newTransaction,
     notification: newNotification,
     sendingCardBalance: sendingCard.balance,
     sendingCardId: sendingCard.id,
     recipientId: recipient.id,
     bankCards: db.bankCards,
-    brothers: db.brothers
+    brothers: db.brothers,
+    transfers: db.transfers,
+    transactions: db.transactions
   });
 
   res.json({
     success: true,
-    message: `تم تحويل ${numAmount} ${db.currency.symbol} إلى حساب الأخ ${recipient.name} بنجاح بعد التحقق الأمني`,
+    message: `تم تحويل ${numAmount} ${db.currency.symbol} إلى حساب الأخ ${recipient.name} وتوثيق العملية بنجاح 🚀`,
     transfer: newTransfer,
-    sendingCardBalance: sendingCard.balance
+    transaction: newTransaction,
+    sendingCardBalance: sendingCard.balance,
+    bankCards: db.bankCards,
+    brothers: db.brothers,
+    transfers: db.transfers,
+    transactions: db.transactions
   });
 });
 

@@ -430,20 +430,25 @@ export const FinanceProvider = ({ children }) => {
           }
 
           if (payload.type === 'NEW_TRANSFER') {
-            const { transfer, notification, bankCards: newCards, brothers: newBrothers } = payload.data;
+            const { transfer, transaction, notification, bankCards: newCards, brothers: newBrothers, transfers: allTransfers, transactions: allTransactions } = payload.data;
             
             if (newCards) setBankCards(newCards);
             if (newBrothers) setBrothers(newBrothers);
             
-            setTransfers((prev) => [transfer, ...prev.filter((t) => t.id !== transfer.id)]);
-            setNotifications((prev) => [notification, ...prev]);
+            if (allTransfers) setTransfers(allTransfers);
+            else if (transfer) setTransfers((prev) => [transfer, ...prev.filter((t) => t.id !== transfer.id)]);
+
+            if (allTransactions) setTransactions(allTransactions);
+            else if (transaction) setTransactions((prev) => [transaction, ...prev.filter((t) => t.id !== transaction.id)]);
             
-            // Pop Alert on Screen & Play Sound
-            setActiveAlert(notification);
-            playChimeSound();
+            if (notification) {
+              setNotifications((prev) => [notification, ...prev]);
+              setActiveAlert(notification);
+              playChimeSound();
+            }
 
             // Browser Notification API if enabled
-            if (Notification.permission === 'granted') {
+            if (notification && Notification.permission === 'granted') {
               new Notification(notification.title, {
                 body: notification.message,
                 icon: '/favicon.svg'
@@ -1117,12 +1122,25 @@ export const FinanceProvider = ({ children }) => {
           recipientId,
           amount: numAmount,
           fieldId,
-          reason: reason.trim(),
-          securityPin
+          reason: reason.trim()
         })
       });
       const data = await res.json();
       if (data.success) {
+        if (data.transfers) {
+          setTransfers(data.transfers);
+        } else if (data.transfer) {
+          setTransfers((prev) => [data.transfer, ...prev.filter((t) => t.id !== data.transfer.id)]);
+        }
+        if (data.transactions) {
+          setTransactions(data.transactions);
+        } else if (data.transaction) {
+          setTransactions((prev) => [data.transaction, ...prev.filter((t) => t.id !== data.transaction.id)]);
+        }
+        if (data.bankCards) setBankCards(data.bankCards);
+        if (data.brothers) setBrothers(data.brothers);
+        if (data.notifications) setNotifications(data.notifications);
+        playChimeSound();
         return { success: true, message: data.message, transfer: data.transfer };
       }
       return { success: false, message: data.message };
