@@ -27,11 +27,11 @@
       "bankName": "ماستر كي / Qi Card",
       "accountNumber": "9256869125",
       "cardHolder": "عبدالله عجمي مطشر",
-      "balance": 902001,
+      "balance": 827001,
       "isSendingCard": true,
       "isFrozen": false,
       "color": "#059669",
-      "lastUpdated": "2026-08-23T16:40:48.872Z"
+      "lastUpdated": "2026-08-23T16:42:06.657Z"
     },
     {
       "id": "card-2",
@@ -126,11 +126,84 @@
           "name": "حليب ومواد غذائية 🥛",
           "limit": 200000,
           "spent": 0
+        },
+        {
+          "id": "f-1787503326641-740",
+          "name": "بنزين وسفر ⛽",
+          "limit": 500000,
+          "spent": 50000
+        }
+      ]
+    },
+    {
+      "id": "b-3",
+      "name": "مستخدم مسجل",
+      "accountNumber": "1003",
+      "phone": "07709313213",
+      "bankAccountNumber": "1003",
+      "bankName": "ماستر كي / Qi Card",
+      "password": "123",
+      "avatarColor": "#8b5cf6",
+      "isAdmin": false,
+      "approvedFields": [
+        {
+          "id": "f-1787503326651-1",
+          "name": "مصاريف عامة 🛒",
+          "limit": 100000,
+          "spent": 0
+        },
+        {
+          "id": "f-1787503326651-2",
+          "name": "بنزين ومواصلات ⛽",
+          "limit": 100000,
+          "spent": 0
+        },
+        {
+          "id": "f-1787503326652-513",
+          "name": "حليب وحفاضات أطفال 🍼",
+          "limit": 500000,
+          "spent": 25000
         }
       ]
     }
   ],
   "transfers": [
+    {
+      "id": "tx-1787503326657",
+      "senderId": "b-2",
+      "senderName": "الأدمن (موافقة على طلب)",
+      "recipientId": "b-3",
+      "recipientName": "مستخدم مسجل",
+      "recipientAccountNumber": "1003",
+      "accountNumber": "1003",
+      "amount": 25000,
+      "fieldId": "f-1787503326652-513",
+      "fieldName": "حليب وحفاضات أطفال 🍼",
+      "reason": "[موافقة على طلب - حليب وحفاضات أطفال 🍼] شراء حليب ومستلزمات أطفال",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-23T16:42:06.657Z",
+      "date": "2026-08-23"
+    },
+    {
+      "id": "tx-1787503326641",
+      "senderId": "b-2",
+      "senderName": "عبدالله عجمي مطشر",
+      "recipientId": "b-1787243535948",
+      "recipientName": "محمد عجمي مطشر",
+      "recipientAccountNumber": "7145810946",
+      "accountNumber": "1003",
+      "amount": 50000,
+      "fieldId": "f-1787503326641-740",
+      "fieldName": "بنزين وسفر ⛽",
+      "reason": "تعبئة وقود بنزين للسفر إلى بغداد",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-23T16:42:06.641Z",
+      "date": "2026-08-23"
+    },
     {
       "id": "tx-1787503248872",
       "senderId": "b-2",
@@ -187,6 +260,35 @@
     }
   ],
   "notifications": [
+    {
+      "id": "notif-1787503326657",
+      "title": "💰 تحويل مالي: 25000 د.ع",
+      "message": "تم تحويل 25000 د.ع إلى حساب الأخ (مستخدم مسجل) رقم (1003) لحاجة [حليب وحفاضات أطفال 🍼]. المتبقي في بطاقة الصندوق: 827001 د.ع",
+      "transferId": "tx-1787503326657",
+      "recipientId": "b-3",
+      "amount": 25000,
+      "reason": "شراء حليب ومستلزمات أطفال",
+      "timestamp": "2026-08-23T16:42:06.657Z",
+      "readBy": []
+    },
+    {
+      "id": "notif-1787503326652",
+      "title": "📥 طلب أموال جديد (حليب وحفاضات أطفال 🍼): 25000 د.ع",
+      "message": "طلب الأخ (مستخدم مسجل) مبلغ 25000 د.ع لبند [حليب وحفاضات أطفال 🍼] لحاجة: (شراء حليب ومستلزمات أطفال). بانتظار موافقة الأدمن.",
+      "timestamp": "2026-08-23T16:42:06.652Z",
+      "readBy": []
+    },
+    {
+      "id": "notif-1787503326641",
+      "title": "💰 تحويل مالي: 50000 د.ع",
+      "message": "تم تحويل 50000 د.ع إلى حساب الأخ (محمد عجمي مطشر) رقم (7145810946) لحاجة [تعبئة وقود بنزين للسفر إلى بغداد]. المتبقي في بطاقة الصندوق: 852001 د.ع",
+      "transferId": "tx-1787503326641",
+      "recipientId": "b-1787243535948",
+      "amount": 50000,
+      "reason": "تعبئة وقود بنزين للسفر إلى بغداد",
+      "timestamp": "2026-08-23T16:42:06.641Z",
+      "readBy": []
+    },
     {
       "id": "notif-1787503248872",
       "title": "💰 تحويل مالي: 45000 د.ع",
@@ -336,6 +438,21 @@
   "invitations": [],
   "fundRequests": [
     {
+      "id": "req-1787503326652",
+      "brotherId": "b-3",
+      "brotherName": "مستخدم مسجل",
+      "brotherAccountNumber": "1003",
+      "bankAccountNumber": "1003",
+      "phone": "07709313213",
+      "amount": 25000,
+      "fieldId": "f-1787503326652-513",
+      "fieldName": "حليب وحفاضات أطفال 🍼",
+      "reason": "شراء حليب ومستلزمات أطفال",
+      "status": "approved",
+      "createdAt": "2026-08-23T16:42:06.652Z",
+      "approvedAt": "2026-08-23T16:42:06.657Z"
+    },
+    {
       "id": "req-1787244666311",
       "brotherId": "b-1787243535948",
       "brotherName": "محمد عجمي مطشر",
@@ -351,6 +468,22 @@
     }
   ],
   "transactions": [
+    {
+      "id": "t-1787503326641",
+      "type": "expense",
+      "amount": 50000,
+      "categoryId": "c-transfers",
+      "categoryName": "تحويل مالي (محمد عجمي مطشر) 💸",
+      "categoryIcon": "Send",
+      "memberId": "b-1787243535948",
+      "memberName": "محمد عجمي مطشر",
+      "paymentMethodId": "pm-qi",
+      "paymentMethodName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "date": "2026-08-23",
+      "description": "تحويل مالي مباشر: تعبئة وقود بنزين للسفر إلى بغداد (حساب #7145810946)",
+      "transferId": "tx-1787503326641",
+      "createdAt": "2026-08-23T16:42:06.641Z"
+    },
     {
       "id": "t-1787503248872",
       "type": "expense",
