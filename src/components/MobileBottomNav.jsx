@@ -7,23 +7,23 @@ import {
   Eye,
   Archive,
   Receipt,
-  Inbox
+  Inbox,
+  MessageSquare
 } from 'lucide-react';
 
 export const MobileBottomNav = ({
   activeTab,
   setActiveTab,
   onOpenTransferModal,
-  onOpenRequestMoney
+  onOpenRequestMoney,
+  onOpenChat
 }) => {
-  const { canCurrentUserSend } = useFinance();
+  const { canCurrentUserSend, messages = [] } = useFinance();
   const canSend = canCurrentUserSend ? canCurrentUserSend() : true;
 
   const tabs = [
     { id: 'dashboard', label: 'الصندوق', icon: LayoutDashboard },
     { id: 'brothers', label: 'الدوائر 👥', icon: Users },
-    { id: 'all-schedules', label: 'الجداول', icon: Eye },
-    { id: 'archives', label: 'الأرشيف', icon: Archive },
   ];
 
   return (
@@ -68,24 +68,34 @@ export const MobileBottomNav = ({
           </button>
         </div>
 
-        {tabs.slice(2).map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition ${
-                isActive
-                  ? 'text-emerald-600 dark:text-emerald-400 font-bold'
-                  : 'text-slate-500 dark:text-slate-400 font-medium'
-              }`}
-            >
-              <Icon className={`w-5 h-5 ${isActive ? 'scale-110' : ''}`} />
-              <span className="text-[10px] mt-0.5">{tab.label}</span>
-            </button>
-          );
-        })}
+        {/* Chat & Voice Notes Button on Mobile */}
+        <button
+          type="button"
+          onClick={() => onOpenChat && onOpenChat('all')}
+          className="flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition text-emerald-700 dark:text-emerald-300 relative font-bold"
+        >
+          <div className="relative">
+            <MessageSquare className="w-5 h-5" />
+            {messages.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-white dark:ring-slate-900 animate-pulse" />
+            )}
+          </div>
+          <span className="text-[10px] mt-0.5 font-bold">محادثة 🎙️</span>
+        </button>
+
+        {/* Archives Tab */}
+        <button
+          type="button"
+          onClick={() => setActiveTab('archives')}
+          className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition ${
+            activeTab === 'archives'
+              ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+              : 'text-slate-500 dark:text-slate-400 font-medium'
+          }`}
+        >
+          <Archive className={`w-5 h-5 ${activeTab === 'archives' ? 'scale-110' : ''}`} />
+          <span className="text-[10px] mt-0.5">الأرشيف</span>
+        </button>
 
       </div>
     </div>

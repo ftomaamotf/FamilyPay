@@ -29,6 +29,7 @@ import { BottomToolsBar } from './components/BottomToolsBar';
 import { GuestJoinBanner } from './components/GuestJoinBanner';
 import { GuestJoinApprovalsModal } from './components/GuestJoinApprovalsModal';
 import { GuestPortalView } from './components/GuestPortalView';
+import { CircleChatModal } from './components/CircleChatModal';
 import { UserCheck, Send } from 'lucide-react';
 
 function MainApp() {
@@ -38,6 +39,9 @@ function MainApp() {
   const pendingMoneyRequests = (fundRequests || []).filter((r) => r.status === 'pending');
 
   // Modals state
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [chatRecipientId, setChatRecipientId] = useState('all');
+
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [transferRecipientId, setTransferRecipientId] = useState(null);
   const [transferFieldId, setTransferFieldId] = useState(null);
@@ -59,6 +63,11 @@ function MainApp() {
   const [joinQrOpen, setJoinQrOpen] = useState(false);
   const [requestMoneyBrotherId, setRequestMoneyBrotherId] = useState(null);
   const [requestMoneyFieldId, setRequestMoneyFieldId] = useState(null);
+
+  const handleOpenChat = (recipientId = 'all') => {
+    setChatRecipientId(recipientId);
+    setChatModalOpen(true);
+  };
 
   const handleOpenTransfer = (recipientId = null, fieldId = null) => {
     setTransferRecipientId(recipientId);
@@ -115,6 +124,7 @@ function MainApp() {
         onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
         onOpenRequestMoney={(brother, field) => handleOpenRequestMoney(brother, field)}
         onOpenPendingRequests={() => setPendingRequestsModalOpen(true)}
+        onOpenChat={handleOpenChat}
         onLogout={() => setCurrentUser(null)}
       />
 
@@ -205,6 +215,7 @@ function MainApp() {
               onOpenJoinQr={() => setJoinQrOpen(true)}
               onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
               onOpenRequestMoney={(brother, field) => handleOpenRequestMoney(brother, field)}
+              onOpenChat={handleOpenChat}
             />
             <TransfersHistory onOpenTransferModal={handleOpenTransfer} />
           </div>
@@ -218,6 +229,7 @@ function MainApp() {
             onOpenJoinQr={() => setJoinQrOpen(true)}
             onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
             onOpenRequestMoney={(brother, field) => handleOpenRequestMoney(brother, field)}
+            onOpenChat={handleOpenChat}
           />
         )}
 
@@ -241,6 +253,7 @@ function MainApp() {
       <BottomToolsBar
         onOpenQrModal={() => setQrModalOpen(true)}
         onOpenSettings={() => setSettingsModalOpen(true)}
+        onOpenChat={handleOpenChat}
         onLogout={() => setCurrentUser(null)}
       />
 
@@ -250,6 +263,7 @@ function MainApp() {
         setActiveTab={setActiveTab}
         onOpenTransferModal={() => handleOpenTransfer()}
         onOpenRequestMoney={(brother, field) => handleOpenRequestMoney(brother, field)}
+        onOpenChat={handleOpenChat}
       />
 
       {/* Modals */}
@@ -336,6 +350,12 @@ function MainApp() {
       <GuestJoinApprovalsModal
         isOpen={guestApprovalsOpen}
         onClose={() => setGuestApprovalsOpen(false)}
+      />
+
+      <CircleChatModal
+        isOpen={chatModalOpen}
+        onClose={() => setChatModalOpen(false)}
+        initialRecipientId={chatRecipientId}
       />
 
     </div>

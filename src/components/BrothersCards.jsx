@@ -17,7 +17,8 @@ import {
   Trash2,
   QrCode,
   Inbox,
-  Edit3
+  Edit3,
+  MessageSquare
 } from 'lucide-react';
 import { EditTransferModal } from './EditTransferModal';
 
@@ -28,7 +29,8 @@ export const BrothersCards = ({
   onOpenEditBrother,
   onOpenWhatsAppInvite,
   onOpenJoinQr,
-  onOpenRequestMoney
+  onOpenRequestMoney,
+  onOpenChat
 }) => {
   const {
     brothers,
@@ -37,7 +39,8 @@ export const BrothersCards = ({
     currentUser,
     settings,
     canCurrentUserSend,
-    updateBrotherFields
+    updateBrotherFields,
+    deleteBrother
   } = useFinance();
   const [copiedId, setCopiedId] = useState(null);
   const [copiedToast, setCopiedToast] = useState(null);
@@ -581,33 +584,46 @@ export const BrothersCards = ({
             </div>
           </div>
 
-          {/* Action Buttons: Send Transfer (Admin Only) or Request Money (Regular Users) */}
-          <div className="pt-2 flex items-center gap-3">
+          {/* Action Buttons: Send Transfer / Request Money + Direct Chat */}
+          <div className="pt-2 flex flex-wrap items-center gap-2.5">
             {isCurrentAdmin ? (
               <button
                 onClick={() => onOpenTransferModal(selectedBrother)}
-                className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition active:scale-98"
+                className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition active:scale-98"
               >
                 <Send className="w-4 h-4 -rotate-45" />
-                <span>إرسال تحويل مالي لهذا الأخ 💸</span>
+                <span>إرسال تحويل مالي لهذا المستخدم 💸</span>
               </button>
             ) : (
               <button
                 onClick={() => onOpenRequestMoney && onOpenRequestMoney(selectedBrother)}
-                className="flex-1 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-teal-600/20 flex items-center justify-center gap-2 transition active:scale-98"
+                className="flex-1 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-teal-600/20 flex items-center justify-center gap-2 transition active:scale-98"
               >
                 <Inbox className="w-4 h-4" />
                 <span>طلب أموال من الصندوق 📥</span>
               </button>
             )}
 
+            {/* Direct Chat & Voice Notes Button */}
+            {onOpenChat && (
+              <button
+                type="button"
+                onClick={() => onOpenChat(selectedBrother.id)}
+                className="px-4 py-3 bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-200 border border-teal-300 dark:border-teal-700 font-extrabold text-xs sm:text-sm rounded-2xl transition flex items-center gap-1.5 active:scale-98 shadow-sm"
+                title="إرسال رسالة أو بصمة صوتية لهذا المستخدم"
+              >
+                <MessageSquare className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                <span>محادثة وبصمة صوت 🎙️</span>
+              </button>
+            )}
+
             {isCurrentAdmin && (
               <button
                 onClick={() => onOpenFieldsModal(selectedBrother)}
-                className="px-5 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-extrabold text-sm rounded-2xl transition flex items-center gap-2"
+                className="px-4 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-extrabold text-xs sm:text-sm rounded-2xl transition flex items-center gap-1.5"
               >
                 <Sliders className="w-4 h-4" />
-                <span>تعديل السلع وسجل الطلبات ⚙️</span>
+                <span>تعديل السلع ⚙️</span>
               </button>
             )}
           </div>

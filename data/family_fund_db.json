@@ -134,58 +134,9 @@
           "spent": 50000
         }
       ]
-    },
-    {
-      "id": "b-3",
-      "name": "مستخدم مسجل",
-      "accountNumber": "1003",
-      "phone": "07709313213",
-      "bankAccountNumber": "1003",
-      "bankName": "ماستر كي / Qi Card",
-      "password": "123",
-      "avatarColor": "#8b5cf6",
-      "isAdmin": false,
-      "approvedFields": [
-        {
-          "id": "f-1787503326651-1",
-          "name": "مصاريف عامة 🛒",
-          "limit": 100000,
-          "spent": 0
-        },
-        {
-          "id": "f-1787503326651-2",
-          "name": "بنزين ومواصلات ⛽",
-          "limit": 100000,
-          "spent": 0
-        },
-        {
-          "id": "f-1787503326652-513",
-          "name": "حليب وحفاضات أطفال 🍼",
-          "limit": 500000,
-          "spent": 25000
-        }
-      ]
     }
   ],
   "transfers": [
-    {
-      "id": "tx-1787503326657",
-      "senderId": "b-2",
-      "senderName": "الأدمن (موافقة على طلب)",
-      "recipientId": "b-3",
-      "recipientName": "مستخدم مسجل",
-      "recipientAccountNumber": "1003",
-      "accountNumber": "1003",
-      "amount": 25000,
-      "fieldId": "f-1787503326652-513",
-      "fieldName": "حليب وحفاضات أطفال 🍼",
-      "reason": "[موافقة على طلب - حليب وحفاضات أطفال 🍼] شراء حليب ومستلزمات أطفال",
-      "sendingCardId": "card-1",
-      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
-      "isSecurityVerified": true,
-      "timestamp": "2026-08-23T16:42:06.657Z",
-      "date": "2026-08-23"
-    },
     {
       "id": "tx-1787503326641",
       "senderId": "b-2",
@@ -438,21 +389,6 @@
   "invitations": [],
   "fundRequests": [
     {
-      "id": "req-1787503326652",
-      "brotherId": "b-3",
-      "brotherName": "مستخدم مسجل",
-      "brotherAccountNumber": "1003",
-      "bankAccountNumber": "1003",
-      "phone": "07709313213",
-      "amount": 25000,
-      "fieldId": "f-1787503326652-513",
-      "fieldName": "حليب وحفاضات أطفال 🍼",
-      "reason": "شراء حليب ومستلزمات أطفال",
-      "status": "approved",
-      "createdAt": "2026-08-23T16:42:06.652Z",
-      "approvedAt": "2026-08-23T16:42:06.657Z"
-    },
-    {
       "id": "req-1787244666311",
       "brotherId": "b-1787243535948",
       "brotherName": "محمد عجمي مطشر",
@@ -676,5 +612,6 @@
       "transferId": "tx-1787480827910",
       "createdAt": "2026-08-23T10:27:07.910Z"
     }
-  ]
+  ],
+  "messages": []
 }

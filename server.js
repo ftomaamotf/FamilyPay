@@ -11,7 +11,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ limit: '25mb', extended: true }));
 
 // Database file path
 const DATA_DIR = path.join(__dirname, 'data');
@@ -1674,6 +1675,71 @@ app.post('/api/requests/:requestId/reject', (req, res) => {
     message: 'تم تسجيل رفض الطلب وإشعار الأخ بذلك',
     request: reqItem
   });
+});
+
+// ================= 8. Realtime Text & Voice Chat System =================
+// 8.1 Get All Messages
+app.get('/api/messages', (req, res) => {
+  const db = readDB();
+  res.json({ success: true, messages: db.messages || [] });
+});
+
+// 8.2 Send Text or Voice Note Message
+app.post('/api/messages', (req, res) => {
+  const { senderId, senderName, recipientId, text, audioUrl, audioDuration, type } = req.body;
+  const db = readDB();
+  if (!db.messages) db.messages = [];
+
+  const sender = db.brothers.find((b) => b.id === senderId) || { name: senderName || 'مستخدم', avatarColor: '#10b981' };
+  const finalRecipientId = recipientId || 'all';
+
+  const newMsg = {
+    id: 'msg-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+    senderId: senderId || 'unknown',
+    senderName: sender.name || senderName || 'مستخدم',
+    senderAvatarColor: sender.avatarColor || '#10b981',
+    recipientId: finalRecipientId,
+    text: (text || '').trim(),
+    audioUrl: audioUrl || null,
+    audioDuration: audioDuration ? Number(audioDuration) : 0,
+    type: type || (audioUrl ? 'voice' : 'text'),
+    timestamp: new Date().toISOString(),
+    readBy: [senderId]
+  };
+
+  db.messages.push(newMsg);
+  if (db.messages.length > 500) {
+    db.messages = db.messages.slice(-500);
+  }
+  saveDB(db);
+
+  broadcastEvent('NEW_MESSAGE', {
+    message: newMsg,
+    messages: db.messages
+  });
+
+  res.json({
+    success: true,
+    message: 'تم إرسال الرسالة بنجاح',
+    data: newMsg,
+    messages: db.messages
+  });
+});
+
+// 8.3 Delete Message
+app.delete('/api/messages/:id', (req, res) => {
+  const { id } = req.params;
+  const db = readDB();
+  if (!db.messages) db.messages = [];
+  db.messages = db.messages.filter((m) => m.id !== id);
+  saveDB(db);
+
+  broadcastEvent('MESSAGE_DELETED', {
+    messageId: id,
+    messages: db.messages
+  });
+
+  res.json({ success: true, messages: db.messages });
 });
 
 // Serve frontend build in production with no-cache headers

@@ -27,6 +27,7 @@ export const Navbar = ({
   onOpenGuestApprovals,
   onOpenRequestMoney,
   onOpenPendingRequests,
+  onOpenChat,
   onLogout
 }) => {
   const {
@@ -37,7 +38,8 @@ export const Navbar = ({
     unreadNotifsCount,
     canCurrentUserSend,
     fundRequests,
-    guestRequests
+    guestRequests,
+    messages = []
   } = useFinance();
 
   const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
@@ -103,6 +105,18 @@ export const Navbar = ({
           {/* User Profile & Actions */}
           <div className="flex items-center gap-2">
             
+            {/* Realtime Chat Button */}
+            {onOpenChat && (
+              <button
+                onClick={() => onOpenChat('all')}
+                title="المحادثة والرسائل الصوتية بين الدوائر"
+                className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs transition active:scale-95"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">المحادثة والبصمات 🎙️</span>
+              </button>
+            )}
+
             {/* Logged in Brother Card Chip */}
             {currentUser && (
               <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 pr-2.5 rounded-2xl border border-slate-200 dark:border-slate-700">

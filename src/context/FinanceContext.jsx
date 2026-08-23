@@ -335,6 +335,9 @@ export const FinanceProvider = ({ children }) => {
     })
   );
 
+  // Circle Chat & Voice Notes State
+  const [messages, setMessages] = useState(() => loadFromStorage('bait_finance_messages', []));
+
   // Sync to Storage
   useEffect(() => saveToStorage('bait_finance_current_user', currentUser), [currentUser]);
   useEffect(() => saveToStorage('bait_finance_bank_cards', bankCards), [bankCards]);
@@ -343,6 +346,7 @@ export const FinanceProvider = ({ children }) => {
   useEffect(() => saveToStorage('bait_finance_monthly_archives', monthlyArchives), [monthlyArchives]);
   useEffect(() => saveToStorage('bait_finance_yearly_archives', yearlyArchives), [yearlyArchives]);
   useEffect(() => saveToStorage('bait_finance_notifs', notifications), [notifications]);
+  useEffect(() => saveToStorage('bait_finance_messages', messages), [messages]);
   useEffect(() => saveToStorage(STORAGE_KEYS.SETTINGS, settings), [settings]);
 
   // Handle Dark mode
@@ -351,7 +355,45 @@ export const FinanceProvider = ({ children }) => {
     else document.documentElement.classList.remove('dark');
   }, [settings.darkMode]);
 
-  // Audio Chime Player
+  // Distinct Message Notification Sound (Double-Tone Crisp Chime)
+  const playMessageNotificationSound = useCallback(() => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = ctx.currentTime;
+
+      // Note 1 (High bell)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(659.25, now); // E5
+      gain1.gain.setValueAtTime(0.28, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.16);
+
+      // Note 2 (Higher bell)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(880, now + 0.08); // A5
+      gain2.gain.setValueAtTime(0.35, now + 0.08);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.08);
+      osc2.stop(now + 0.32);
+
+      if (window.navigator?.vibrate) {
+        window.navigator.vibrate([70, 40, 70]);
+      }
+    } catch (e) {
+      console.log('Message sound error:', e);
+    }
+  }, []);
+
+  // Audio Chime Player for transfers & alerts
   const playChimeSound = useCallback(() => {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -381,6 +423,7 @@ export const FinanceProvider = ({ children }) => {
           if (data.state.brothers) setBrothers(data.state.brothers);
           if (data.state.bankCards) setBankCards(data.state.bankCards);
           if (data.state.transfers) setTransfers(data.state.transfers);
+          if (data.state.messages) setMessages(data.state.messages);
           if (data.state.security?.fundPin) setFundPin(data.state.security.fundPin);
           if (data.state.security?.transferPermissions) setTransferPermissions(data.state.security.transferPermissions);
           if (data.state.fundRequests) setFundRequests(data.state.fundRequests);
@@ -531,6 +574,31 @@ export const FinanceProvider = ({ children }) => {
 
           if (payload.type === 'ARCHIVE_UPDATED') {
             if (payload.data.monthlyArchives) setMonthlyArchives(payload.data.monthlyArchives);
+          }
+
+          if (payload.type === 'NEW_MESSAGE') {
+            const { message, messages: allMsgs } = payload.data;
+            if (allMsgs) setMessages(allMsgs);
+            else if (message) setMessages((prev) => [...prev.filter((m) => m.id !== message.id), message]);
+
+            // If message is from another user, play distinct audio notification sound!
+            if (message && message.senderId !== currentUser?.id) {
+              playMessageNotificationSound();
+              
+              // If browser notifications allowed, show banner
+              if (Notification.permission === 'granted') {
+                new Notification(`💬 رسالة جديدة من ${message.senderName}`, {
+                  body: message.type === 'voice' ? '🎙️ [بصمة صوتية جديدة]' : message.text,
+                  icon: '/favicon.svg'
+                });
+              }
+            }
+          }
+
+          if (payload.type === 'MESSAGE_DELETED') {
+            const { messageId, messages: allMsgs } = payload.data;
+            if (allMsgs) setMessages(allMsgs);
+            else if (messageId) setMessages((prev) => prev.filter((m) => m.id !== messageId));
           }
         } catch (err) {
           console.error('Error parsing SSE event:', err);
@@ -1479,6 +1547,63 @@ export const FinanceProvider = ({ children }) => {
     return { success: true, message: 'تم حذف الأرشيف بنجاح بعد التحقق من إذن الأدمن' };
   };
 
+  // 10. Circle Chat & Voice Notes
+  const sendMessage = async ({ recipientId, text, audioUrl, audioDuration, type }) => {
+    const activeUser = currentUser || { id: 'b-guest', name: 'مستخدم' };
+    try {
+      const res = await fetch(`${API_BASE}/api/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderId: activeUser.id,
+          senderName: activeUser.name,
+          recipientId: recipientId || 'all',
+          text,
+          audioUrl,
+          audioDuration,
+          type
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.messages) {
+        setMessages(data.messages);
+      }
+      return data;
+    } catch {
+      // Local fallback
+      const localMsg = {
+        id: 'msg-' + Date.now(),
+        senderId: activeUser.id,
+        senderName: activeUser.name,
+        senderAvatarColor: activeUser.avatarColor || '#10b981',
+        recipientId: recipientId || 'all',
+        text: text || '',
+        audioUrl: audioUrl || null,
+        audioDuration: audioDuration || 0,
+        type: type || (audioUrl ? 'voice' : 'text'),
+        timestamp: new Date().toISOString()
+      };
+      setMessages((prev) => [...prev, localMsg]);
+      return { success: true, data: localMsg };
+    }
+  };
+
+  const deleteMessage = async (messageId) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/messages/${messageId}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success && data.messages) {
+        setMessages(data.messages);
+      }
+      return data;
+    } catch {
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+      return { success: true };
+    }
+  };
+
   const markAllNotifsAsRead = () => {
     if (!currentUser) return;
     setNotifications((prev) =>
@@ -1550,7 +1675,11 @@ export const FinanceProvider = ({ children }) => {
         createMonthlyArchive,
         deleteArchiveProtected,
         markAllNotifsAsRead,
-        playChimeSound
+        playChimeSound,
+        messages,
+        sendMessage,
+        deleteMessage,
+        playMessageNotificationSound
       }}
     >
       {children}
