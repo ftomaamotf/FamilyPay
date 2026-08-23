@@ -25,6 +25,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
 
   const [recipientId, setRecipientId] = useState(initialRecipientId || brothers[0]?.id || 'b-1');
   const [fieldId, setFieldId] = useState(initialFieldId || '');
+  const [commodityName, setCommodityName] = useState('');
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
   const [copied, setCopied] = useState(false);
@@ -38,6 +39,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
   const handleClose = () => {
     setErrorMsg('');
     setCompletedTransfer(null);
+    setCommodityName('');
     onClose();
   };
 
@@ -93,11 +95,13 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     setErrorMsg('');
 
     const targetRecipientId = recipientId || selectedRecipient?.id || brothers[0]?.id;
+    const finalCommodity = commodityName.trim() || selectedRecipient?.approvedFields?.find(f => f.id === fieldId)?.name || reason.trim();
 
     const res = await executeTransfer({
       recipientId: targetRecipientId,
       amount: Number(amount),
       fieldId: fieldId || null,
+      commodityName: finalCommodity,
       reason: reason.trim()
     });
 
@@ -347,27 +351,90 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               </div>
             )}
 
-            {/* 3. Field / Category Selector */}
-            {selectedRecipient?.approvedFields?.length > 0 && (
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  2. الحقل / البند المصرح لهذا الأخ بإذن الأدمن:
+            {/* 2. Commodity / Field Selection or Custom Entry */}
+            <div className="space-y-2 p-3 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-black text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>2. اسم السلعة / البند (تُسجل وتُثبت في دائرة الأخ فوراً) *:</span>
                 </label>
-                <select
-                  value={fieldId}
-                  onChange={(e) => setFieldId(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
-                >
-                  {selectedRecipient.approvedFields.map((f) => (
-                    <option key={f.id} value={f.id} className="dark:bg-slate-800">
-                      {f.name} (السقف: {f.limit} {currency} - المتبقي: {Math.max(0, f.limit - (f.spent || 0))} {currency})
-                    </option>
-                  ))}
-                </select>
+                {commodityName && (
+                  <span className="text-[10px] text-emerald-600 font-bold">
+                    تُحسب في دائرته
+                  </span>
+                )}
               </div>
-            )}
 
-            {/* 4. Amount Input */}
+              {/* Custom Commodity Name Input */}
+              <input
+                type="text"
+                value={commodityName}
+                onChange={(e) => setCommodityName(e.target.value)}
+                placeholder="اكتب اسم السلعة هنا (مثال: بنزين، حليب للأطفال، صيانة، مسواك...)"
+                className="w-full bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+              />
+
+              {/* Or Select from existing approved items */}
+              {selectedRecipient?.approvedFields?.length > 0 && (
+                <div className="pt-1">
+                  <span className="text-[11px] text-slate-500 font-bold block mb-1">
+                    أو اختر من السلع المثبتة مسبقاً في دائرته:
+                  </span>
+                  <select
+                    value={fieldId}
+                    onChange={(e) => {
+                      setFieldId(e.target.value);
+                      const f = selectedRecipient.approvedFields.find((item) => item.id === e.target.value);
+                      if (f) setCommodityName(f.name);
+                    }}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="">-- اختر من السلع المثبتة في دائرته --</option>
+                    {selectedRecipient.approvedFields.map((f) => (
+                      <option key={f.id} value={f.id} className="dark:bg-slate-800">
+                        {f.name} (المصروف الحالي: {(f.spent || 0).toLocaleString()} {currency})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Commodity Chips */}
+            <div>
+              <span className="block font-bold text-slate-700 dark:text-slate-300 mb-1 text-xs">
+                اختيار سريع لنوع السلعة:
+              </span>
+              <div className="flex flex-wrap gap-1">
+                {[
+                  { label: 'بنزين ومواصلات ⛽', commodity: 'بنزين ومواصلات ⛽', reason: 'بنزين ومواصلات' },
+                  { label: 'حليب للأطفال 🥛', commodity: 'حليب للأطفال 🥛', reason: 'حليب للأطفال' },
+                  { label: 'مواد غذائية ومسواك 🛒', commodity: 'مواد غذائية ومسواك 🛒', reason: 'تموين ومواد غذائية' },
+                  { label: 'صيدلية وأدوية 🩺', commodity: 'صيدلية وأدوية 🩺', reason: 'أدوية وصيدلية' },
+                  { label: 'فواتير وكهرباء ⚡', commodity: 'فواتير وكهرباء ⚡', reason: 'فاتورة كهرباء وانترنت' },
+                  { label: 'صيانة وتصليح 🔧', commodity: 'صيانة وتصليح 🔧', reason: 'صيانة وتصليح' },
+                  { label: 'أولاد وتعليم 📚', commodity: 'أولاد وتعليم 📚', reason: 'احتياجات دراسية وتعليم' }
+                ].map((chip, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setCommodityName(chip.commodity);
+                      setReason(chip.reason);
+                      const match = selectedRecipient?.approvedFields?.find((f) =>
+                        f.name.toLowerCase().includes(chip.commodity.split(' ')[0].toLowerCase())
+                      );
+                      if (match) setFieldId(match.id);
+                    }}
+                    className="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 font-bold border border-emerald-200 dark:border-emerald-800 transition"
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 3. Amount Input */}
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 3. المبلغ المراد تحويله ({currency}) *
@@ -379,16 +446,16 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full text-2xl font-black bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-3 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 text-center"
+                className="w-full text-2xl font-black bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-3 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 text-center font-mono"
               />
             </div>
 
-            {/* 5. MANDATORY REASON / NEED (الحاجة) */}
+            {/* 4. MANDATORY REASON / NEED (الحاجة) */}
             <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
                   <AlertCircle className="w-4 h-4 text-amber-600" />
-                  <span>4. سبب طلب المال / الحاجة (إجباري 100%) *</span>
+                  <span>4. سبب طلب المال / الحاجة والتفاصيل (إجباري 100%) *</span>
                 </label>
                 {!isReasonValid && (
                   <span className="text-[10px] text-rose-600 font-bold animate-pulse">
@@ -405,19 +472,6 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                 placeholder="مثال: حليب مجفف للأولاد، بنزين سفر، كشف طبي..."
                 className="w-full bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-amber-500"
               />
-
-              <div className="flex flex-wrap gap-1">
-                {quickReasonChips.map((chip) => (
-                  <button
-                    key={chip}
-                    type="button"
-                    onClick={() => setReason(chip)}
-                    className="text-[10px] px-2 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 hover:bg-amber-200 font-medium"
-                  >
-                    {chip}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {errorMsg && (

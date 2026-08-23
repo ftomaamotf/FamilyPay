@@ -939,9 +939,10 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // 3.3 Submit Money Request (Regular brother asks for funds with their account password)
-  const submitMoneyRequest = async ({ brotherId, amount, fieldId, reason, password }) => {
+  // 3.3 Submit Money Request (User asks for funds with commodity/item name)
+  const submitMoneyRequest = async ({ brotherId, amount, fieldId, reason, commodityName, customFieldName }) => {
     const activeBrother = brothers.find((br) => br.id === (brotherId || currentUser?.id)) || currentUser;
+    const finalCommodityName = commodityName || customFieldName;
     try {
       const res = await fetch(`${API_BASE}/api/requests`, {
         method: 'POST',
@@ -953,8 +954,9 @@ export const FinanceProvider = ({ children }) => {
           bankAccountNumber: activeBrother?.bankAccountNumber,
           amount: Number(amount),
           fieldId,
-          reason,
-          password
+          fieldName: finalCommodityName,
+          commodityName: finalCommodityName,
+          reason
         })
       });
       const data = await res.json();
@@ -974,7 +976,7 @@ export const FinanceProvider = ({ children }) => {
         bankAccountNumber: b?.bankAccountNumber,
         amount: Number(amount),
         fieldId,
-        fieldName: f?.name || 'مصروف عام',
+        fieldName: finalCommodityName || f?.name || 'مصروف عام 🛒',
         reason: reason.trim(),
         status: 'pending',
         createdAt: new Date().toISOString()
@@ -1099,8 +1101,8 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // 5. Send Transfer (Direct without password)
-  const executeTransfer = async ({ recipientId, amount, fieldId, reason }) => {
+  // 5. Send Transfer (Direct without password + Commodity Pinning)
+  const executeTransfer = async ({ recipientId, amount, fieldId, reason, commodityName, customFieldName }) => {
     if (isCardFrozen) {
       return { success: false, message: '🔒 بطاقة الصندوق مجمدة ومقفلة أمنياً حالياً. يرجى إلغاء التجميد أولاً.' };
     }
@@ -1113,6 +1115,8 @@ export const FinanceProvider = ({ children }) => {
       return { success: false, message: '⚠️ يجب كتابة سبب طلب المال (الحاجة) إجبارياً قبل الإرسال' };
     }
 
+    const finalCommodityName = commodityName || customFieldName;
+
     try {
       const res = await fetch(`${API_BASE}/api/transfers`, {
         method: 'POST',
@@ -1122,6 +1126,8 @@ export const FinanceProvider = ({ children }) => {
           recipientId,
           amount: numAmount,
           fieldId,
+          fieldName: finalCommodityName,
+          commodityName: finalCommodityName,
           reason: reason.trim()
         })
       });

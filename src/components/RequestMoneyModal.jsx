@@ -24,6 +24,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
   const currentBrother = brothers.find((b) => b.id === selectedRequesterId) || brothers.find((b) => b.id === (initialBrotherId || currentUser?.id)) || currentUser;
 
   const [fieldId, setFieldId] = useState(initialFieldId || '');
+  const [commodityName, setCommodityName] = useState('');
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
@@ -73,6 +74,8 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
     setErrorMsg('');
     setSuccessMsg('');
 
+    const finalCommodity = commodityName.trim() || selectedField?.name || reason.trim();
+
     const res = await submitMoneyRequest({
       brotherId: currentBrother?.id || currentUser?.id,
       brotherName: currentBrother?.name || currentUser?.name,
@@ -80,6 +83,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       bankAccountNumber: currentBrother?.bankAccountNumber || currentUser?.bankAccountNumber,
       amount: numAmount,
       fieldId,
+      commodityName: finalCommodity,
       reason: reason.trim()
     });
 
@@ -89,7 +93,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       setSuccessMsg(res.message || 'تم إرسال طلبك بنجاح للأدمن');
       setAmount('');
       setReason('');
-      setPassword('');
+      setCommodityName('');
       setTimeout(() => {
         onClose();
       }, 1800);
@@ -179,32 +183,89 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             </div>
           </div>
 
-          {/* Field Selection */}
-          {currentBrother?.approvedFields?.length > 0 && (
-            <div>
-              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                بند / حقل المصروف المطلوب *:
+          {/* Commodity / Field Selection or Custom Entry */}
+          <div className="space-y-2 p-3.5 bg-slate-50 dark:bg-slate-750 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between">
+              <label className="block font-black text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+                <span>اسم السلعة / البند (تثبت في دائرتك فوراً) *:</span>
               </label>
-              <select
-                value={fieldId}
-                onChange={(e) => setFieldId(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 font-bold"
-              >
-                {currentBrother.approvedFields.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name} (المتبقي من السقف: {Math.max(0, f.limit - f.spent).toLocaleString()} {currency})
-                  </option>
-                ))}
-              </select>
-
-              {selectedField && (
-                <div className="mt-1.5 flex items-center justify-between text-[11px] bg-teal-50/50 dark:bg-teal-950/20 px-3 py-1.5 rounded-xl border border-teal-200/50 dark:border-teal-800/40 text-teal-700 dark:text-teal-300">
-                  <span>سقف هذا البند: <strong>{fieldLimit.toLocaleString()} {currency}</strong></span>
-                  <span>المتبقي: <strong className="text-emerald-600 dark:text-emerald-400">{fieldRemaining.toLocaleString()} {currency}</strong></span>
-                </div>
+              {commodityName && (
+                <span className="text-[10px] text-teal-600 font-bold">
+                  تُسجل تلقائياً
+                </span>
               )}
             </div>
-          )}
+
+            {/* Custom Commodity Name Input */}
+            <input
+              type="text"
+              value={commodityName}
+              onChange={(e) => setCommodityName(e.target.value)}
+              placeholder="اكتب اسم السلعة هنا (مثال: بنزين، حليب أطفال، مسواك، طبيب...)"
+              className="w-full bg-white dark:bg-slate-900 border border-teal-300 dark:border-teal-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 shadow-sm"
+            />
+
+            {/* Or choose from existing items */}
+            {currentBrother?.approvedFields?.length > 0 && (
+              <div className="pt-1">
+                <span className="text-[11px] text-slate-500 font-bold block mb-1">
+                  أو اختر من السلع المثبتة مسبقاً في حسابك:
+                </span>
+                <select
+                  value={fieldId}
+                  onChange={(e) => {
+                    setFieldId(e.target.value);
+                    const f = currentBrother.approvedFields.find((item) => item.id === e.target.value);
+                    if (f) setCommodityName(f.name);
+                  }}
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 font-bold"
+                >
+                  <option value="">-- اختر من السلع المثبتة في دائرتك --</option>
+                  {currentBrother.approvedFields.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name} (المصروف الحالي: {(f.spent || 0).toLocaleString()} {currency})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Commodity Chips */}
+          <div>
+            <span className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5 text-xs">
+              أو اختر بالضغط السريع على أي سلعة:
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { label: 'بنزين ومواصلات ⛽', commodity: 'بنزين ومواصلات ⛽', reason: 'تعبئة بنزين ومواصلات' },
+                { label: 'حليب للأطفال 🥛', commodity: 'حليب للأطفال 🥛', reason: 'شراء حليب ومستلزمات للأطفال' },
+                { label: 'مواد غذائية ومسواك 🛒', commodity: 'مواد غذائية ومسواك 🛒', reason: 'شراء مواد غذائية ومسواك للبيت' },
+                { label: 'صيدلية وأطباء 🩺', commodity: 'صيدلية وأطباء 🩺', reason: 'مراجعة طبيب وشراء أدوية' },
+                { label: 'فواتير وانترنت ⚡', commodity: 'فواتير وانترنت ⚡', reason: 'سداد فاتورة انترنت وكهرباء' },
+                { label: 'صيانة منزلية 🔧', commodity: 'صيانة منزلية 🔧', reason: 'أعمال صيانة وتصليح' },
+                { label: 'أولاد وتعليم 📚', commodity: 'أولاد وتعليم 📚', reason: 'مستلزمات دراسية وكتب' },
+                { label: 'ملابس واحتياجات 👕', commodity: 'ملابس واحتياجات 👕', reason: 'شراء ملابس واحتياجات' }
+              ].map((chip, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setCommodityName(chip.commodity);
+                    setReason(chip.reason);
+                    const match = currentBrother?.approvedFields?.find((f) =>
+                      f.name.toLowerCase().includes(chip.commodity.split(' ')[0].toLowerCase())
+                    );
+                    if (match) setFieldId(match.id);
+                  }}
+                  className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-750 hover:bg-teal-50 dark:hover:bg-teal-950/40 text-slate-700 dark:text-slate-300 hover:text-teal-700 dark:hover:text-teal-300 border border-slate-200 dark:border-slate-700 text-[11px] font-bold transition active:scale-95"
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Amount */}
           <div>
@@ -223,39 +284,6 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
                 className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-xl pr-9 pl-3 py-2.5 text-sm font-black text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 font-mono text-left"
                 dir="ltr"
               />
-            </div>
-          </div>
-
-          {/* Quick Commodity Chips */}
-          <div>
-            <span className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-              اختيار سريع لنوع السلعة / المصروف:
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                { label: 'بنزين ونقل ⛽', reason: 'تعبئة بنزين ومواصلات' },
-                { label: 'حليب ومواد غذائية 🥛', reason: 'شراء حليب ومواد غذائية للبيت' },
-                { label: 'صيدلية وأطباء 🩺', reason: 'مراجعة طبيب وشراء أدوية من الصيدلية' },
-                { label: 'فواتير وانترنت ⚡', reason: 'سداد فاتورة انترنت وكهرباء' },
-                { label: 'صيانة منزلية 🔧', reason: 'أعمال صيانة وتصليح في المنزل' },
-                { label: 'أولاد وتعليم 📚', reason: 'شراء احتياجات وكتب ومستلزمات دراسية' }
-              ].map((chip, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => {
-                    setReason(chip.reason);
-                    // Find if field exists
-                    const match = currentBrother?.approvedFields?.find((f) =>
-                      f.name.toLowerCase().includes(chip.label.split(' ')[0].toLowerCase())
-                    );
-                    if (match) setFieldId(match.id);
-                  }}
-                  className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-750 hover:bg-teal-50 dark:hover:bg-teal-950/40 text-slate-700 dark:text-slate-300 hover:text-teal-700 dark:hover:text-teal-300 border border-slate-200 dark:border-slate-700 text-[11px] font-bold transition active:scale-95"
-                >
-                  {chip.label}
-                </button>
-              ))}
             </div>
           </div>
 

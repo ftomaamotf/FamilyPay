@@ -111,7 +111,7 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
             </div>
             <div>
               <h3 className="font-black text-base sm:text-lg flex items-center gap-2">
-                <span>طلبات الأموال الواردة من الإخوة</span>
+                <span>طلبات الأموال الواردة من المستخدمين</span>
                 {pendingRequests.length > 0 && (
                   <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full">
                     {pendingRequests.length} جديدة
@@ -119,7 +119,7 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                 )}
               </h3>
               <p className="text-xs text-amber-100">
-                مراجعة طلبات السحب والموافقة عليها وتحويلها فوراً
+                مراجعة طلبات السحب والموافقة عليها وتحويلها فوراً لدائرة المستخدم
               </p>
             </div>
           </div>
@@ -141,7 +141,7 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                 لا توجد طلبات أموال معلقة حالياً
               </h4>
               <p className="text-xs text-slate-400 max-w-xs mx-auto">
-                عندما يطلب أي أخ مبالغ لمصروفاته، ستظهر طلباته هنا فوراً لتوافق عليها بلمسة واحدة.
+                عندما يطلب أي مستخدم مبالغ لسلعة معينة، ستظهر طلباته هنا لتوافق عليها وتُثبت في دائرته.
               </p>
             </div>
           ) : (
@@ -160,9 +160,14 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                         <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
                           {req.brotherName}
                         </h4>
-                        <span className="text-[10px] text-slate-400 font-mono">
-                          #{req.brotherAccountNumber} • بند: {req.fieldName}
-                        </span>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            #{req.brotherAccountNumber}
+                          </span>
+                          <span className="text-[11px] px-2 py-0.5 rounded-lg bg-teal-100/70 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 font-extrabold border border-teal-300/60 dark:border-teal-800">
+                            🏷️ السلعة: {req.fieldName || 'مصروف عام'}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
