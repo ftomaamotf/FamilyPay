@@ -135,9 +135,45 @@ export const FinanceProvider = ({ children }) => {
     ])
   );
 
-  // Brothers with Approved Field Schedules
-  const [brothers, setBrothers] = useState(() =>
-    loadFromStorage('bait_finance_brothers', [
+  // Brothers with Approved Field Schedules (Only real users: Abdullah, Mohammed, Omar)
+  const [brothers, setBrothers] = useState(() => {
+    const raw = loadFromStorage('bait_finance_brothers', [
+      {
+        id: 'b-2',
+        name: 'عبدالله عجمي',
+        email: 'abduallh_ajmi@yahoo.com',
+        accountNumber: '1002',
+        phone: '07702206214',
+        bankAccountNumber: '9256869125',
+        password: '1988',
+        bankName: 'ماستر كي / Qi Card',
+        avatarColor: '#6366f1',
+        isAdmin: true,
+        approvedFields: [
+          { id: 'f-4', name: 'بنزين ومواصلات ⛽', limit: 150000, spent: 49999 },
+          { id: 'f-5', name: 'حليب للأطفال 🥛', limit: 150000, spent: 0 },
+          { id: 'f-6', name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
+          { id: 'f-1787246913231-83', name: 'صيدلية وأطباء 🩺', limit: 100000, spent: 0 }
+        ]
+      },
+      {
+        id: 'b-1787243535948',
+        name: 'محمد عجمي',
+        email: 'mohammed@familyfund.iq',
+        accountNumber: '1003',
+        phone: '077027959161',
+        bankAccountNumber: '7145810946',
+        password: '123',
+        bankName: 'ماستر كي / Qi Card',
+        avatarColor: '#10b981',
+        isAdmin: false,
+        approvedFields: [
+          { id: 'f-1787243536212-2', name: 'بنزين ومواصلات ⛽', limit: 150000, spent: 0 },
+          { id: 'f-1787243536212-3', name: 'حليب ومواد غذائية 🥛', limit: 200000, spent: 0 },
+          { id: 'f-1787503326641-740', name: 'بنزين وسفر ⛽', limit: 500000, spent: 50000 },
+          { id: 'f-1787541751196-523', name: 'حليب للأطفال 🥛', limit: 500000, spent: 1000 }
+        ]
+      },
       {
         id: 'b-1',
         name: 'عمر عجمي',
@@ -152,90 +188,14 @@ export const FinanceProvider = ({ children }) => {
         approvedFields: [
           { id: 'f-1', name: 'حليب ومواد غذائية 🥛', limit: 200000, spent: 0 },
           { id: 'f-2', name: 'فواتير وانترنت ⚡', limit: 100000, spent: 0 },
-          { id: 'f-3', name: 'صيانة منزلية 🔧', limit: 100000, spent: 0 }
-        ]
-      },
-      {
-        id: 'b-2',
-        name: 'عبدالله عجمي',
-        email: 'abdullah.ajmi@gmail.com',
-        accountNumber: '1002',
-        phone: '07702206214',
-        bankAccountNumber: '9256869125',
-        password: '1988',
-        bankName: 'ماستر كي / Qi Card',
-        avatarColor: '#6366f1',
-        isAdmin: true,
-        approvedFields: [
-          { id: 'f-4', name: 'بنزين ومواصلات ⛽', limit: 150000, spent: 0 },
-          { id: 'f-5', name: 'حليب للأطفال 🥛', limit: 150000, spent: 0 },
-          { id: 'f-6', name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 }
-        ]
-      },
-      {
-        id: 'b-3',
-        name: 'أحمد عجمي',
-        email: 'ahmed.ajmi@gmail.com',
-        accountNumber: '1003',
-        phone: '07702345678',
-        bankAccountNumber: '880098765432102',
-        password: '123',
-        bankName: 'ماستر كي / Qi Card',
-        avatarColor: '#3b82f6',
-        isAdmin: false,
-        approvedFields: [
-          { id: 'f-7', name: 'تموين وسوبرماركت 🍞', limit: 200000, spent: 0 },
-          { id: 'f-8', name: 'غاز وكهرباء ⚡', limit: 100000, spent: 0 }
-        ]
-      },
-      {
-        id: 'b-4',
-        name: 'محمد عجمي',
-        email: 'mohammed.ajmi@gmail.com',
-        accountNumber: '1004',
-        phone: '07703456789',
-        bankAccountNumber: '880011223344503',
-        password: '123',
-        bankName: 'ماستر كي / Qi Card',
-        avatarColor: '#8b5cf6',
-        isAdmin: false,
-        approvedFields: [
-          { id: 'f-9', name: 'صيدلية وأدوية 💊', limit: 150000, spent: 0 },
-          { id: 'f-10', name: 'مستلزمات منزلية 🧹', limit: 100000, spent: 0 }
-        ]
-      },
-      {
-        id: 'b-5',
-        name: 'يوسف',
-        accountNumber: '1005',
-        phone: '07705678901',
-        bankAccountNumber: '880099887766505',
-        password: '123',
-        bankName: 'ماستر كي / Qi Card',
-        avatarColor: '#ec4899',
-        isAdmin: false,
-        approvedFields: [
-          { id: 'f-11', name: 'أولاد وتعليم 📚', limit: 900, spent: 400 },
-          { id: 'f-12', name: 'خضار وفواكه 🍎', limit: 600, spent: 300 }
-        ]
-      },
-      {
-        id: 'b-6',
-        name: 'خالد',
-        accountNumber: '1006',
-        phone: '07706789012',
-        bankAccountNumber: '880033445566706',
-        password: '123',
-        bankName: 'ماستر كي / Qi Card',
-        avatarColor: '#14b8a6',
-        isAdmin: false,
-        approvedFields: [
-          { id: 'f-13', name: 'طوارئ ونثريات 🛡️', limit: 500, spent: 150 },
-          { id: 'f-14', name: 'ملابس واحتياجات 👕', limit: 600, spent: 200 }
+          { id: 'f-3', name: 'صيانة منزلية 🔧', limit: 100000, spent: 0 },
+          { id: 'f-1787246876444-537', name: 'اطباء', limit: 100000, spent: 0 }
         ]
       }
-    ])
-  );
+    ]);
+    // Filter out any legacy dummy sample names
+    return (raw || []).filter((b) => b && !['b-3', 'b-4', 'b-5', 'b-6'].includes(b.id) && !['يوسف', 'خالد', 'أحمد'].includes(b.name));
+  });
 
   // Transfers Log
   const [transfers, setTransfers] = useState(() =>
@@ -485,7 +445,8 @@ export const FinanceProvider = ({ children }) => {
       const missingToSync = [];
       (prevLocal || []).forEach((lb) => {
         const key = lb.id || lb.accountNumber;
-        if (!mergedMap.has(key) && lb.name) {
+        const isDummy = ['b-3', 'b-4', 'b-5', 'b-6'].includes(lb.id) || ['يوسف', 'خالد', 'أحمد'].includes(lb.name);
+        if (!isDummy && !mergedMap.has(key) && lb.name) {
           mergedMap.set(key, lb);
           missingToSync.push(lb);
           hasMissing = true;
