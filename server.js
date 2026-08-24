@@ -923,26 +923,7 @@ app.post('/api/brothers', (req, res) => {
 
 // 5.1.1 Two-way Sync endpoint for Admin and Users
 app.post('/api/sync', (req, res) => {
-  const { brothers: clientBrothers } = req.body;
   const db = readDB();
-  let changed = false;
-
-  if (Array.isArray(clientBrothers)) {
-    clientBrothers.forEach((cb) => {
-      if (!cb || !cb.name) return;
-      const idx = db.brothers.findIndex((b) => b.id === cb.id || String(b.accountNumber) === String(cb.accountNumber));
-      if (idx === -1) {
-        db.brothers.push(cb);
-        changed = true;
-      }
-    });
-  }
-
-  if (changed) {
-    saveDB(db);
-    broadcastEvent('BROTHERS_UPDATED', { brothers: db.brothers });
-  }
-
   res.json({ success: true, brothers: db.brothers, state: db });
 });
 

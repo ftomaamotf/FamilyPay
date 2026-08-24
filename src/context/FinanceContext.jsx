@@ -178,8 +178,8 @@ export const FinanceProvider = ({ children }) => {
         approvedFields: []
       }
     ]);
-    // Filter out any legacy dummy sample names
-    return (raw || []).filter((b) => b && !['b-3', 'b-4', 'b-5', 'b-6'].includes(b.id) && !['يوسف', 'خالد', 'أحمد'].includes(b.name));
+    // Filter out any legacy dummy sample names or deleted accounts
+    return (raw || []).filter((b) => b && !['b-3', 'b-4', 'b-5', 'b-6', 'b-1787553982824'].includes(b.id) && !['يوسف', 'خالد', 'أحمد', 'علي فاضل'].includes(b.name));
   });
 
   // Transfers Log (Real transfers only, no dummy items)
