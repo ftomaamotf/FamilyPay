@@ -351,12 +351,29 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               </div>
             )}
 
-            {/* 2. Commodity / Field Selection or Custom Entry */}
-            <div className="space-y-2 p-3 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60">
+            {/* 2. Amount Input (المبلغ أولاً) */}
+            <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-300 dark:border-emerald-700">
+              <label className="block text-xs font-black text-emerald-900 dark:text-emerald-200 mb-1.5 flex items-center justify-between">
+                <span>2. المبلغ المراد تحويله ({currency}) *:</span>
+                <span className="text-[10px] text-emerald-600 font-bold">المبلغ المطلوب بدقة</span>
+              </label>
+              <input
+                type="number"
+                step="any"
+                required
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="اكتب المبلغ هنا (مثال: 70000)"
+                className="w-full text-2xl font-black bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-2xl px-4 py-3 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 text-center font-mono shadow-xs"
+              />
+            </div>
+
+            {/* 3. Commodity / Item Entry (السلعة ثانياً) */}
+            <div className="space-y-2 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between">
-                <label className="block text-xs font-black text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
+                <label className="block text-xs font-black text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>2. اسم السلعة / البند (تُسجل وتُثبت في دائرة الأخ فوراً) *:</span>
+                  <span>3. اسم السلعة / الغرض (تُسجل وتُثبت في دائرة الأخ فوراً) *:</span>
                 </label>
                 {commodityName && (
                   <span className="text-[10px] text-emerald-600 font-bold">
@@ -368,10 +385,14 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               {/* Custom Commodity Name Input */}
               <input
                 type="text"
+                required
                 value={commodityName}
-                onChange={(e) => setCommodityName(e.target.value)}
+                onChange={(e) => {
+                  setCommodityName(e.target.value);
+                  if (!reason) setReason(e.target.value);
+                }}
                 placeholder="اكتب اسم السلعة هنا (مثال: بنزين، حليب للأطفال، صيانة، مسواك...)"
-                className="w-full bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+                className="w-full bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
               />
 
               {/* Or Select from existing approved items */}
@@ -385,7 +406,10 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                     onChange={(e) => {
                       setFieldId(e.target.value);
                       const f = selectedRecipient.approvedFields.find((item) => item.id === e.target.value);
-                      if (f) setCommodityName(f.name);
+                      if (f) {
+                        setCommodityName(f.name);
+                        if (!reason) setReason(f.name);
+                      }
                     }}
                     className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                   >
@@ -434,28 +458,12 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               </div>
             </div>
 
-            {/* 3. Amount Input */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                3. المبلغ المراد تحويله ({currency}) *
-              </label>
-              <input
-                type="number"
-                step="any"
-                required
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                className="w-full text-2xl font-black bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-3 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 text-center font-mono"
-              />
-            </div>
-
-            {/* 4. MANDATORY REASON / NEED (الحاجة) */}
-            <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 space-y-2">
+            {/* 4. Notes / Reason (اختياري / إضافي) */}
+            <div className="p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
                   <AlertCircle className="w-4 h-4 text-amber-600" />
-                  <span>4. سبب طلب المال / الحاجة والتفاصيل (إجباري 100%) *</span>
+                  <span>4. سبب طلب المال / الحاجة والتفاصيل (إجباري 100%) *:</span>
                 </label>
                 {!isReasonValid && (
                   <span className="text-[10px] text-rose-600 font-bold animate-pulse">
@@ -470,7 +478,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="مثال: حليب مجفف للأولاد، بنزين سفر، كشف طبي..."
-                className="w-full bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-amber-500 shadow-xs"
               />
             </div>
 

@@ -183,12 +183,29 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             </div>
           </div>
 
-          {/* Commodity / Field Selection or Custom Entry */}
+          {/* 1. Amount Input (المبلغ أولاً) */}
+          <div className="p-3.5 bg-teal-50/50 dark:bg-teal-950/20 rounded-2xl border border-teal-200 dark:border-teal-800">
+            <label className="block font-black text-slate-800 dark:text-slate-200 text-xs mb-1.5 flex items-center gap-1">
+              <DollarSign className="w-4 h-4 text-teal-600" />
+              <span>1. المبلغ المطلوب تحويله ({currency}) *:</span>
+            </label>
+            <input
+              type="number"
+              required
+              min="1"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="اكتب المبلغ هنا (مثال: 70000)"
+              className="w-full bg-white dark:bg-slate-900 border-2 border-teal-400 dark:border-teal-600 rounded-xl px-4 py-2.5 text-base font-black text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 font-mono text-center shadow-xs"
+            />
+          </div>
+
+          {/* 2. Commodity / Field Selection (السلعة ثانياً) */}
           <div className="space-y-2 p-3.5 bg-slate-50 dark:bg-slate-750 rounded-2xl border border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <label className="block font-black text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-teal-600" />
-                <span>اسم السلعة / البند (تثبت في دائرتك فوراً) *:</span>
+                <span>2. اسم السلعة / الغرض (تثبت في دائرتك فوراً) *:</span>
               </label>
               {commodityName && (
                 <span className="text-[10px] text-teal-600 font-bold">
@@ -200,9 +217,10 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             {/* Custom Commodity Name Input */}
             <input
               type="text"
+              required
               value={commodityName}
               onChange={(e) => setCommodityName(e.target.value)}
-              placeholder="اكتب اسم السلعة هنا (مثال: بنزين، حليب أطفال، مسواك، طبيب...)"
+              placeholder="اكتب اسم السلعة هنا (مثال: بنزين، حليب للأطفال، مسواك البيت...)"
               className="w-full bg-white dark:bg-slate-900 border border-teal-300 dark:border-teal-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 shadow-sm"
             />
 
@@ -267,39 +285,19 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             </div>
           </div>
 
-          {/* Amount */}
+          {/* 3. Reason / Notes Input */}
           <div>
-            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-              المبلغ المطلوب ({currency}) *:
-            </label>
-            <div className="relative">
-              <DollarSign className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="number"
-                required
-                min="1"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="مثال: 50000"
-                className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-xl pr-9 pl-3 py-2.5 text-sm font-black text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 font-mono text-left"
-                dir="ltr"
-              />
-            </div>
-          </div>
-
-          {/* Reason / Purpose */}
-          <div>
-            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-              سبب طلب الأموال (الحاجة / التفاصيل) *:
+            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
+              <FileText className="w-3.5 h-3.5 text-teal-500" />
+              <span>3. ملاحظات أو تفاصيل إضافية (اختياري):</span>
             </label>
             <div className="relative">
               <FileText className="w-4 h-4 absolute right-3 top-3 text-slate-400" />
               <textarea
-                required
                 rows={2}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="اكتب سبب طلب المبلغ (مثلاً: بنزين للسيارة، حليب للأطفال، دكتور وصيدلية...)"
+                placeholder="اكتب أي تفاصيل إضافية عن الطلب إن وجدت..."
                 className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-xl pr-9 pl-3 py-2 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 leading-relaxed"
               />
             </div>

@@ -1007,81 +1007,36 @@ app.put('/api/brothers/:brotherId/fields', (req, res) => {
   });
 });
 
-// Intelligent Commodity/Field Auto-Categorization Helper
-const CATEGORY_MAP = [
-  { keywords: ['بنزين', 'بانزين', 'نقل', 'مواصلات', 'وقود', 'كاز', 'تكسي', 'سيارة', 'طريق'], name: 'بنزين ومواصلات ⛽', limit: 150000 },
-  { keywords: ['حليب', 'اكل', 'أكل', 'طعام', 'تموين', 'غذائية', 'مسواك', 'سوبرماركت', 'بقالة', 'لحم', 'دجاج', 'خبز', 'رز', 'زيت', 'مسواق'], name: 'حليب ومواد غذائية 🥛', limit: 200000 },
-  { keywords: ['طبيب', 'دكتور', 'علاج', 'دواء', 'صيدلية', 'مستشفى', 'عيادة', 'تحاليل', 'اشعة', 'أدوية', 'كشفية', 'اطباء', 'أطباء', 'مريض'], name: 'صيدلية وأطباء 🩺', limit: 150000 },
-  { keywords: ['فاتورة', 'فواتير', 'انترنت', 'إنترنت', 'كهرباء', 'ماء', 'مولدة', 'غاز', 'شحن', 'رصيد', 'اشتراك'], name: 'فواتير وانترنت ⚡', limit: 100000 },
-  { keywords: ['صيانة', 'تصليح', 'سبلت', 'عطل', 'تصليحات', 'منزل', 'سباكة', 'كهربائي', 'بناء'], name: 'صيانة منزلية 🔧', limit: 100000 },
-  { keywords: ['مدرسة', 'تعليم', 'كتب', 'أقلام', 'دفاتر', 'اولاد', 'أولاد', 'جامعة', 'دراسة', 'اقساط', 'أقساط', 'قرطاسية'], name: 'أولاد وتعليم 📚', limit: 150000 },
-  { keywords: ['ملابس', 'كسوة', 'احذية', 'أحذية', 'ثياب', 'قميص', 'بنطلون'], name: 'ملابس واحتياجات 👕', limit: 100000 },
-  { keywords: ['طوارئ', 'طارئ', 'نثريات', 'مفاجئ', 'حادث'], name: 'طوارئ ونثريات 🛡️', limit: 100000 }
-];
-
+// Dynamic Commodity/Item Naming Helper (Exact name + Price tracking)
 function matchOrAssignField(brother, explicitFieldId, reasonText, customItemName) {
   if (!brother.approvedFields) brother.approvedFields = [];
 
-  // 1. Explicit Custom Item Name provided by user/admin
-  const cleanCustom = String(customItemName || '').trim();
-  if (cleanCustom) {
-    let existing = brother.approvedFields.find((f) => 
-      f.name.toLowerCase() === cleanCustom.toLowerCase() ||
-      f.name.includes(cleanCustom) ||
-      cleanCustom.includes(f.name)
-    );
-    if (!existing) {
-      existing = {
-        id: 'f-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-        name: cleanCustom,
-        limit: 500000,
-        spent: 0
-      };
-      brother.approvedFields.push(existing);
-    }
+  const raw = (customItemName || reasonText || '').trim();
+  const cleanName = raw.replace(/^\[.*?\]\s*/, '').trim() || 'مصروف عام';
+
+  // Find if brother already has a commodity with this exact name
+  let existing = brother.approvedFields.find((f) => 
+    f.name.toLowerCase() === cleanName.toLowerCase() ||
+    f.name.trim() === cleanName.trim()
+  );
+
+  if (!existing && explicitFieldId) {
+    existing = brother.approvedFields.find((f) => f.id === explicitFieldId);
+  }
+
+  if (existing) {
     return existing;
   }
 
-  // 2. Explicit Field ID selected
-  if (explicitFieldId) {
-    const existing = brother.approvedFields.find((f) => f.id === explicitFieldId);
-    if (existing) return existing;
-  }
-
-  // 3. Keyword matching from reason
-  const reasonLower = (reasonText || '').toLowerCase();
-  for (const cat of CATEGORY_MAP) {
-    const match = cat.keywords.some((kw) => reasonLower.includes(kw));
-    if (match) {
-      let found = brother.approvedFields.find((f) =>
-        f.name.toLowerCase().includes(cat.name.split(' ')[0].toLowerCase()) ||
-        cat.keywords.some((kw) => f.name.toLowerCase().includes(kw))
-      );
-      if (!found) {
-        found = {
-          id: 'f-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-          name: cat.name,
-          limit: cat.limit || 500000,
-          spent: 0
-        };
-        brother.approvedFields.push(found);
-      }
-      return found;
-    }
-  }
-
-  if (brother.approvedFields.length > 0) {
-    return brother.approvedFields[0];
-  }
-
-  const defaultField = {
-    id: 'f-' + Date.now(),
-    name: 'مصاريف عامة 🛒',
-    limit: 500000,
+  // Create new commodity named exactly as given
+  const newField = {
+    id: 'f-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+    name: cleanName,
+    limit: 0,
     spent: 0
   };
-  brother.approvedFields.push(defaultField);
-  return defaultField;
+  brother.approvedFields.push(newField);
+  return newField;
 }
 
 // 6. Execute Transfer (WITH COMMODITY PINNING + DEDUCT + BROADCAST)

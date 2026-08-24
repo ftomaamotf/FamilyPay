@@ -428,132 +428,71 @@ export const BrothersCards = ({
                       <Edit2 className="w-3.5 h-3.5" />
                       <span>تعديل البيانات</span>
                     </button>
-                    <button
-                      onClick={() => onOpenFieldsModal(selectedBrother)}
-                      title="تعديل السلع والحقول المعتمدة"
-                      className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 rounded-xl border border-emerald-200 dark:border-emerald-800 transition flex items-center gap-1.5 text-xs font-bold"
-                    >
-                      <Sliders className="w-3.5 h-3.5" />
-                      <span>تعديل السلع</span>
-                    </button>
                   </div>
                 )}
               </div>
 
-          {/* Approved Commodities & Fields with Spent Progress Bars & 1-Click Delete */}
+          {/* Approved Commodities & Exact Prices Display */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-emerald-500" />
-                <span>السلع والبنود المثبتة في دائرة هذا المستخدم ({selectedBrother.approvedFields?.length || 0}):</span>
+                <span>السلع والمصروفات الخاصة بـ ({selectedBrother.name}):</span>
               </span>
-              {isCurrentAdmin && (
-                <button
-                  onClick={() => onOpenFieldsModal(selectedBrother)}
-                  className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
-                >
-                  <Sliders className="w-3.5 h-3.5" />
-                  <span>إدارة وسقوف السلع</span>
-                </button>
-              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {selectedBrother.approvedFields?.map((f) => {
-                const limit = f.limit || 0;
                 const calculatedSpent = dynamicFieldSpent(f.id, f.name);
-                const spent = Math.max(f.spent || 0, calculatedSpent);
-                const percent = limit > 0 ? Math.min(100, Math.round((spent / limit) * 100)) : 0;
+                const priceAmount = Math.max(f.spent || 0, calculatedSpent);
 
                 return (
                   <div
                     key={f.id}
-                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 space-y-2 relative group/field hover:border-emerald-400/50 transition shadow-xs"
+                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between relative group/field hover:border-emerald-400 transition shadow-xs"
                   >
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-extrabold text-slate-800 dark:text-white text-sm">
-                          {f.name}
-                        </span>
-                        {isCurrentAdmin && (
-                          <button
-                            onClick={() => {
-                              if (window.confirm(`هل أنت متأكد من حذف سلعة [${f.name}] بالكامل للمستخدم ${selectedBrother.name}؟`)) {
-                                const updated = (selectedBrother.approvedFields || []).filter((item) => item.id !== f.id);
-                                updateBrotherFields(selectedBrother.id, updated);
-                              }
-                            }}
-                            title="حذف هذه السلعة"
-                            className="opacity-0 group-hover/field:opacity-100 p-1 text-slate-400 hover:text-rose-500 rounded transition"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
+                    {/* Commodity Name */}
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0 border border-emerald-500/20">
+                        🛒
                       </div>
-
-                      <div className="text-xs font-mono flex items-center gap-1.5">
-                        <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm">
-                          {formatMoney(spent, currency)}
-                        </span>
-                        <span className="text-slate-400 font-normal text-[11px]"> / {formatMoney(limit, currency)}</span>
-
-                        {isCurrentAdmin && spent > 0 && (
-                          <button
-                            onClick={() => {
-                              const matchedTx = transfers.find((t) =>
-                                isTransferStrictlyForBrother(t, selectedBrother) &&
-                                (t.fieldId === f.id || (t.fieldName && f.name && t.fieldName.includes(f.name.split(' ')[0])))
-                              );
-                              if (matchedTx) {
-                                setEditingTransfer(matchedTx);
-                              } else {
-                                setEditingTransfer({
-                                  id: 'tx-' + Date.now(),
-                                  recipientId: selectedBrother.id,
-                                  recipientName: selectedBrother.name,
-                                  recipientAccountNumber: selectedBrother.bankAccountNumber || selectedBrother.accountNumber,
-                                  amount: spent,
-                                  fieldId: f.id,
-                                  fieldName: f.name,
-                                  reason: `مصروفات سابقة لسلعة ${f.name}`
-                                });
-                              }
-                            }}
-                            className="px-1.5 py-0.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 rounded-md border border-emerald-200 dark:border-emerald-800 transition flex items-center gap-0.5 shadow-xs"
-                            title="تعديل هذا المبلغ المصروف"
-                          >
-                            <Edit3 className="w-3 h-3" />
-                            <span className="text-[9px] font-black">تعديل</span>
-                          </button>
-                        )}
-                      </div>
+                      <span className="font-black text-slate-800 dark:text-white text-xs sm:text-sm truncate">
+                        {f.name}
+                      </span>
                     </div>
 
-                    {/* Progress Bar & Details */}
-                    <div className="w-full h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-300 ${
-                          percent >= 100
-                            ? 'bg-rose-500'
-                            : percent >= 80
-                            ? 'bg-amber-500'
-                            : 'bg-emerald-500'
-                        }`}
-                        style={{ width: `${percent}%` }}
-                      />
-                    </div>
+                    {/* Price / Transferred Amount in front of commodity */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-xs sm:text-sm font-black font-mono px-3 py-1 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 rounded-xl shadow-xs">
+                        {formatMoney(priceAmount, currency)}
+                      </span>
 
-                    <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold">
-                      <span>المصروف أمام السلعة: <strong className="text-emerald-600 dark:text-emerald-400 font-mono">{formatMoney(spent, currency)}</strong></span>
-                      <span>المتبقي: <strong className="font-mono">{formatMoney(Math.max(0, limit - spent), currency)}</strong></span>
+                      {/* Admin Delete Commodity */}
+                      {isCurrentAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(`هل أنت متأكد من حذف سلعة [${f.name}]؟`)) {
+                              const updated = (selectedBrother.approvedFields || []).filter((item) => item.id !== f.id);
+                              updateBrotherFields(selectedBrother.id, updated);
+                            }
+                          }}
+                          title="حذف هذه السلعة"
+                          className="opacity-0 group-hover/field:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition rounded"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
               })}
 
               {(!selectedBrother.approvedFields || selectedBrother.approvedFields.length === 0) && (
-                <div className="col-span-2 text-center py-6 text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-                  لا توجد سلع مثبتة لهذا المستخدم حالياً. يتم تثبيت السلعة تلقائياً عند أول طلب أو تحويل!
+                <div className="col-span-2 text-center py-7 text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 space-y-1">
+                  <span className="text-lg block">🛍️</span>
+                  <span className="font-bold text-slate-300">لا توجد سلع مسجلة لهذا المستخدم حالياً.</span>
+                  <span className="text-[11px] text-slate-500 block">عند قيامك بتحويل مبلغ وكتابة اسم السلعة (أو طلب المستخدم لمبلغ وسلعة)، ستظهر السلعة وسعرها هنا فوراً!</span>
                 </div>
               )}
             </div>
