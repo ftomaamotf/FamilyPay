@@ -193,14 +193,7 @@ function MainApp() {
         {/* Desktop View Switcher Tabs */}
         <DesktopNavTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {/* Top Prominent Sending Card Banner with Security & Live Counters */}
-        <SendingCardBanner
-          onOpenTransferModal={() => handleOpenTransfer()}
-          onOpenCardsManager={() => setCardsManagerOpen(true)}
-          onOpenAdminModal={() => setAdminModalOpen(true)}
-          onOpenSecurityModal={() => setSecurityModalOpen(true)}
-        />
-
+        {/* Live Counters & Alerts Bar */}
         <LiveCountersBar
           onOpenPendingRequests={() => setPendingRequestsModalOpen(true)}
           onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
@@ -218,7 +211,6 @@ function MainApp() {
               onOpenRequestMoney={(brother, field) => handleOpenRequestMoney(brother, field)}
               onOpenChat={handleOpenChat}
             />
-            <TransfersHistory onOpenTransferModal={handleOpenTransfer} />
           </div>
         )}
 
@@ -336,6 +328,8 @@ function MainApp() {
       <SettingsModal
         isOpen={settingsModalOpen}
         onClose={() => setSettingsModalOpen(false)}
+        onOpenCardsManager={() => setCardsManagerOpen(true)}
+        onOpenJoinQr={() => setJoinQrOpen(true)}
       />
 
       <QrShareModal

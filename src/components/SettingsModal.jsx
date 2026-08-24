@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
 import { CURRENCIES } from '../utils/defaultData';
+import { formatMoney } from '../utils/formatters';
 import {
   X,
   Settings,
@@ -13,20 +14,33 @@ import {
   Send,
   UserCheck,
   Lock,
+  Unlock,
   Moon,
   Sun,
   KeyRound,
   Users,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  CreditCard,
+  Eye,
+  EyeOff,
+  QrCode,
+  Sparkles,
+  Plus
 } from 'lucide-react';
 
-export const SettingsModal = ({ isOpen, onClose }) => {
+export const SettingsModal = ({
+  isOpen,
+  onClose,
+  onOpenCardsManager,
+  onOpenJoinQr
+}) => {
   const {
     settings,
     updateSettings,
     brothers,
     bankCards,
+    sendingCard,
     transfers,
     monthlyArchives,
     yearlyArchives,
@@ -34,10 +48,16 @@ export const SettingsModal = ({ isOpen, onClose }) => {
     currentUser,
     transferAdminRole,
     transferPermissions,
-    updateTransferPermissions
+    updateTransferPermissions,
+    isCardFrozen,
+    toggleCardFreeze,
+    fundPin,
+    changeFundPin,
+    isBalanceHiddenByAdmin,
+    toggleAdminBalanceVisibility
   } = useFinance();
 
-  const [activeTab, setActiveTab] = useState('permissions'); // 'permissions' | 'general' | 'backup'
+  const [activeTab, setActiveTab] = useState('cards'); // 'cards' | 'permissions' | 'security' | 'general'
 
   // Admin Delegation State
   const [selectedTargetAdminId, setSelectedTargetAdminId] = useState('');
@@ -54,10 +74,15 @@ export const SettingsModal = ({ isOpen, onClose }) => {
   const [permMsg, setPermMsg] = useState('');
   const [permSuccess, setPermSuccess] = useState(false);
 
+  // Security PIN state
+  const [newPinInput, setNewPinInput] = useState('');
+  const [pinChangeMsg, setPinChangeMsg] = useState('');
+
   if (!isOpen) return null;
 
   const currentAdmin = brothers.find((b) => b.id === activeAdminId) || { name: 'الأدمن' };
   const isCurrentAdminUser = currentUser?.id === activeAdminId || currentUser?.isAdmin;
+  const currency = settings.currencySymbol || 'د.ع';
 
   // Toggle sender permission for a specific brother
   const handleToggleSender = (brotherId) => {
@@ -74,7 +99,7 @@ export const SettingsModal = ({ isOpen, onClose }) => {
   const handleDelegateAdmin = async (e) => {
     e.preventDefault();
     if (!selectedTargetAdminId) {
-      setDelegateMsg('يرجى اختيار الأخ المراد تفويضه كأدمن');
+      setDelegateMsg('يرجى اختيار المستخدم المراد تفويضه كأدمن');
       return;
     }
 
@@ -116,10 +141,26 @@ export const SettingsModal = ({ isOpen, onClose }) => {
     }
   };
 
+  // Change Security PIN
+  const handleChangePinSubmit = async (e) => {
+    e.preventDefault();
+    if (!newPinInput.trim() || newPinInput.trim().length < 3) {
+      setPinChangeMsg('يرجى إدخال رمز حماية مكون من 3 أرقام على الأقل');
+      return;
+    }
+    const res = await changeFundPin(newPinInput.trim());
+    if (res.success) {
+      setPinChangeMsg('✅ تم تغيير رمز حماية الصندوق بنجاح!');
+      setNewPinInput('');
+    } else {
+      setPinChangeMsg('❌ حدث خطأ أثناء تغيير الرمز');
+    }
+  };
+
   // Export full JSON Backup
   const handleExportBackup = () => {
     const backupData = {
-      version: '2.5.0',
+      version: '2.6.0',
       exportedAt: new Date().toISOString(),
       settings,
       brothers,
@@ -145,75 +186,248 @@ export const SettingsModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn" dir="rtl">
-      <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col overflow-hidden text-slate-800 dark:text-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-md animate-fadeIn" dir="rtl">
+      <div className="bg-white dark:bg-slate-800 w-full max-w-xl rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[92vh] flex flex-col overflow-hidden text-slate-800 dark:text-slate-100">
         
         {/* Header */}
-        <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-gradient-to-l from-emerald-800 via-teal-900 to-slate-900 text-white">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center justify-center">
               <Settings className="w-5 h-5" />
             </div>
-            <div>
-              <h2 className="font-black text-base sm:text-lg text-slate-900 dark:text-white">
-                إعدادات البرنامج وإدارة الصلاحيات
+            <div className="text-right">
+              <h2 className="font-black text-base sm:text-lg">
+                إعدادات البرنامج وإدارة الصندوق
               </h2>
-              <p className="text-xs text-slate-400">تحويل الأدمن، تحديد من يرسل الأموال، والنسخ الاحتياطي</p>
+              <p className="text-xs text-emerald-200">البطاقات، الأمان، تحويل الأدمن، والصلاحيات</p>
             </div>
           </div>
 
-          <button onClick={onClose} className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white transition">
+          <button onClick={onClose} className="p-1.5 rounded-full text-emerald-200 hover:text-white transition">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Tab Switcher: 3 Tabs */}
-        <div className="flex bg-slate-50 dark:bg-slate-750 px-4 pt-3 border-b border-slate-200 dark:border-slate-700 text-xs font-bold gap-2">
+        {/* Tab Switcher: 4 Tabs */}
+        <div className="flex bg-slate-50 dark:bg-slate-750 px-3 pt-3 border-b border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5 overflow-x-auto scrollbar-none">
+          
+          <button
+            onClick={() => setActiveTab('cards')}
+            className={`pb-3 px-2.5 border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
+              activeTab === 'cards'
+                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400 font-black'
+                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <CreditCard className="w-4 h-4 text-emerald-500" />
+            <span>البطاقات والرصيد</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('security')}
+            className={`pb-3 px-2.5 border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
+              activeTab === 'security'
+                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400 font-black'
+                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4 text-blue-500" />
+            <span>حماية الصندوق</span>
+          </button>
+
           <button
             onClick={() => setActiveTab('permissions')}
-            className={`pb-3 border-b-2 transition flex items-center gap-1.5 ${
+            className={`pb-3 px-2.5 border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'permissions'
-                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
+                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400 font-black'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <Crown className="w-4 h-4 text-amber-500" />
-            <span>الأدمن وصلاحيات الإرسال</span>
+            <span>الأدمن والصلاحيات</span>
           </button>
 
           <button
             onClick={() => setActiveTab('general')}
-            className={`pb-3 border-b-2 transition flex items-center gap-1.5 ${
+            className={`pb-3 px-2.5 border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'general'
-                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
+                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400 font-black'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
-            <Coins className="w-4 h-4 text-emerald-500" />
-            <span>العملة والمظهر</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('backup')}
-            className={`pb-3 border-b-2 transition flex items-center gap-1.5 ${
-              activeTab === 'backup'
-                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
-          >
-            <Download className="w-4 h-4 text-blue-500" />
-            <span>النسخ الاحتياطي</span>
+            <Coins className="w-4 h-4 text-teal-500" />
+            <span>النسخ والمظهر</span>
           </button>
         </div>
 
         {/* Tab Content */}
-        <div className="p-5 overflow-y-auto space-y-5 flex-1 text-xs">
+        <div className="p-4 sm:p-5 overflow-y-auto space-y-5 flex-1 text-xs">
           
-          {/* TAB 1: ADMIN DELEGATION & TRANSFER PERMISSIONS (تحويل الأدمن وصلاحيات الإرسال) */}
+          {/* TAB 1: CARDS & BALANCE (البطاقات المصرفية ورصيد الصندوق) */}
+          {activeTab === 'cards' && (
+            <div className="space-y-5">
+              
+              {/* Main Card Overview */}
+              <div className="p-4 rounded-3xl bg-gradient-to-l from-emerald-900 via-teal-950 to-slate-900 text-white border border-emerald-800/40 space-y-4 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-emerald-400" />
+                    <span className="font-black text-sm">{sendingCard?.name || 'بطاقة الصندوق الرئيسية'}</span>
+                  </div>
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                    {sendingCard?.bankName || 'Qi Card'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-white/10 pt-3">
+                  <div>
+                    <span className="text-[11px] text-emerald-200 block">رقم الحساب / البطاقة:</span>
+                    <span className="font-mono text-sm font-bold">{sendingCard?.accountNumber || '9256869125'}</span>
+                  </div>
+                  <div className="text-left">
+                    <span className="text-[11px] text-emerald-200 block">الرصيد المالي الحالي:</span>
+                    <span className="font-mono text-base font-black text-emerald-300">
+                      {formatMoney(sendingCard?.balance || 0)} {currency}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Balance Visibility Toggle */}
+              {isCurrentAdminUser && (
+                <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <span className="font-black text-slate-900 dark:text-white block">
+                      إظهار أو إخفاء الرصيد الكلي عن المستخدمين 👁️
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      {isBalanceHiddenByAdmin
+                        ? 'الرصيد مخفي حالياً عن باقي المستخدمين ومعروض لك كأدمن فقط'
+                        : 'الرصيد معروض وظاهر لجميع المستخدمين حالياً'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={toggleAdminBalanceVisibility}
+                    className={`px-3.5 py-2 rounded-2xl font-black text-xs transition flex items-center gap-1.5 shadow-sm active:scale-95 ${
+                      isBalanceHiddenByAdmin
+                        ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 border border-amber-400'
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+                    }`}
+                  >
+                    {isBalanceHiddenByAdmin ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                    <span>{isBalanceHiddenByAdmin ? 'إظهار للجميع' : 'إخفاء الرصيد'}</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Cards Management Action */}
+              <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-black text-slate-900 dark:text-white">
+                      إدارة البطاقات المصرفية للصندوق 💳
+                    </h4>
+                    <p className="text-[11px] text-slate-400">
+                      إضافة بطاقات جديدة، تغيير بطاقة الإرسال الرئيسية، وتعديل الأرصدة
+                    </p>
+                  </div>
+                  {onOpenCardsManager && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onOpenCardsManager();
+                      }}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-sm transition active:scale-95 flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>إدارة البطاقات</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* TAB 2: SECURITY & PIN (حماية وأمان الصندوق) */}
+          {activeTab === 'security' && (
+            <div className="space-y-5">
+              
+              {/* Card Freeze / Unfreeze Toggle */}
+              <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <span className="font-black text-slate-900 dark:text-white block">
+                    قفل وتجميد بطاقة الصندوق أمنياً 🔒
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    {isCardFrozen
+                      ? 'البطاقة مجمدة ومقفلة حالياً ولا يمكن تحويل أي أموال منها'
+                      : 'البطاقة نشطة وجاهزة لتحويل وصرف الأموال'}
+                  </span>
+                </div>
+                {isCurrentAdminUser && (
+                  <button
+                    type="button"
+                    onClick={toggleCardFreeze}
+                    className={`px-3.5 py-2 rounded-2xl font-black text-xs transition flex items-center gap-1.5 shadow-sm active:scale-95 ${
+                      isCardFrozen
+                        ? 'bg-rose-600 text-white hover:bg-rose-700'
+                        : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                    }`}
+                  >
+                    {isCardFrozen ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                    <span>{isCardFrozen ? 'فك التجميد' : 'قفل وتجميد'}</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Change Fund PIN Form */}
+              {isCurrentAdminUser && (
+                <form onSubmit={handleChangePinSubmit} className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <KeyRound className="w-4 h-4 text-emerald-500" />
+                    <h4 className="font-black text-slate-900 dark:text-white">
+                      تغيير رمز حماية الصندوق (PIN) 🔑
+                    </h4>
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    رمز الحماية يُستخدم لحماية العمليات الحساسة وتفويض الأدمن
+                  </p>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="password"
+                      value={newPinInput}
+                      onChange={(e) => setNewPinInput(e.target.value)}
+                      placeholder="أدخل رمز حماية جديد..."
+                      maxLength={8}
+                      className="flex-1 px-3.5 py-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold outline-none focus:border-emerald-500 text-right"
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-sm transition active:scale-95"
+                    >
+                      حفظ الرمز
+                    </button>
+                  </div>
+                  {pinChangeMsg && (
+                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+                      {pinChangeMsg}
+                    </p>
+                  )}
+                </form>
+              )}
+
+            </div>
+          )}
+
+          {/* TAB 3: ADMIN & PERMISSIONS (الأدمن وصلاحيات الإرسال) */}
           {activeTab === 'permissions' && (
             <div className="space-y-6">
               
-              {/* SECTION 1: SPECIFY WHO CAN SEND MONEY (تحديد من يستطيع إرسال الأموال) */}
+              {/* SECTION 1: SPECIFY WHO CAN SEND MONEY */}
               <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-3.5">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
@@ -224,14 +438,12 @@ export const SettingsModal = ({ isOpen, onClose }) => {
                       تحديد من يستطيع إرسال الأموال من الصندوق 💸
                     </h3>
                     <p className="text-[11px] text-slate-400">
-                      حدد من له صلاحية الضغط على زر التحويل وإرسال مبالغ للإخوة
+                      حدد من له صلاحية الضغط على زر التحويل وإرسال مبالغ للمستخدمين
                     </p>
                   </div>
                 </div>
 
                 <form onSubmit={handleSavePermissions} className="space-y-3 pt-1">
-                  
-                  {/* Mode Selector */}
                   <div className="space-y-2">
                     <label
                       onClick={() => setPermMode('admin_only')}
@@ -243,10 +455,10 @@ export const SettingsModal = ({ isOpen, onClose }) => {
                     >
                       <div className="space-y-0.5">
                         <span className="font-extrabold block text-slate-900 dark:text-white">
-                          👑 الأدمن فقط (الأكثر أماناً وحوكمة)
+                          👑 الأدمن فقط ({currentAdmin?.name})
                         </span>
                         <span className="text-[11px] text-slate-400">
-                          فقط الأدمن الحالي ({currentAdmin?.name}) يستطيع تنفيذ وإرسال التحويلات
+                          فقط الأدمن الحالي يستطيع تنفيذ وإرسال التحويلات
                         </span>
                       </div>
                       <input
@@ -255,31 +467,6 @@ export const SettingsModal = ({ isOpen, onClose }) => {
                         checked={permMode === 'admin_only'}
                         onChange={() => setPermMode('admin_only')}
                         className="text-emerald-600"
-                      />
-                    </label>
-
-                    <label
-                      onClick={() => setPermMode('custom')}
-                      className={`p-3 rounded-2xl border cursor-pointer flex items-center justify-between transition ${
-                        permMode === 'custom'
-                          ? 'bg-teal-50 dark:bg-teal-950/40 border-teal-500 ring-2 ring-teal-500/20'
-                          : 'bg-white dark:bg-slate-850 border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="space-y-0.5">
-                        <span className="font-extrabold block text-slate-900 dark:text-white">
-                          👥 الأدمن + أشخاص محددين بالاسم
-                        </span>
-                        <span className="text-[11px] text-slate-400">
-                          تحديد إخوة معينين يُسمح لهم بإرسال الأموال من الصندوق
-                        </span>
-                      </div>
-                      <input
-                        type="radio"
-                        name="permMode"
-                        checked={permMode === 'custom'}
-                        onChange={() => setPermMode('custom')}
-                        className="text-teal-600"
                       />
                     </label>
 
@@ -293,10 +480,10 @@ export const SettingsModal = ({ isOpen, onClose }) => {
                     >
                       <div className="space-y-0.5">
                         <span className="font-extrabold block text-slate-900 dark:text-white">
-                          🌐 جميع الإخوة المشتركين
+                          🌐 جميع المستخدمين المسجلين
                         </span>
                         <span className="text-[11px] text-slate-400">
-                          صلاحية مفتوحة لأي أخ مسجل لتحويل الأموال عند الحاجة
+                          صلاحية مفتوحة لأي مستخدم مسجل للتحويل عند الحاجة
                         </span>
                       </div>
                       <input
@@ -309,242 +496,149 @@ export const SettingsModal = ({ isOpen, onClose }) => {
                     </label>
                   </div>
 
-                  {/* If custom mode: Brother toggles list */}
-                  {permMode === 'custom' && (
-                    <div className="p-3 bg-white dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2 animate-fadeIn">
-                      <span className="font-bold text-[11px] text-slate-500 dark:text-slate-400 block">
-                        اختر الإخوة المصرح لهم بالإرسال:
-                      </span>
-                      <div className="space-y-1.5 max-h-44 overflow-y-auto">
-                        {brothers.map((b) => {
-                          const isAllowed = allowedSenders.includes(b.id);
-                          const isAdmin = b.id === activeAdminId;
-                          return (
-                            <div
-                              key={b.id}
-                              onClick={() => !isAdmin && handleToggleSender(b.id)}
-                              className={`p-2 rounded-xl border flex items-center justify-between cursor-pointer transition ${
-                                isAllowed
-                                  ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800'
-                                  : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className="w-6 h-6 rounded-lg text-white text-[10px] font-bold flex items-center justify-center"
-                                  style={{ backgroundColor: b.avatarColor }}
-                                >
-                                  {b.name[0]}
-                                </span>
-                                <span className="font-bold text-xs">{b.name}</span>
-                                {isAdmin && (
-                                  <span className="text-[10px] bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-md font-bold">
-                                    الأدمن الأساسي
-                                  </span>
-                                )}
-                              </div>
-                              <div className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold flex items-center gap-1 ${
-                                isAllowed
-                                  ? 'bg-emerald-600 text-white'
-                                  : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
-                              }`}>
-                                {isAllowed ? <Check className="w-3 h-3" /> : null}
-                                <span>{isAllowed ? 'مصرّح له بالإرسال' : 'غير مصرح'}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                  {isCurrentAdminUser && (
+                    <button
+                      type="submit"
+                      disabled={permLoading}
+                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl transition shadow-md flex items-center justify-center gap-2"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>{permLoading ? 'جاري الحفظ...' : 'حفظ صلاحيات الإرسال'}</span>
+                    </button>
                   )}
-
                   {permMsg && (
-                    <div className={`p-2.5 rounded-xl border text-xs font-bold text-center ${
-                      permSuccess
-                        ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                        : 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800'
-                    }`}>
+                    <p className={`text-xs font-bold ${permSuccess ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'}`}>
                       {permMsg}
-                    </div>
+                    </p>
                   )}
-
-                  <button
-                    type="submit"
-                    disabled={permLoading}
-                    className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>{permLoading ? 'جاري الحفظ...' : 'حفظ وتطبيق صلاحيات الإرسال 💾'}</span>
-                  </button>
-
                 </form>
               </div>
 
-              {/* SECTION 2: TRANSFER ADMIN ROLE (تحويل وتفويض الأدمن) */}
-              <div className="p-4 rounded-3xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 space-y-3.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                    <Crown className="w-4 h-4" />
+              {/* SECTION 2: JOIN QR CODE FOR NEW USERS */}
+              {onOpenJoinQr && (
+                <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <span className="font-black text-slate-900 dark:text-white block">
+                      باركود انضمام وتسجيل مستخدم جديد 📷
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      عرض رمز QR للانضمام المباشر للصندوق عبر كاميرا الهاتف
+                    </span>
                   </div>
-                  <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenJoinQr();
+                    }}
+                    className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 font-black text-xs rounded-2xl shadow-sm transition active:scale-95 flex items-center gap-1.5 border border-amber-400"
+                  >
+                    <QrCode className="w-4 h-4" />
+                    <span>عرض الباركود</span>
+                  </button>
+                </div>
+              )}
+
+              {/* SECTION 3: TRANSFER ADMIN ROLE */}
+              {isCurrentAdminUser && (
+                <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Crown className="w-4 h-4 text-amber-500" />
                     <h3 className="font-black text-sm text-slate-900 dark:text-white">
-                      تحويل وتفويض صلاحية الأدمن لشخص آخر 👑
+                      تسليم وتفويض صلاحيات الأدمن 👑
                     </h3>
-                    <p className="text-[11px] text-slate-400">
-                      تسليم إدارة الصندوق والتحكم الكامل لأحد الإخوة
-                    </p>
                   </div>
-                </div>
+                  <p className="text-[11px] text-slate-400">
+                    اختر المستخدم الذي ترغب في تحويل إدارة الصندوق الكاملة إليه
+                  </p>
 
-                {/* Current Admin Badge */}
-                <div className="p-3 bg-white dark:bg-slate-850 rounded-2xl border border-amber-200/80 dark:border-amber-800/60 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400 font-bold">الأدمن الحالي المسئول:</span>
-                  <div className="flex items-center gap-1.5 font-black text-xs text-amber-600 dark:text-amber-400">
-                    <Crown className="w-3.5 h-3.5" />
-                    <span>{currentAdmin?.name} (#{currentAdmin?.accountNumber})</span>
-                  </div>
-                </div>
-
-                <form onSubmit={handleDelegateAdmin} className="space-y-3">
-                  
-                  {/* Select New Admin */}
-                  <div>
-                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      اختر الأخ المراد تسليمه صلاحية الأدمن *:
-                    </label>
+                  <form onSubmit={handleDelegateAdmin} className="space-y-3 pt-1">
                     <select
                       value={selectedTargetAdminId}
                       onChange={(e) => setSelectedTargetAdminId(e.target.value)}
-                      required
-                      className="w-full bg-white dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-amber-500 font-bold"
+                      className="w-full px-3.5 py-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold outline-none focus:border-emerald-500"
                     >
-                      <option value="">-- اضغط لاختيار الأخ --</option>
-                      {brothers.map((b) => (
-                        <option key={b.id} value={b.id} disabled={b.id === activeAdminId}>
-                          {b.name} (#{b.accountNumber}) {b.id === activeAdminId ? '← (الأدمن الحالي)' : ''}
-                        </option>
-                      ))}
+                      <option value="">-- اختر المستخدم المراد تسليمه الأدمن --</option>
+                      {brothers
+                        .filter((b) => b.id !== activeAdminId)
+                        .map((b) => (
+                          <option key={b.id} value={b.id}>
+                            {b.name} (حساب: #{b.accountNumber})
+                          </option>
+                        ))}
                     </select>
-                  </div>
 
-                  {delegateMsg && (
-                    <div className={`p-2.5 rounded-xl border text-xs font-bold text-center ${
-                      delegateSuccess
-                        ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                        : 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800'
-                    }`}>
-                      {delegateMsg}
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={delegateLoading || !selectedTargetAdminId}
-                    className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5 disabled:opacity-50"
-                  >
-                    <Crown className="w-4 h-4" />
-                    <span>{delegateLoading ? 'جاري التحويل...' : 'تسليم وتفويض صلاحية الأدمن فوراً 👑'}</span>
-                  </button>
-
-                </form>
-              </div>
+                    <button
+                      type="submit"
+                      disabled={delegateLoading || !selectedTargetAdminId}
+                      className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 font-black rounded-2xl transition shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      <Crown className="w-4 h-4" />
+                      <span>{delegateLoading ? 'جاري التحويل...' : 'تسليم الأدمن الآن'}</span>
+                    </button>
+                    {delegateMsg && (
+                      <p className={`text-xs font-bold ${delegateSuccess ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'}`}>
+                        {delegateMsg}
+                      </p>
+                    )}
+                  </form>
+                </div>
+              )}
 
             </div>
           )}
 
-          {/* TAB 2: GENERAL SETTINGS (العملة والمظهر) */}
+          {/* TAB 4: GENERAL & BACKUP (النسخ والمظهر) */}
           {activeTab === 'general' && (
-            <div className="space-y-4">
+            <div className="space-y-5">
               
-              {/* Currency Selector */}
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
-                  <Coins className="w-4 h-4 text-amber-500" />
-                  <span>العملة الافتراضية للمعاملات:</span>
-                </label>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {CURRENCIES.map((curr) => {
-                    const isSelected = settings?.currencyCode === curr.code;
-                    return (
-                      <button
-                        key={curr.code}
-                        type="button"
-                        onClick={() => updateSettings({ currencyCode: curr.code, currencySymbol: curr.symbol })}
-                        className={`p-2.5 rounded-2xl border transition flex items-center justify-between text-xs font-bold ${
-                          isSelected
-                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500'
-                            : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-700 dark:text-slate-300'
-                        }`}
-                      >
-                        <span>{curr.name}</span>
-                        <strong className="text-emerald-600 dark:text-emerald-400">{curr.symbol}</strong>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Dark Mode */}
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                <div>
-                  <span className="font-extrabold text-slate-800 dark:text-white block">الوضع الليلي (Dark Mode)</span>
-                  <span className="text-[11px] text-slate-400">تفعيل المظهر الداكن المريح للعين</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => updateSettings({ darkMode: !settings.darkMode })}
-                  className={`p-2 rounded-xl border flex items-center gap-1.5 font-bold transition ${
-                    settings.darkMode
-                      ? 'bg-slate-700 text-amber-300 border-slate-600'
-                      : 'bg-slate-100 text-slate-700 border-slate-200'
-                  }`}
-                >
-                  {settings.darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                  <span>{settings.darkMode ? 'مفعل' : 'معطل'}</span>
-                </button>
-              </div>
-
-            </div>
-          )}
-
-          {/* TAB 3: BACKUP & MAINTENANCE (النسخ الاحتياطي) */}
-          {activeTab === 'backup' && (
-            <div className="space-y-4">
-              
-              {/* Export Backup Card */}
-              <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-2">
-                <h4 className="font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5">
-                  <Download className="w-4 h-4 text-emerald-600" />
-                  <span>تصدير نسخة احتياطية كاملة (JSON)</span>
+              {/* Currency & Dark Mode */}
+              <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-3">
+                <h4 className="font-black text-slate-900 dark:text-white">
+                  المظهر والعملة 🎨
                 </h4>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  حفظ نسخة من جميع الحسابات، التحويلات، السجلات، والأرشيف المالي في ملف يمكنك استرجاعه بأي وقت.
+
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-700 dark:text-slate-300">الوضع الليلي (Dark Mode):</span>
+                  <button
+                    type="button"
+                    onClick={() => updateSettings({ darkMode: !settings.darkMode })}
+                    className="p-2 rounded-2xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 transition"
+                  >
+                    {settings.darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* JSON Backup Export */}
+              <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Download className="w-4 h-4 text-blue-500" />
+                  <h4 className="font-black text-slate-900 dark:text-white">
+                    تصدير نسخة احتياطية من البيانات (JSON) 💾
+                  </h4>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  تنزيل ملف كامل يحتوي على جميع المستخدمين والبطاقات والمصروفات والتحويلات
                 </p>
                 <button
                   type="button"
                   onClick={handleExportBackup}
-                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow transition mt-1"
+                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl transition shadow-md flex items-center justify-center gap-2"
                 >
-                  تحميل النسخة الاحتياطية الآن
+                  <Download className="w-4 h-4" />
+                  <span>تصدير النسخة الاحتياطية الآن</span>
                 </button>
               </div>
 
-              {/* Reset Cache */}
-              <div className="p-4 rounded-3xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 space-y-2">
-                <h4 className="font-extrabold text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
-                  <RefreshCcw className="w-4 h-4 text-rose-600" />
-                  <span>إعادة تعيين الذاكرة المؤقتة</span>
-                </h4>
-                <p className="text-[11px] text-rose-600 dark:text-rose-400">
-                  إذا واجهت أي بيانات قديمة عالقة في المتصفح، يمكنك مسح الذاكرة المؤقتة لجهازك.
-                </p>
+              {/* Clear Cache */}
+              <div className="pt-2 text-center">
                 <button
                   type="button"
                   onClick={handleClearLocalCache}
-                  className="w-full py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl shadow transition"
+                  className="text-xs text-rose-500 hover:underline font-bold"
                 >
-                  مسح الذاكرة المؤقتة وتحديث الصفحة
+                  إعادة تعيين الذاكرة المؤقتة على هذا الجهاز 🔄
                 </button>
               </div>
 
