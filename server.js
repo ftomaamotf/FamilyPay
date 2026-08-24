@@ -1007,33 +1007,55 @@ app.put('/api/brothers/:brotherId/fields', (req, res) => {
   });
 });
 
-// Dynamic Commodity/Item Naming Helper (Exact name + Price tracking)
+// Arabic text normalizer for accurate commodity matching without duplicates
+function normalizeArabicText(text) {
+  if (!text) return '';
+  return String(text)
+    .trim()
+    .toLowerCase()
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/[ة]/g, 'ه')
+    .replace(/[ى]/g, 'ي')
+    .replace(/[\u064B-\u065F]/g, '') // remove tashkeel
+    .replace(/[\s\-_.,/\\#+=!@$%^&*()~`"':;?><]/g, '') // remove spaces/symbols
+    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ''); // remove emojis
+}
+
+// Dynamic Commodity/Item Naming Helper (Exact name + Price tracking + Anti-Duplicate)
 function matchOrAssignField(brother, explicitFieldId, reasonText, customItemName) {
   if (!brother.approvedFields) brother.approvedFields = [];
 
   const raw = (customItemName || reasonText || '').trim();
   const cleanName = raw.replace(/^\[.*?\]\s*/, '').trim() || 'مصروف عام';
+  const normInput = normalizeArabicText(cleanName);
 
-  // Find if brother already has a commodity with this exact name
-  let existing = brother.approvedFields.find((f) => 
-    f.name.toLowerCase() === cleanName.toLowerCase() ||
-    f.name.trim() === cleanName.trim()
-  );
+  // 1. Find if brother already has this commodity (by normalized name or matching root)
+  let existing = null;
+  if (normInput) {
+    existing = brother.approvedFields.find((f) => {
+      const normF = normalizeArabicText(f.name);
+      return normF === normInput || 
+             (normF.length >= 3 && normInput.length >= 3 && (normF.includes(normInput) || normInput.includes(normF)));
+    });
+  }
 
+  // 2. Check if explicit ID provided
   if (!existing && explicitFieldId) {
     existing = brother.approvedFields.find((f) => f.id === explicitFieldId);
   }
 
+  // If already exists, return it so the amount goes directly to the existing title without duplicating
   if (existing) {
     return existing;
   }
 
-  // Create new commodity named exactly as given
+  // 3. New commodity: Append to the BOTTOM of the list (اسفل السلعة السابقة)
   const newField = {
     id: 'f-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
     name: cleanName,
     limit: 0,
-    spent: 0
+    spent: 0,
+    createdAt: new Date().toISOString()
   };
   brother.approvedFields.push(newField);
   return newField;

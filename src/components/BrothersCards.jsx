@@ -441,19 +441,22 @@ export const BrothersCards = ({
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {selectedBrother.approvedFields?.map((f) => {
+            <div className="flex flex-col gap-2.5">
+              {selectedBrother.approvedFields?.map((f, index) => {
                 const calculatedSpent = dynamicFieldSpent(f.id, f.name);
                 const priceAmount = Math.max(f.spent || 0, calculatedSpent);
 
                 return (
                   <div
                     key={f.id}
-                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between relative group/field hover:border-emerald-400 transition shadow-xs"
+                    className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between relative group/field hover:border-emerald-400 transition shadow-xs"
                   >
-                    {/* Commodity Name */}
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0 border border-emerald-500/20">
+                    {/* Commodity Name & Index */}
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-black flex items-center justify-center shrink-0">
+                        {index + 1}
+                      </span>
+                      <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-500/20">
                         🛒
                       </div>
                       <span className="font-black text-slate-800 dark:text-white text-xs sm:text-sm truncate">
@@ -463,7 +466,7 @@ export const BrothersCards = ({
 
                     {/* Price / Transferred Amount in front of commodity */}
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-xs sm:text-sm font-black font-mono px-3 py-1 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 rounded-xl shadow-xs">
+                      <span className="text-xs sm:text-sm font-black font-mono px-3 py-1.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 rounded-xl shadow-xs">
                         {formatMoney(priceAmount, currency)}
                       </span>
 
@@ -489,7 +492,7 @@ export const BrothersCards = ({
               })}
 
               {(!selectedBrother.approvedFields || selectedBrother.approvedFields.length === 0) && (
-                <div className="col-span-2 text-center py-7 text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 space-y-1">
+                <div className="text-center py-7 text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 space-y-1">
                   <span className="text-lg block">🛍️</span>
                   <span className="font-bold text-slate-300">لا توجد سلع مسجلة لهذا المستخدم حالياً.</span>
                   <span className="text-[11px] text-slate-500 block">عند قيامك بتحويل مبلغ وكتابة اسم السلعة (أو طلب المستخدم لمبلغ وسلعة)، ستظهر السلعة وسعرها هنا فوراً!</span>
