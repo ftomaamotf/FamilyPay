@@ -1835,6 +1835,79 @@ export const FinanceProvider = ({ children }) => {
     );
   };
 
+  // 12. Web Push Notification Support (Android & iPhone background calls)
+  const [isPushSupported, setIsPushSupported] = useState(false);
+  const [isPushSubscribed, setIsPushSubscribed] = useState(false);
+
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
+  const subscribePushNotifications = async (targetUserId) => {
+    const uid = targetUserId || currentUser?.id;
+    if (!uid) return { success: false, message: 'يجب تسجيل الدخول أولاً' };
+
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+      return { success: false, message: 'المتصفح لا يدعم خدمة الإشعارات الخلفية المباشرة' };
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        return { success: false, message: 'تم رفض إذن الإشعارات من المتصفح، يرجى السماح بالإشعارات من إعدادات الهاتف' };
+      }
+
+      const reg = await navigator.serviceWorker.ready;
+      let subscription = await reg.pushManager.getSubscription();
+
+      if (!subscription) {
+        const vapidRes = await fetch(`${API_BASE}/api/push/vapid-public-key`);
+        const vapidData = await vapidRes.json();
+        const publicKey = vapidData.publicKey || 'BNcaM3lxrHfnfl6H_OPgCYmMbNZBQAtRznWfN246zGEZ5Zlm_20zOf4Rb5fSBgO4W0MUHps_YPpzINH_qRyUMns';
+
+        subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+      }
+
+      if (subscription) {
+        await fetch(`${API_BASE}/api/push/subscribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: uid,
+            subscription: subscription.toJSON(),
+            userAgent: navigator.userAgent
+          })
+        });
+        setIsPushSubscribed(true);
+        return { success: true, message: '✅ تم تفعيل رنين المكالمات عند غلق البرنامج بنجاح!' };
+      }
+    } catch (err) {
+      console.log('Push subscription error:', err);
+      return { success: false, message: 'تعذر تفعيل الإشعارات: ' + (err.message || 'خطأ غير معروف') };
+    }
+    return { success: false, message: 'حدث خطأ أثناء الاشتراك بالإشعارات' };
+  };
+
+  // Auto-subscribe when user logs in if permission already granted
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
+      setIsPushSupported(true);
+      if (currentUser?.id && Notification.permission === 'granted') {
+        subscribePushNotifications(currentUser.id);
+      }
+    }
+  }, [currentUser?.id]);
+
   const updateSettings = (newSettings) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
@@ -1917,7 +1990,10 @@ export const FinanceProvider = ({ children }) => {
         endVoiceCall: endIntercomCall,
         sendCallVoiceChunk: (callId, audioData) => sendIntercomVoiceBurst({ callId, audioData }),
         playIntercomRingtone,
-        playWalkieTalkieChirp
+        playWalkieTalkieChirp,
+        isPushSupported,
+        isPushSubscribed,
+        subscribePushNotifications
       }}
     >
       {children}

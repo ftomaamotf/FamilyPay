@@ -3,6 +3,7 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import webpush from 'web-push';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,6 +14,16 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ limit: '25mb', extended: true }));
+
+// Web Push VAPID Configuration for Background Push Notifications (Android & iPhone)
+const VAPID_PUBLIC = process.env.VAPID_PUBLIC || 'BNcaM3lxrHfnfl6H_OPgCYmMbNZBQAtRznWfN246zGEZ5Zlm_20zOf4Rb5fSBgO4W0MUHps_YPpzINH_qRyUMns';
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE || '05acFLu6xyFDs9xulsVI5OLiEpxOkvJjVKnhXtiqJ6w';
+
+webpush.setVapidDetails(
+  'mailto:support@familyfund.iq',
+  VAPID_PUBLIC,
+  VAPID_PRIVATE
+);
 
 // Database file path
 const DATA_DIR = path.join(__dirname, 'data');
@@ -1761,8 +1772,21 @@ app.post('/api/intercom/call', (req, res) => {
 
   activeIntercomCalls[callId] = callData;
 
-  // Broadcast ringing alert to all clients via SSE
+  // 1. Broadcast ringing alert to open clients via SSE
   broadcastEvent('INTERCOM_RINGING', { call: callData });
+
+  // 2. Trigger instant Background Push Notification to Receiver's Phone (Android & iPhone even if app closed!)
+  sendPushToUser(receiverId, {
+    title: `📞 مكالمة صوتية واردة من ${caller.name}`,
+    body: `يرن عليك الآن.. اضغط للرد الفوري والتحدث 📲`,
+    callId: callData.id,
+    callerId,
+    callerName: caller.name,
+    callerAvatar: caller.avatarColor,
+    receiverId,
+    type: 'INCOMING_CALL',
+    url: '/'
+  });
 
   res.json({
     success: true,
@@ -1847,6 +1871,79 @@ app.get('/api/intercom/active-for/:userId', (req, res) => {
     (c) => c && (c.callerId === userId || c.receiverId === userId) && c.status === 'connected'
   );
   res.json({ success: true, ringingCall: ringingCall || null, connectedCall: connectedCall || null });
+});
+
+// ================= 10. Web Push Background Notifications (Android & iPhone PWA) =================
+
+// Helper to send Web Push Notification to a user or all users
+function sendPushToUser(userId, payload) {
+  try {
+    const db = readDB();
+    if (!db.pushSubscriptions || db.pushSubscriptions.length === 0) return;
+
+    const targets = userId === 'all'
+      ? db.pushSubscriptions
+      : db.pushSubscriptions.filter((s) => s.userId === userId);
+
+    targets.forEach((subObj) => {
+      if (subObj.subscription && subObj.subscription.endpoint) {
+        webpush.sendNotification(subObj.subscription, JSON.stringify(payload))
+          .catch((err) => {
+            console.log(`Push notify note (status: ${err.statusCode}) for user ${subObj.userId}`);
+            if (err.statusCode === 410 || err.statusCode === 404) {
+              const freshDb = readDB();
+              if (freshDb.pushSubscriptions) {
+                freshDb.pushSubscriptions = freshDb.pushSubscriptions.filter((s) => s.subscription.endpoint !== subObj.subscription.endpoint);
+                saveDB(freshDb);
+              }
+            }
+          });
+      }
+    });
+  } catch (err) {
+    console.error('sendPushToUser general error:', err);
+  }
+}
+
+// 10.1 Get VAPID Public Key for client subscription
+app.get('/api/push/vapid-public-key', (req, res) => {
+  res.json({ success: true, publicKey: VAPID_PUBLIC });
+});
+
+// 10.2 Register or Update Device Push Subscription (from Android or iPhone)
+app.post('/api/push/subscribe', (req, res) => {
+  const { userId, subscription, userAgent } = req.body;
+  if (!userId || !subscription || !subscription.endpoint) {
+    return res.status(400).json({ success: false, message: 'بيانات الاشتراك غير مكتملة' });
+  }
+
+  const db = readDB();
+  if (!db.pushSubscriptions) db.pushSubscriptions = [];
+
+  // Remove existing identical endpoint
+  db.pushSubscriptions = db.pushSubscriptions.filter((s) => s.subscription && s.subscription.endpoint !== subscription.endpoint);
+
+  db.pushSubscriptions.push({
+    userId,
+    subscription,
+    userAgent: userAgent || '',
+    updatedAt: new Date().toISOString()
+  });
+
+  saveDB(db);
+  console.log(`✅ تم تسجيل جهاز المستخدم (${userId}) لاستقبال إشعارات المكالمات عند غلق التطبيق`);
+  res.json({ success: true, message: 'تم تفعيل استقبال إشعارات المكالمات عند غلق البرنامج بنجاح 🔔' });
+});
+
+// 10.3 Test Push Notification
+app.post('/api/push/test', (req, res) => {
+  const { userId } = req.body;
+  sendPushToUser(userId || 'all', {
+    title: '🔔 إشعار تجريبي من صندوق العائلة',
+    body: 'نظام الإشعارات الخلفية للمكالمات يعمل بنجاح حتى عند إغلاق التطبيق! 🚀',
+    type: 'TEST'
+  });
+  res.json({ success: true, message: 'تم إرسال الإشعار التجريبي' });
 });
 
 // Serve frontend build in production with no-cache headers

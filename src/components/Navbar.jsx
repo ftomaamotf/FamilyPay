@@ -17,7 +17,8 @@ import {
   Crown,
   Share2,
   Inbox,
-  MessageSquare
+  MessageSquare,
+  Bell
 } from 'lucide-react';
 
 export const Navbar = ({
@@ -40,7 +41,9 @@ export const Navbar = ({
     canCurrentUserSend,
     fundRequests,
     guestRequests,
-    messages = []
+    messages = [],
+    isPushSubscribed,
+    subscribePushNotifications
   } = useFinance();
 
   const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
@@ -106,6 +109,27 @@ export const Navbar = ({
           {/* User Profile & Actions */}
           <div className="flex items-center gap-2">
             
+            {/* Background Call Notifications Activator */}
+            <button
+              onClick={async () => {
+                const res = await subscribePushNotifications();
+                if (res && res.message) {
+                  alert(res.message);
+                }
+              }}
+              title="تفعيل رنين وإشعارات المكالمات عند غلق التطبيق في الأندرويد والآيفون"
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-black shadow-xs transition active:scale-95 border ${
+                isPushSubscribed
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
+                  : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border-amber-500/40 animate-pulse'
+              }`}
+            >
+              <Bell className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">
+                {isPushSubscribed ? 'رنين المكالمات مفعل 🔔' : 'تفعيل رنين المكالمات 📳'}
+              </span>
+            </button>
+
             {/* Realtime Chat Button */}
             {onOpenChat && (
               <button
