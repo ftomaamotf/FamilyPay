@@ -27,11 +27,11 @@
       "bankName": "ماستر كي / Qi Card",
       "accountNumber": "9256869125",
       "cardHolder": "عبدالله عجمي مطشر",
-      "balance": 827001,
+      "balance": 826001,
       "isSendingCard": true,
       "isFrozen": false,
       "color": "#059669",
-      "lastUpdated": "2026-08-23T16:42:06.657Z"
+      "lastUpdated": "2026-08-24T03:29:49.012Z"
     },
     {
       "id": "card-2",
@@ -131,12 +131,68 @@
           "id": "f-1787541751196-523",
           "name": "حليب للأطفال 🥛",
           "limit": 500000,
+          "spent": 1000
+        }
+      ]
+    },
+    {
+      "id": "b-1",
+      "name": "عمر عجمي",
+      "email": "omar.ajmi@gmail.com",
+      "accountNumber": "1001",
+      "phone": "07703432608",
+      "bankAccountNumber": "7115069812",
+      "password": "1989",
+      "bankName": "ماستر كي / Qi Card",
+      "avatarColor": "#10b981",
+      "isAdmin": false,
+      "approvedFields": [
+        {
+          "id": "f-1",
+          "name": "حليب ومواد غذائية 🥛",
+          "limit": 200000,
+          "spent": 0
+        },
+        {
+          "id": "f-2",
+          "name": "فواتير وانترنت ⚡",
+          "limit": 100000,
+          "spent": 0
+        },
+        {
+          "id": "f-3",
+          "name": "صيانة منزلية 🔧",
+          "limit": 100000,
+          "spent": 0
+        },
+        {
+          "id": "f-1787246876444-537",
+          "name": "اطباء",
+          "limit": 100000,
           "spent": 0
         }
       ]
     }
   ],
   "transfers": [
+    {
+      "id": "tx-1787542189014",
+      "senderId": "b-2",
+      "senderName": "الأدمن (موافقة على طلب)",
+      "recipientId": "b-1787243535948",
+      "recipientName": "محمد عجمي",
+      "recipientAccountNumber": "7145810946",
+      "accountNumber": "1003",
+      "amount": 1000,
+      "fieldId": "f-1787541751196-523",
+      "fieldName": "حليب للأطفال 🥛",
+      "reason": "[موافقة على طلب - حليب للأطفال 🥛] شراء حليب ومستلزمات للأطفال",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-24T03:29:49.014Z",
+      "date": "2026-08-24"
+    },
     {
       "id": "tx-1787503326641",
       "senderId": "b-2",
@@ -211,6 +267,17 @@
     }
   ],
   "notifications": [
+    {
+      "id": "notif-1787542189014",
+      "title": "💰 تحويل مالي: 1000 د.ع",
+      "message": "تم تحويل 1000 د.ع إلى حساب الأخ (محمد عجمي) رقم (7145810946) لحاجة [حليب للأطفال 🥛]. المتبقي في بطاقة الصندوق: 826001 د.ع",
+      "transferId": "tx-1787542189014",
+      "recipientId": "b-1787243535948",
+      "amount": 1000,
+      "reason": "شراء حليب ومستلزمات للأطفال",
+      "timestamp": "2026-08-24T03:29:49.014Z",
+      "readBy": []
+    },
     {
       "id": "notif-1787541751196",
       "title": "📥 طلب أموال جديد (حليب للأطفال 🥛): 1000 د.ع",
@@ -406,8 +473,9 @@
       "fieldId": "f-1787541751196-523",
       "fieldName": "حليب للأطفال 🥛",
       "reason": "شراء حليب ومستلزمات للأطفال",
-      "status": "pending",
-      "createdAt": "2026-08-24T03:22:31.196Z"
+      "status": "approved",
+      "createdAt": "2026-08-24T03:22:31.196Z",
+      "approvedAt": "2026-08-24T03:29:49.014Z"
     },
     {
       "id": "req-1787244666311",
@@ -841,6 +909,21 @@
       "audioDuration": 0,
       "type": "text",
       "timestamp": "2026-08-24T03:24:13.625Z",
+      "readBy": [
+        "b-1787243535948"
+      ]
+    },
+    {
+      "id": "msg-1787542007173-929",
+      "senderId": "b-1787243535948",
+      "senderName": "محمد عجمي",
+      "senderAvatarColor": "#10b981",
+      "recipientId": "b-1787243535948",
+      "text": "✅",
+      "audioUrl": null,
+      "audioDuration": 0,
+      "type": "text",
+      "timestamp": "2026-08-24T03:26:47.173Z",
       "readBy": [
         "b-1787243535948"
       ]
