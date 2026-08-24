@@ -1972,13 +1972,16 @@ export const FinanceProvider = ({ children }) => {
         incomingCall,
         setIncomingCall,
         incomingVoiceBurst,
-        isWalkieTalkieOpen,
-        setIsWalkieTalkieOpen,
         startIntercomCall,
         acceptIntercomCall,
         rejectIntercomCall,
         endIntercomCall,
         sendIntercomVoiceBurst,
+        startVoiceCall: startIntercomCall,
+        acceptVoiceCall: acceptIntercomCall,
+        rejectVoiceCall: rejectIntercomCall,
+        endVoiceCall: endIntercomCall,
+        sendCallVoiceChunk: (callId, audioData) => sendIntercomVoiceBurst({ callId, audioData }),
         playIntercomRingtone,
         playWalkieTalkieChirp
       }}

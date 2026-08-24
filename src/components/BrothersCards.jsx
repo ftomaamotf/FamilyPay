@@ -44,7 +44,7 @@ export const BrothersCards = ({
     canCurrentUserSend,
     updateBrotherFields,
     deleteBrother,
-    startIntercomCall
+    startVoiceCall
   } = useFinance();
   const [copiedId, setCopiedId] = useState(null);
   const [copiedToast, setCopiedToast] = useState(null);
@@ -391,14 +391,15 @@ export const BrothersCards = ({
                       {selectedBrother.phone && (
                         <div className="flex items-center gap-2 flex-wrap">
                           <span>هاتف: {selectedBrother.phone}</span>
-                          <a
-                            href={`tel:${String(selectedBrother.phone).replace(/[\s\-]/g, '')}`}
+                          <button
+                            type="button"
+                            onClick={() => startVoiceCall(selectedBrother.id)}
                             className="px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-slate-950 transition text-[11px] font-black flex items-center gap-1 active:scale-95"
-                            title="اتصال هاتفي مباشر"
+                            title="بدء مكالمة صوتية مباشرة داخل البرنامج"
                           >
                             <Phone className="w-3 h-3" />
-                            <span>اتصال 📞</span>
-                          </a>
+                            <span>اتصال صوتي 📞</span>
+                          </button>
                           <a
                             href={`https://wa.me/${String(selectedBrother.phone).replace(/[\s\-\+]/g, '').replace(/^0/, '964')}`}
                             target="_blank"
