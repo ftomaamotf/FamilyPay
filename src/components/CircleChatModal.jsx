@@ -12,7 +12,9 @@ import {
   Crown,
   Smile,
   CheckCheck,
-  Radio
+  Radio,
+  Phone,
+  MessageCircle
 } from 'lucide-react';
 import { useFinance } from '../context/FinanceContext';
 
@@ -309,24 +311,43 @@ export const CircleChatModal = ({ isOpen, onClose, initialRecipientId = 'all' })
         </div>
 
         {/* Current Active Channel Status Bar */}
-        <div className="px-4 py-2 bg-emerald-50/70 dark:bg-emerald-950/30 border-b border-emerald-100 dark:border-emerald-900/40 flex items-center justify-between text-xs font-bold text-emerald-800 dark:text-emerald-300">
-          <div className="flex items-center gap-2">
+        <div className="px-4 py-2.5 bg-emerald-50/80 dark:bg-emerald-950/40 border-b border-emerald-100 dark:border-emerald-900/50 flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-emerald-900 dark:text-emerald-200">
+          <div className="flex items-center gap-2 flex-wrap">
             <span>
               {activeTab === 'all'
                 ? '🌐 أنت الآن في المحادثة العامة لجميع دوائر المستخدمين والأدمن'
                 : ('👤 محادثة مباشرة مع: ' + (selectedBrother?.name || 'المستخدم'))
               }
             </span>
+
+            {/* Direct Voice Call & WhatsApp Actions */}
             {activeTab !== 'all' && (
-              <button
-                type="button"
-                onClick={() => startIntercomCall(activeTab)}
-                className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-[11px] rounded-xl shadow-sm transition flex items-center gap-1 active:scale-95 border border-amber-400"
-                title="بدء مناداة وتحدث لاسلكي مباشر مع هذا المستخدم"
-              >
-                <Radio className="w-3 h-3" />
-                <span>مناداة 📻</span>
-              </button>
+              <div className="flex items-center gap-1.5 mr-1">
+                {/* Voice Call Button */}
+                <button
+                  type="button"
+                  onClick={() => startIntercomCall(activeTab)}
+                  className="px-3 py-1 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-black text-[11px] rounded-xl shadow-sm transition flex items-center gap-1.5 active:scale-95 border border-emerald-400/40"
+                  title="بدء اتصال صوتي وتحدث مباشر مع هذا المستخدم"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>اتصال صوتي 📞</span>
+                </button>
+
+                {/* WhatsApp Chat & Call Button */}
+                {selectedBrother?.phone && (
+                  <a
+                    href={`https://wa.me/${String(selectedBrother.phone).replace(/[\s\-\+]/g, '').replace(/^0/, '964')}?text=${encodeURIComponent(`مرحباً ${selectedBrother.name}، بخصوص حساب ومصاريف الصندوق..`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[11px] rounded-xl shadow-sm transition flex items-center gap-1 active:scale-95 border border-emerald-400"
+                    title="اتصال أو مراسلة عبر واتساب"
+                  >
+                    <MessageCircle className="w-3 h-3" />
+                    <span>واتساب 💬</span>
+                  </a>
+                )}
+              </div>
             )}
           </div>
           <span className="text-[10px] text-slate-400">

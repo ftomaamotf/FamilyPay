@@ -19,7 +19,9 @@ import {
   Inbox,
   Edit3,
   MessageSquare,
-  Radio
+  Radio,
+  Phone,
+  MessageCircle
 } from 'lucide-react';
 import { EditTransferModal } from './EditTransferModal';
 
@@ -612,23 +614,26 @@ export const BrothersCards = ({
                 type="button"
                 onClick={() => onOpenChat(selectedBrother.id)}
                 className="px-4 py-3 bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-200 border border-teal-300 dark:border-teal-700 font-extrabold text-xs sm:text-sm rounded-2xl transition flex items-center gap-1.5 active:scale-98 shadow-sm"
-                title="إرسال رسالة أو بصمة صوتية لهذا المستخدم"
+                title="إرسال رسالة أو بصمة صوتية أو اتصال صوتي لهذا المستخدم"
               >
                 <MessageSquare className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                 <span>محادثة وبصمة صوت 🎙️</span>
               </button>
             )}
 
-            {/* Walkie-Talkie / Live Intercom Button */}
-            <button
-              type="button"
-              onClick={() => startIntercomCall(selectedBrother.id)}
-              className="px-4 py-3 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700 font-extrabold text-xs sm:text-sm rounded-2xl transition flex items-center gap-1.5 active:scale-98 shadow-sm"
-              title="بدء مناداة وتحدث مباشر مع هذا المستخدم عبر جهاز اللاسلكي"
-            >
-              <Radio className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              <span>مناداة وتحدث مباشر 📻</span>
-            </button>
+            {/* Direct WhatsApp Call & Chat Button */}
+            {selectedBrother?.phone && (
+              <a
+                href={`https://wa.me/${String(selectedBrother.phone).replace(/[\s\-\+]/g, '').replace(/^0/, '964')}?text=${encodeURIComponent(`مرحباً ${selectedBrother.name}، بخصوص حساب ومصاريف الصندوق..`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-3 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700 font-extrabold text-xs sm:text-sm rounded-2xl transition flex items-center gap-1.5 active:scale-98 shadow-sm"
+                title="اتصال أو محادثة عبر واتساب"
+              >
+                <MessageCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>واتساب 💬</span>
+              </a>
+            )}
 
             {isCurrentAdmin && (
               <button

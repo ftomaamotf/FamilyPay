@@ -468,6 +468,36 @@ export const FinanceProvider = ({ children }) => {
     }
   }, []);
 
+  // Smart Merge Helper for Brothers
+  const syncAndMergeBrothers = useCallback((serverBrothers) => {
+    if (!Array.isArray(serverBrothers) || serverBrothers.length === 0) return;
+    setBrothers((prevLocal) => {
+      const mergedMap = new Map();
+      // 1. Add all server brothers
+      serverBrothers.forEach((b) => mergedMap.set(b.id || b.accountNumber, b));
+      // 2. Check if local storage has brothers not present on server
+      let hasMissing = false;
+      const missingToSync = [];
+      (prevLocal || []).forEach((lb) => {
+        const key = lb.id || lb.accountNumber;
+        if (!mergedMap.has(key) && lb.name) {
+          mergedMap.set(key, lb);
+          missingToSync.push(lb);
+          hasMissing = true;
+        }
+      });
+      // 3. Auto-sync missing brothers to server
+      if (hasMissing && missingToSync.length > 0) {
+        fetch(`${API_BASE}/api/sync`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brothers: missingToSync })
+        }).catch(() => {});
+      }
+      return Array.from(mergedMap.values());
+    });
+  }, []);
+
   // Realtime Server-Sent Events (SSE) Listener & Initial Server Sync
   useEffect(() => {
     // Initial fetch from server to guarantee sync with family_fund_db.json
@@ -475,7 +505,7 @@ export const FinanceProvider = ({ children }) => {
       .then((r) => r.json())
       .then((data) => {
         if (data.success && data.state) {
-          if (data.state.brothers) setBrothers(data.state.brothers);
+          if (data.state.brothers) syncAndMergeBrothers(data.state.brothers);
           if (data.state.bankCards) setBankCards(data.state.bankCards);
           if (data.state.transfers) setTransfers(data.state.transfers);
           if (data.state.messages) setMessages(data.state.messages);
@@ -593,7 +623,7 @@ export const FinanceProvider = ({ children }) => {
           }
 
           if (payload.type === 'BROTHERS_UPDATED') {
-            if (payload.data.brothers) setBrothers(payload.data.brothers);
+            if (payload.data.brothers) syncAndMergeBrothers(payload.data.brothers);
           }
 
           if (payload.type === 'FIELDS_UPDATED') {

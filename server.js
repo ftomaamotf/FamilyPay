@@ -878,22 +878,39 @@ app.post('/api/admin/delegate', (req, res) => {
 // 5.1 Admin: Add New Brother / Account
 app.post('/api/brothers', (req, res) => {
   const { name, accountNumber, phone, bankAccountNumber, bankName, password, avatarColor, approvedFields } = req.body;
-  if (!name || !accountNumber) {
-    return res.status(400).json({ success: false, message: 'يرجى إدخال اسم الأخ ورقم الحساب' });
+  if (!name) {
+    return res.status(400).json({ success: false, message: 'يرجى إدخال اسم المستخدم' });
   }
 
   const db = readDB();
-  const cleanAcc = String(accountNumber).trim();
+  const cleanAcc = accountNumber ? String(accountNumber).trim() : String(1000 + db.brothers.length + 1);
 
-  // Check if account number already exists
-  const exists = db.brothers.some((b) => String(b.accountNumber) === cleanAcc);
-  if (exists) {
-    return res.status(400).json({ success: false, message: 'رقم الحساب مسجل مسبقاً، اختر رقماً آخر' });
+  // Check if brother already exists by id or account number -> update it (upsert)
+  const existingIndex = db.brothers.findIndex((b) => (req.body.id && b.id === req.body.id) || (accountNumber && String(b.accountNumber) === cleanAcc));
+  if (existingIndex !== -1) {
+    db.brothers[existingIndex] = {
+      ...db.brothers[existingIndex],
+      name: name.trim(),
+      phone: phone !== undefined ? String(phone).trim() : db.brothers[existingIndex].phone,
+      bankAccountNumber: bankAccountNumber ? String(bankAccountNumber).trim() : db.brothers[existingIndex].bankAccountNumber,
+      bankName: bankName ? bankName.trim() : db.brothers[existingIndex].bankName,
+      password: password ? String(password).trim() : db.brothers[existingIndex].password,
+      avatarColor: avatarColor || db.brothers[existingIndex].avatarColor,
+      approvedFields: approvedFields || db.brothers[existingIndex].approvedFields
+    };
+    saveDB(db);
+    broadcastEvent('BROTHERS_UPDATED', { brothers: db.brothers });
+    return res.json({
+      success: true,
+      message: `تم تحديث بيانات المستخدم (${db.brothers[existingIndex].name}) بنجاح`,
+      brother: db.brothers[existingIndex],
+      brothers: db.brothers
+    });
   }
 
   const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#ef4444', '#6366f1'];
   const newBrother = {
-    id: 'b-' + Date.now(),
+    id: req.body.id || 'b-' + Date.now(),
     name: name.trim(),
     accountNumber: cleanAcc,
     phone: phone ? String(phone).trim() : '0770' + Math.floor(1000000 + Math.random() * 9000000),
@@ -915,10 +932,35 @@ app.post('/api/brothers', (req, res) => {
 
   res.json({
     success: true,
-    message: `تمت إضافة الأخ (${newBrother.name}) برقم حساب (#${newBrother.accountNumber}) بنجاح`,
+    message: `تمت إضافة المستخدم (${newBrother.name}) برقم حساب (#${newBrother.accountNumber}) بنجاح`,
     brother: newBrother,
     brothers: db.brothers
   });
+});
+
+// 5.1.1 Two-way Sync endpoint for Admin and Users
+app.post('/api/sync', (req, res) => {
+  const { brothers: clientBrothers } = req.body;
+  const db = readDB();
+  let changed = false;
+
+  if (Array.isArray(clientBrothers)) {
+    clientBrothers.forEach((cb) => {
+      if (!cb || !cb.name) return;
+      const idx = db.brothers.findIndex((b) => b.id === cb.id || String(b.accountNumber) === String(cb.accountNumber));
+      if (idx === -1) {
+        db.brothers.push(cb);
+        changed = true;
+      }
+    });
+  }
+
+  if (changed) {
+    saveDB(db);
+    broadcastEvent('BROTHERS_UPDATED', { brothers: db.brothers });
+  }
+
+  res.json({ success: true, brothers: db.brothers, state: db });
 });
 
 // 5.2 Admin: Update Brother Details
