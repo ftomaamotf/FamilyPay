@@ -38,14 +38,8 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       } else if (currentUser?.id) {
         setSelectedRequesterId(currentUser.id);
       }
-      if (initialFieldId) {
-        setFieldId(initialFieldId);
-      } else {
-        const br = brothers.find((b) => b.id === (initialBrotherId || currentUser?.id)) || currentUser;
-        if (br?.approvedFields?.length > 0) {
-          setFieldId(br.approvedFields[0].id);
-        }
-      }
+      setFieldId(initialFieldId || '');
+      setCommodityName('');
       setErrorMsg('');
       setSuccessMsg('');
     }
@@ -65,8 +59,8 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       setErrorMsg('يرجى كتابة مبلغ صحيح أكبر من الصفر');
       return;
     }
-    if (!reason.trim()) {
-      setErrorMsg('يرجى توضيح سبب طلب الأموال (الحاجة)');
+    if (!commodityName.trim() && !fieldId) {
+      setErrorMsg('يرجى كتابة اسم السلعة المطلوبة');
       return;
     }
 
@@ -74,7 +68,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
     setErrorMsg('');
     setSuccessMsg('');
 
-    const finalCommodity = commodityName.trim() || selectedField?.name || reason.trim();
+    const finalCommodity = commodityName.trim() || selectedField?.name || reason.trim() || 'مصروف عام';
 
     const res = await submitMoneyRequest({
       brotherId: currentBrother?.id || currentUser?.id,
@@ -82,9 +76,9 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       phone: currentBrother?.phone || currentUser?.phone,
       bankAccountNumber: currentBrother?.bankAccountNumber || currentUser?.bankAccountNumber,
       amount: numAmount,
-      fieldId,
+      fieldId: commodityName.trim() ? null : (fieldId || null),
       commodityName: finalCommodity,
-      reason: reason.trim()
+      reason: reason.trim() || finalCommodity
     });
 
     setLoading(false);

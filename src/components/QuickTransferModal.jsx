@@ -51,14 +51,9 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
         const found = brothers.find((b) => b.id !== currentUser?.id) || brothers[0];
         setRecipientId(found.id);
       }
-      if (initialFieldId) {
-        setFieldId(initialFieldId);
-      } else {
-        const target = brothers.find((b) => b.id === (initialRecipientId || recipientId)) || brothers[0];
-        if (target?.approvedFields?.length > 0) {
-          setFieldId(target.approvedFields[0].id);
-        }
-      }
+      setFieldId(initialFieldId || '');
+      setCommodityName('');
+      setErrorMsg('');
     }
   }, [isOpen]);
 
@@ -72,7 +67,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const isReasonValid = reason.trim().length >= 2;
+  const isReasonValid = (reason.trim().length >= 2) || (commodityName.trim().length >= 2);
   const isAmountValid = Number(amount) > 0;
   const canSubmit = isReasonValid && isAmountValid && !isCardFrozen && !loading && isSenderAuthorized;
 
@@ -82,12 +77,12 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
       setErrorMsg('🔒 بطاقة الصندوق مجمدة حالياً لحمايتها. يرجى إلغاء التجميد من الأدمن أولاً.');
       return;
     }
-    if (!isReasonValid) {
-      setErrorMsg('⚠️ يجب كتابة سبب طلب المال (الحاجة) بالتفصيل قبل الإرسال');
-      return;
-    }
     if (!isAmountValid) {
       setErrorMsg('⚠️ يرجى إدخال مبلغ صحيح');
+      return;
+    }
+    if (!commodityName.trim() && !fieldId && !reason.trim()) {
+      setErrorMsg('⚠️ يجب كتابة اسم السلعة أو سبب الصرف قبل الإرسال');
       return;
     }
 
@@ -95,14 +90,14 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     setErrorMsg('');
 
     const targetRecipientId = recipientId || selectedRecipient?.id || brothers[0]?.id;
-    const finalCommodity = commodityName.trim() || selectedRecipient?.approvedFields?.find(f => f.id === fieldId)?.name || reason.trim();
+    const finalCommodity = commodityName.trim() || selectedRecipient?.approvedFields?.find(f => f.id === fieldId)?.name || reason.trim() || 'مصروف عام';
 
     const res = await executeTransfer({
       recipientId: targetRecipientId,
       amount: Number(amount),
-      fieldId: fieldId || null,
+      fieldId: commodityName.trim() ? null : (fieldId || null),
       commodityName: finalCommodity,
-      reason: reason.trim()
+      reason: reason.trim() || finalCommodity
     });
 
     setLoading(false);

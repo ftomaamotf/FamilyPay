@@ -1021,35 +1021,35 @@ function normalizeArabicText(text) {
     .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ''); // remove emojis
 }
 
-// Dynamic Commodity/Item Naming Helper (Exact name + Price tracking + Anti-Duplicate)
+// Strict Commodity/Item Naming Helper (Creates new item below previous without auto-redirection)
 function matchOrAssignField(brother, explicitFieldId, reasonText, customItemName) {
   if (!brother.approvedFields) brother.approvedFields = [];
 
-  const raw = (customItemName || reasonText || '').trim();
-  const cleanName = raw.replace(/^\[.*?\]\s*/, '').trim() || 'مصروف عام';
+  const raw = (customItemName || '').trim();
+  const cleanName = raw.replace(/^\[.*?\]\s*/, '').trim() || (reasonText || 'مصروف عام').trim();
   const normInput = normalizeArabicText(cleanName);
 
-  // 1. Find if brother already has this commodity (by normalized name or matching root)
   let existing = null;
+
+  // 1. If a commodity name is typed, ONLY check for EXACT identical name match
   if (normInput) {
     existing = brother.approvedFields.find((f) => {
       const normF = normalizeArabicText(f.name);
-      return normF === normInput || 
-             (normF.length >= 3 && normInput.length >= 3 && (normF.includes(normInput) || normInput.includes(normF)));
+      return normF === normInput;
     });
   }
 
-  // 2. Check if explicit ID provided
-  if (!existing && explicitFieldId) {
+  // 2. Only if no custom name was provided, check explicitFieldId
+  if (!raw && !existing && explicitFieldId) {
     existing = brother.approvedFields.find((f) => f.id === explicitFieldId);
   }
 
-  // If already exists, return it so the amount goes directly to the existing title without duplicating
+  // If exact identical commodity exists, use it
   if (existing) {
     return existing;
   }
 
-  // 3. New commodity: Append to the BOTTOM of the list (اسفل السلعة السابقة)
+  // 3. Any new commodity name: Create new entry and append to the BOTTOM (أسفل القديمة)
   const newField = {
     id: 'f-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
     name: cleanName,
