@@ -149,12 +149,7 @@ export const FinanceProvider = ({ children }) => {
         bankName: 'ماستر كي / Qi Card',
         avatarColor: '#6366f1',
         isAdmin: true,
-        approvedFields: [
-          { id: 'f-4', name: 'بنزين ومواصلات ⛽', limit: 150000, spent: 49999 },
-          { id: 'f-5', name: 'حليب للأطفال 🥛', limit: 150000, spent: 0 },
-          { id: 'f-6', name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
-          { id: 'f-1787246913231-83', name: 'صيدلية وأطباء 🩺', limit: 100000, spent: 0 }
-        ]
+        approvedFields: []
       },
       {
         id: 'b-1787243535948',
@@ -167,12 +162,7 @@ export const FinanceProvider = ({ children }) => {
         bankName: 'ماستر كي / Qi Card',
         avatarColor: '#10b981',
         isAdmin: false,
-        approvedFields: [
-          { id: 'f-1787243536212-2', name: 'بنزين ومواصلات ⛽', limit: 150000, spent: 0 },
-          { id: 'f-1787243536212-3', name: 'حليب ومواد غذائية 🥛', limit: 200000, spent: 0 },
-          { id: 'f-1787503326641-740', name: 'بنزين وسفر ⛽', limit: 500000, spent: 50000 },
-          { id: 'f-1787541751196-523', name: 'حليب للأطفال 🥛', limit: 500000, spent: 1000 }
-        ]
+        approvedFields: []
       },
       {
         id: 'b-1',
@@ -185,12 +175,7 @@ export const FinanceProvider = ({ children }) => {
         bankName: 'ماستر كي / Qi Card',
         avatarColor: '#10b981',
         isAdmin: false,
-        approvedFields: [
-          { id: 'f-1', name: 'حليب ومواد غذائية 🥛', limit: 200000, spent: 0 },
-          { id: 'f-2', name: 'فواتير وانترنت ⚡', limit: 100000, spent: 0 },
-          { id: 'f-3', name: 'صيانة منزلية 🔧', limit: 100000, spent: 0 },
-          { id: 'f-1787246876444-537', name: 'اطباء', limit: 100000, spent: 0 }
-        ]
+        approvedFields: []
       }
     ]);
     // Filter out any legacy dummy sample names

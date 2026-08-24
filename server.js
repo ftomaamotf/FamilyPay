@@ -1095,17 +1095,17 @@ app.post('/api/transfers', (req, res) => {
     return res.status(400).json({ success: false, message: '⚠️ يجب كتابة سبب طلب المال (الحاجة) إجبارياً قبل الإرسال' });
   }
 
-  // 3. Find Recipient (by id, account number, or name)
+  // 3. Find Recipient Strictly (by id, account number, or exact name)
   let recipient = db.brothers.find((b) => b.id === recipientId);
   if (!recipient && recipientId) {
     recipient = db.brothers.find((b) =>
-      b.accountNumber === String(recipientId) ||
-      b.bankAccountNumber === String(recipientId) ||
-      (b.name && b.name.trim().toLowerCase() === String(recipientId).trim().toLowerCase())
+      String(b.accountNumber) === String(recipientId) ||
+      String(b.bankAccountNumber) === String(recipientId) ||
+      normalizeArabicText(b.name) === normalizeArabicText(recipientId)
     );
   }
-  if (!recipient && db.brothers.length > 0) {
-    recipient = db.brothers.find((b) => b.id !== db.activeAdminId) || db.brothers[0];
+  if (!recipient) {
+    return res.status(404).json({ success: false, message: '⚠️ لم يتم العثور على دائرة الأخ المستلم المحدد بدقة' });
   }
 
   const sender = db.brothers.find((b) => b.id === senderId) || db.brothers.find((b) => b.id === db.activeAdminId) || db.brothers[0];

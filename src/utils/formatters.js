@@ -38,6 +38,19 @@ export const getMonthName = (monthIndex) => {
   return months[monthIndex] || '';
 };
 
+export const normalizeArabicText = (text) => {
+  if (!text) return '';
+  return String(text)
+    .trim()
+    .toLowerCase()
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/[ة]/g, 'ه')
+    .replace(/[ى]/g, 'ي')
+    .replace(/[\u064B-\u065F]/g, '')
+    .replace(/[\s\-_.,/\\#+=!@$%^&*()~`"':;?><]/g, '')
+    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '');
+};
+
 // Export to Excel sheet
 export const exportToExcel = (transactions, categories, currencySymbol, fileName = 'تقرير_حسابات_المنزل.xlsx') => {
   const catMap = new Map(categories.map(c => [c.id, c.name]));

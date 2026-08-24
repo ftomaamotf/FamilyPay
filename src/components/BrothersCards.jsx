@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { formatMoney } from '../utils/formatters';
+import { formatMoney, normalizeArabicText } from '../utils/formatters';
 import {
   Users,
   Copy,
@@ -69,45 +69,39 @@ export const BrothersCards = ({
     }
   }, [brothers, currentUser, activeAdminId]);
 
-  // Strict Transfer Matching for Brother (Prevents brother transfers from contaminating Admin or vice versa)
+  // Strict Transfer Matching for Brother (Prevents brother transfers from contaminating other circles)
   const isTransferStrictlyForBrother = (t, b) => {
     if (!t || !b) return false;
-    const tName = String(t.recipientName || '').trim().toLowerCase();
-    const bName = String(b.name || '').trim().toLowerCase();
-
-    // 1. If recipientName clearly belongs to another brother, reject immediately
-    if (tName && bName) {
-      const isNameMatch = tName === bName || tName.includes(bName) || bName.includes(tName);
-      if (isNameMatch) return true;
-    }
-
-    // 2. Direct recipientId match
+    // 1. Direct ID match
     if (t.recipientId && b.id && String(t.recipientId) === String(b.id)) {
-      // If names differ drastically (e.g. Admin name vs Muhammad), reject false ID alias
-      if (tName && bName && !tName.includes(bName) && !bName.includes(tName)) {
-        return false;
-      }
       return true;
     }
-
-    // 3. Bank Account Number match
-    const tBank = String(t.recipientAccountNumber || '').trim();
-    const bBank = String(b.bankAccountNumber || '').trim();
+    // 2. Exact Bank Account Number match
+    const tBank = String(t.recipientAccountNumber || t.accountNumber || '').trim();
+    const bBank = String(b.bankAccountNumber || b.accountNumber || '').trim();
     if (tBank && bBank && tBank === bBank) {
       return true;
     }
-
+    // 3. Exact Normalized Name match (لا تطابق جزئي بالتقريب)
+    const tNorm = normalizeArabicText(t.recipientName);
+    const bNorm = normalizeArabicText(b.name);
+    if (tNorm && bNorm && tNorm === bNorm) {
+      return true;
+    }
     return false;
   };
 
   const dynamicFieldSpent = (fieldId, fieldName) => {
     if (!selectedBrother) return 0;
+    const normField = normalizeArabicText(fieldName);
     return transfers
-      .filter((t) =>
-        isTransferStrictlyForBrother(t, selectedBrother) &&
-        (t.fieldId === fieldId || (t.fieldName && fieldName && t.fieldName.includes(fieldName.split(' ')[0])))
-      )
-      .reduce((sum, t) => sum + (t.amount || 0), 0);
+      .filter((t) => {
+        if (!isTransferStrictlyForBrother(t, selectedBrother)) return false;
+        if (t.fieldId && fieldId && t.fieldId === fieldId) return true;
+        if (normField && t.fieldName && normalizeArabicText(t.fieldName) === normField) return true;
+        return false;
+      })
+      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
   };
 
   const copyAccountNumber = (brother) => {
