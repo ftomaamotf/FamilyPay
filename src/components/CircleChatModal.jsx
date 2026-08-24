@@ -320,33 +320,30 @@ export const CircleChatModal = ({ isOpen, onClose, initialRecipientId = 'all' })
               }
             </span>
 
-            {/* Direct Voice Call & WhatsApp Actions */}
-            {activeTab !== 'all' && (
+            {/* Direct Phone Call & WhatsApp Actions */}
+            {activeTab !== 'all' && selectedBrother?.phone && (
               <div className="flex items-center gap-1.5 mr-1">
-                {/* Voice Call Button */}
-                <button
-                  type="button"
-                  onClick={() => startIntercomCall(activeTab)}
+                {/* Direct Phone Call Button */}
+                <a
+                  href={`tel:${String(selectedBrother.phone).replace(/[\s\-]/g, '')}`}
                   className="px-3 py-1 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-black text-[11px] rounded-xl shadow-sm transition flex items-center gap-1.5 active:scale-95 border border-emerald-400/40"
-                  title="بدء اتصال صوتي وتحدث مباشر مع هذا المستخدم"
+                  title={`اتصال هاتفي مباشر بـ ${selectedBrother.name}`}
                 >
                   <Phone className="w-3.5 h-3.5" />
-                  <span>اتصال صوتي 📞</span>
-                </button>
+                  <span>اتصال هاتفي 📞</span>
+                </a>
 
                 {/* WhatsApp Chat & Call Button */}
-                {selectedBrother?.phone && (
-                  <a
-                    href={`https://wa.me/${String(selectedBrother.phone).replace(/[\s\-\+]/g, '').replace(/^0/, '964')}?text=${encodeURIComponent(`مرحباً ${selectedBrother.name}، بخصوص حساب ومصاريف الصندوق..`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[11px] rounded-xl shadow-sm transition flex items-center gap-1 active:scale-95 border border-emerald-400"
-                    title="اتصال أو مراسلة عبر واتساب"
-                  >
-                    <MessageCircle className="w-3 h-3" />
-                    <span>واتساب 💬</span>
-                  </a>
-                )}
+                <a
+                  href={`https://wa.me/${String(selectedBrother.phone).replace(/[\s\-\+]/g, '').replace(/^0/, '964')}?text=${encodeURIComponent(`مرحباً ${selectedBrother.name}، بخصوص حساب ومصاريف الصندوق..`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[11px] rounded-xl shadow-sm transition flex items-center gap-1 active:scale-95 border border-emerald-400"
+                  title="مكالمة أو مراسلة عبر واتساب"
+                >
+                  <MessageCircle className="w-3 h-3" />
+                  <span>واتساب 💬</span>
+                </a>
               </div>
             )}
           </div>

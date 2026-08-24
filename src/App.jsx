@@ -355,8 +355,6 @@ function MainApp() {
         initialRecipientId={chatRecipientId}
       />
 
-      <WalkieTalkieModal />
-
     </div>
   );
 }
