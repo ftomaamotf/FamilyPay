@@ -38,6 +38,7 @@ export const BrothersCards = ({
   const {
     brothers,
     transfers,
+    fundRequests,
     activeAdminId,
     currentUser,
     settings,
@@ -444,7 +445,13 @@ export const BrothersCards = ({
             <div className="flex flex-col gap-2.5">
               {selectedBrother.approvedFields?.map((f, index) => {
                 const calculatedSpent = dynamicFieldSpent(f.id, f.name);
-                const priceAmount = Math.max(f.spent || 0, calculatedSpent);
+                const pending = fundRequests?.find((r) =>
+                  r.status === 'pending' &&
+                  (r.brotherId === selectedBrother.id || r.brotherName === selectedBrother.name) &&
+                  (r.fieldId === f.id || (r.fieldName && f.name && (r.fieldName.includes(f.name) || f.name.includes(r.fieldName))))
+                );
+                const priceAmount = Math.max(f.spent || 0, calculatedSpent, pending?.amount || f.limit || 0);
+                const isPending = calculatedSpent === 0 && (f.spent || 0) === 0 && Boolean(pending);
 
                 return (
                   <div
@@ -459,14 +466,25 @@ export const BrothersCards = ({
                       <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-500/20">
                         🛒
                       </div>
-                      <span className="font-black text-slate-800 dark:text-white text-xs sm:text-sm truncate">
-                        {f.name}
-                      </span>
+                      <div className="min-w-0">
+                        <span className="font-black text-slate-800 dark:text-white text-xs sm:text-sm truncate block">
+                          {f.name}
+                        </span>
+                        {isPending && (
+                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold block">
+                            ⏳ بانتظار موافقة الأدمن والتحويل
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Price / Transferred Amount in front of commodity */}
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-xs sm:text-sm font-black font-mono px-3 py-1.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 rounded-xl shadow-xs">
+                      <span className={`text-xs sm:text-sm font-black font-mono px-3 py-1.5 rounded-xl shadow-xs border ${
+                        isPending
+                          ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                          : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
+                      }`}>
                         {formatMoney(priceAmount, currency)}
                       </span>
 

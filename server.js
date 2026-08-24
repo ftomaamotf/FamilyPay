@@ -1431,6 +1431,8 @@ app.post('/api/requests', (req, res) => {
   res.json({
     success: true,
     request: newRequest,
+    brothers: db.brothers,
+    fundRequests: db.fundRequests,
     message: `✅ تم إرسال طلبك بمبلغ (${numAmount} ${db.currency.symbol}) وتوجيهه لبند [${assignedField.name}] بنجاح!`
   });
 });

@@ -534,6 +534,26 @@ export const FinanceProvider = ({ children }) => {
             );
           }
 
+          if (payload.type === 'NEW_MONEY_REQUEST') {
+            const { request, fundRequests: allReqs, brothers: allBros, notification } = payload.data;
+            if (allReqs) setFundRequests(allReqs);
+            else if (request) setFundRequests((prev) => [request, ...prev.filter((r) => r.id !== request.id)]);
+            if (allBros) syncAndMergeBrothers(allBros);
+            if (notification) {
+              setNotifications((prev) => [notification, ...prev]);
+              setActiveAlert(notification);
+              playChimeSound();
+            }
+          }
+
+          if (payload.type === 'REQUEST_STATUS_CHANGED') {
+            const { request, fundRequests: allReqs } = payload.data;
+            if (allReqs) setFundRequests(allReqs);
+            else if (request) {
+              setFundRequests((prev) => prev.map((r) => (r.id === request.id ? request : r)));
+            }
+          }
+
           if (payload.type === 'GUEST_JOIN_REQUEST') {
             const { request, notif } = payload.data;
             if (request) {
@@ -1090,14 +1110,32 @@ export const FinanceProvider = ({ children }) => {
         })
       });
       const data = await res.json();
-      if (data.success && data.request) {
-        setFundRequests((prev) => [data.request, ...prev.filter((r) => r.id !== data.request.id)]);
+      if (data.success) {
+        if (data.request) {
+          setFundRequests((prev) => [data.request, ...prev.filter((r) => r.id !== data.request.id)]);
+        }
+        if (data.brothers) {
+          syncAndMergeBrothers(data.brothers);
+        }
       }
       return data;
     } catch {
       // Local fallback
       const b = brothers.find((br) => br.id === (brotherId || currentUser?.id)) || currentUser;
-      const f = b?.approvedFields?.find((fld) => fld.id === fieldId);
+      const itemName = (finalCommodityName || reason || 'مصروف عام').trim();
+      let assignedFieldId = fieldId;
+      
+      if (b && itemName) {
+        const existingField = (b.approvedFields || []).find(fld => fld.name.toLowerCase() === itemName.toLowerCase() || fld.name.includes(itemName));
+        if (!existingField) {
+          const newFld = { id: 'f-' + Date.now(), name: itemName, limit: Number(amount), spent: 0 };
+          assignedFieldId = newFld.id;
+          setBrothers(prev => prev.map(item => item.id === b.id ? { ...item, approvedFields: [...(item.approvedFields || []), newFld] } : item));
+        } else {
+          assignedFieldId = existingField.id;
+        }
+      }
+
       const req = {
         id: 'req-' + Date.now(),
         brotherId: b?.id,
@@ -1105,8 +1143,8 @@ export const FinanceProvider = ({ children }) => {
         brotherAccountNumber: b?.accountNumber,
         bankAccountNumber: b?.bankAccountNumber,
         amount: Number(amount),
-        fieldId,
-        fieldName: finalCommodityName || f?.name || 'مصروف عام 🛒',
+        fieldId: assignedFieldId,
+        fieldName: itemName,
         reason: reason.trim(),
         status: 'pending',
         createdAt: new Date().toISOString()
