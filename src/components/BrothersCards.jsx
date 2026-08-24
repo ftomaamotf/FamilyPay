@@ -305,17 +305,40 @@ export const BrothersCards = ({
               );
             })}
 
-            {/* Join via Barcode / QR Code Button */}
+            {/* Join via Barcode / QR Code Circular Button */}
             {isCurrentAdmin && onOpenJoinQr && (
-              <button
-                type="button"
-                onClick={onOpenJoinQr}
-                className="w-full py-3 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition active:scale-95 mt-2 shadow-md shadow-amber-500/20 border border-amber-400 shrink-0"
-                title="عرض رمز QR لإضافة وانضمام مستخدم جديد عبر كاميرا الهاتف"
-              >
-                <QrCode className="w-4 h-4" />
-                <span>باركود إضافة مستخدم جديد 📷</span>
-              </button>
+              <div className="flex flex-col items-center shrink-0 w-auto lg:w-full">
+                <button
+                  type="button"
+                  onClick={onOpenJoinQr}
+                  title="عرض رمز QR لإضافة وانضمام مستخدم جديد عبر كاميرا الهاتف"
+                  className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full opacity-90 hover:opacity-100 hover:scale-105 active:scale-95"
+                >
+                  {/* Outer Circular Ring */}
+                  <div className="relative p-1 rounded-full ring-2 ring-amber-500/80 group-hover:ring-amber-400 group-hover:ring-offset-2 group-hover:ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-amber-500/20">
+                    {/* The Inner QR Avatar Circle */}
+                    <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 text-slate-950 shadow-inner relative overflow-hidden">
+                      <QrCode className="w-8 h-8 sm:w-9 sm:h-9 stroke-[2.2] drop-shadow" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/30 pointer-events-none" />
+                    </div>
+
+                    {/* Camera Badge on top */}
+                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-amber-400 flex items-center justify-center shadow-md border border-amber-400 text-[10px]">
+                      📷
+                    </div>
+                  </div>
+
+                  {/* Circle Name Label */}
+                  <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-amber-300 group-hover:text-amber-200">
+                    باركود إضافة
+                  </span>
+
+                  {/* Action Pill Badge */}
+                  <div className="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 group-hover:bg-amber-500 group-hover:text-slate-950 transition-all">
+                    <span>مسح QR ⚡</span>
+                  </div>
+                </button>
+              </div>
             )}
 
             {/* Manual Add User Button for Admin */}
@@ -323,11 +346,11 @@ export const BrothersCards = ({
               <button
                 type="button"
                 onClick={onOpenAddBrother}
-                className="w-full py-2.5 px-3 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border-2 border-dashed border-emerald-500/40 hover:border-emerald-400 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition active:scale-95 mt-1.5 shadow-sm shrink-0"
+                className="w-full py-2 px-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-dashed border-emerald-500/30 hover:border-emerald-400 rounded-2xl text-[11px] font-black flex items-center justify-center gap-1 transition active:scale-95 mt-1 shadow-sm shrink-0"
                 title="إضافة مستخدم جديد يدوياً إلى الدوائر"
               >
-                <UserPlus className="w-4 h-4 text-emerald-400" />
-                <span>إضافة مستخدم جديد ✍️</span>
+                <UserPlus className="w-3.5 h-3.5 text-emerald-400" />
+                <span>إضافة يدوية ✍️</span>
               </button>
             )}
           </div>
