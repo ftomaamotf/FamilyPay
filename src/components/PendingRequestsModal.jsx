@@ -276,32 +276,18 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                 </div>
               )}
 
-              {/* Qi Card Direct Quick Launcher */}
-              <button
-                type="button"
-                onClick={() => {
-                  const acc = selectedReq.bankAccountNumber || selectedReq.brotherAccountNumber;
-                  navigator.clipboard.writeText(acc);
-                  window.open('https://online.qi.iq', '_blank');
-                }}
-                className="w-full py-2 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 font-black text-xs rounded-xl shadow flex items-center justify-center gap-1.5 transition active:scale-95"
-              >
-                <CreditCard className="w-4 h-4" />
-                <span>نسخ الحساب (#{selectedReq.bankAccountNumber || selectedReq.brotherAccountNumber}) وفتح تطبيق كي 📲</span>
-              </button>
-
-              <div className="flex gap-2 pt-1">
+              <div className="flex gap-2 pt-2">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow transition"
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow transition active:scale-95"
                 >
                   {loading ? 'جاري التحويل...' : 'تأكيد التحويل الآن 🚀'}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setSelectedReq(null); setActionType(null); }}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl"
+                  className="px-5 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs"
                 >
                   إلغاء
                 </button>

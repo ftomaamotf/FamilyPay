@@ -216,36 +216,26 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
               <button
-                onClick={() => {
-                  const acc = completedTransfer.recipientAccountNumber;
-                  navigator.clipboard.writeText(acc);
-                  window.open('https://online.qi.iq', '_blank');
-                }}
-                className="py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 font-black text-xs rounded-2xl shadow flex items-center justify-center gap-1.5 transition active:scale-95"
-              >
-                <CreditCard className="w-4 h-4" />
-                <span>فتح تطبيق كي للتأكيد 📲</span>
-              </button>
-
-              <button
+                type="button"
                 onClick={onClose}
-                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow"
+                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow transition active:scale-95"
               >
                 إغلاق
               </button>
 
               <button
+                type="button"
                 onClick={() => {
                   const text = `🔔 إشعار تحويل مالي موثق:\nتم تحويل ${completedTransfer.amount} ${currency} إلى الأخ ${completedTransfer.recipientName} على رقم الحساب (${completedTransfer.recipientAccountNumber}) لحاجة [${completedTransfer.reason}].`;
                   navigator.clipboard.writeText(text);
                   alert('تم نسخ نص الإشعار لمشاركته!');
                 }}
-                className="py-3 px-4 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs rounded-2xl border border-slate-200 dark:border-slate-600 flex items-center justify-center gap-1"
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-650 text-slate-800 dark:text-white font-bold text-xs rounded-2xl border border-slate-200 dark:border-slate-600 flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs"
               >
-                <Copy className="w-4 h-4" />
-                <span>نسخ الإيصال</span>
+                <Copy className="w-4 h-4 text-emerald-500" />
+                <span>نسخ الإيصال الكامل 📋</span>
               </button>
             </div>
           </div>
