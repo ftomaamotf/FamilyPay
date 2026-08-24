@@ -197,90 +197,19 @@ export const FinanceProvider = ({ children }) => {
     return (raw || []).filter((b) => b && !['b-3', 'b-4', 'b-5', 'b-6'].includes(b.id) && !['يوسف', 'خالد', 'أحمد'].includes(b.name));
   });
 
-  // Transfers Log
-  const [transfers, setTransfers] = useState(() =>
-    loadFromStorage('bait_finance_transfers', [
-      {
-        id: 'tx-1',
-        senderName: 'عمر (الأدمن)',
-        senderId: 'b-1',
-        recipientId: 'b-2',
-        recipientName: 'أحمد',
-        recipientAccountNumber: 'IQ45QI880098765432102',
-        amount: 150,
-        fieldId: 'f-5',
-        fieldName: 'حليب للأطفال 🥛',
-        reason: 'شراء حليب مجفف وحليب طازج للأولاد',
-        sendingCardId: 'card-1',
-        sendingCardName: 'بطاقة الصندوق المشترك',
-        timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
-        date: new Date().toISOString().split('T')[0]
-      },
-      {
-        id: 'tx-2',
-        senderName: 'عمر (الأدمن)',
-        senderId: 'b-1',
-        recipientId: 'b-3',
-        recipientName: 'محمد',
-        recipientAccountNumber: 'IQ45QI880011223344503',
-        amount: 650,
-        fieldId: 'f-7',
-        fieldName: 'تموين وسوبرماركت 🍞',
-        reason: 'تموين البيت الأسبوعي زيت وسكر ودقيق',
-        sendingCardId: 'card-1',
-        sendingCardName: 'بطاقة الصندوق المشترك',
-        timestamp: new Date(Date.now() - 3600000 * 5).toISOString(),
-        date: new Date().toISOString().split('T')[0]
-      }
-    ])
-  );
+  // Transfers Log (Real transfers only, no dummy items)
+  const [transfers, setTransfers] = useState(() => {
+    const raw = loadFromStorage('bait_finance_transfers', []);
+    return (raw || []).filter((t) => t && !['tx-1', 'tx-2', 'tx-3', 'tx-4', 'tx-5'].includes(t.id));
+  });
 
   // Monthly and Yearly Archives
   const [monthlyArchives, setMonthlyArchives] = useState(() =>
-    loadFromStorage('bait_finance_monthly_archives', [
-      {
-        id: 'arch-2026-07',
-        year: 2026,
-        month: 7,
-        monthName: 'يوليو 2026',
-        totalFund: 28000,
-        totalSpent: 26400,
-        remaining: 1600,
-        transfersCount: 38,
-        isLocked: true,
-        brotherBreakdowns: [
-          { brotherId: 'b-1', brotherName: 'عمر', totalSpent: 4200 },
-          { brotherId: 'b-2', brotherName: 'أحمد', totalSpent: 4500 },
-          { brotherId: 'b-3', brotherName: 'محمد', totalSpent: 4800 },
-          { brotherId: 'b-4', brotherName: 'علي', totalSpent: 4100 },
-          { brotherId: 'b-5', brotherName: 'يوسف', totalSpent: 4600 },
-          { brotherId: 'b-6', brotherName: 'خالد', totalSpent: 4200 }
-        ]
-      }
-    ])
+    loadFromStorage('bait_finance_monthly_archives', [])
   );
 
   const [yearlyArchives, setYearlyArchives] = useState(() =>
-    loadFromStorage('bait_finance_yearly_archives', [
-      {
-        id: 'arch-year-2025',
-        year: 2025,
-        totalFund: 320000,
-        totalSpent: 308500,
-        remaining: 11500,
-        transfersCount: 420,
-        isLocked: true,
-        monthsCount: 12,
-        brotherBreakdowns: [
-          { brotherId: 'b-1', brotherName: 'عمر', totalSpent: 51200 },
-          { brotherId: 'b-2', brotherName: 'أحمد', totalSpent: 52400 },
-          { brotherId: 'b-3', brotherName: 'محمد', totalSpent: 54100 },
-          { brotherId: 'b-4', brotherName: 'علي', totalSpent: 49800 },
-          { brotherId: 'b-5', brotherName: 'يوسف', totalSpent: 50900 },
-          { brotherId: 'b-6', brotherName: 'خالد', totalSpent: 50100 }
-        ]
-      }
-    ])
+    loadFromStorage('bait_finance_yearly_archives', [])
   );
 
   // Notifications State & Realtime Alerts
@@ -290,15 +219,21 @@ export const FinanceProvider = ({ children }) => {
   const [activeAlert, setActiveAlert] = useState(null);
 
   // Settings
-  const [settings, setSettings] = useState(() =>
-    loadFromStorage(STORAGE_KEYS.SETTINGS, {
-      currencyCode: 'EGP',
-      currencySymbol: 'ج.م',
+  const [settings, setSettings] = useState(() => {
+    const s = loadFromStorage(STORAGE_KEYS.SETTINGS, {
+      currencyCode: 'IQD',
+      currencySymbol: 'د.ع',
       darkMode: false,
       selectedYear: new Date().getFullYear(),
       selectedMonth: new Date().getMonth() + 1,
-    })
-  );
+    });
+    // Ensure Iraqi Dinar currency symbol
+    if (!s.currencySymbol || s.currencySymbol === 'ج.م' || s.currencyCode === 'EGP') {
+      s.currencyCode = 'IQD';
+      s.currencySymbol = 'د.ع';
+    }
+    return s;
+  });
 
   // Circle Chat & Voice Notes State
   const [messages, setMessages] = useState(() => loadFromStorage('bait_finance_messages', []));
