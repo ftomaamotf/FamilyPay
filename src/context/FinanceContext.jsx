@@ -12,7 +12,15 @@ import { STORAGE_KEYS, loadFromStorage, saveToStorage, exportAllDataBackup, read
 
 const FinanceContext = createContext(null);
 
-const API_BASE = window.location.port === '5173' ? 'http://localhost:5000' : '';
+const API_BASE = (() => {
+  if (typeof window === 'undefined') return 'https://familypay-aw26.onrender.com';
+  if (window.location.port === '5173') return 'http://localhost:5000';
+  if (window.location.port === '5000') return '';
+  if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'https://familypay-aw26.onrender.com';
+  }
+  return '';
+})();
 
 export const FinanceProvider = ({ children }) => {
   // Current Logged-In Brother / User State (null by default to show Login Screen)
@@ -757,16 +765,37 @@ export const FinanceProvider = ({ children }) => {
     };
   }, [playChimeSound, playMessageNotificationSound, playIntercomRingtone, playWalkieTalkieChirp, currentUser]);
 
-  // Periodic polling for Admin and Brothers to guarantee instantaneous real-time sync
+  // Periodic polling for Admin and Brothers to guarantee instantaneous real-time sync & calls
   useEffect(() => {
     fetchGuestRequests();
     fetchFundRequests();
     const interval = setInterval(() => {
       fetchGuestRequests();
       fetchFundRequests();
+
+      // Intercom & Live Call polling failsafe
+      if (currentUser?.id) {
+        fetch(`${API_BASE}/api/intercom/active-for/${currentUser.id}`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.success) {
+              if (data.ringingCall && (!incomingCall || incomingCall.id !== data.ringingCall.id)) {
+                setIncomingCall(data.ringingCall);
+                playIntercomRingtone();
+              } else if (!data.ringingCall && incomingCall) {
+                setIncomingCall(null);
+              }
+              if (data.connectedCall && (!activeCall || activeCall.id !== data.connectedCall.id)) {
+                setActiveCall(data.connectedCall);
+                setIsWalkieTalkieOpen(true);
+              }
+            }
+          })
+          .catch(() => {});
+      }
     }, 2000);
     return () => clearInterval(interval);
-  }, [fetchGuestRequests, fetchFundRequests]);
+  }, [fetchGuestRequests, fetchFundRequests, currentUser, incomingCall, activeCall, playIntercomRingtone]);
 
   // Active Sending Card
   const sendingCard = useMemo(() => {

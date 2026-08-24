@@ -201,8 +201,9 @@ const broadcastEvent = (eventType, data) => {
 
 app.get('/api/events', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
   const clientId = Date.now() + Math.random().toString(36).substr(2, 5);
@@ -211,7 +212,16 @@ app.get('/api/events', (req, res) => {
 
   res.write(`data: ${JSON.stringify({ type: 'CONNECTED', clientId })}\n\n`);
 
+  const pingInterval = setInterval(() => {
+    try {
+      res.write(': ping\n\n');
+    } catch {
+      clearInterval(pingInterval);
+    }
+  }, 15000);
+
   req.on('close', () => {
+    clearInterval(pingInterval);
     sseClients = sseClients.filter((c) => c.id !== clientId);
   });
 });
@@ -1884,6 +1894,18 @@ app.get('/api/intercom/status/:callId', (req, res) => {
   const { callId } = req.params;
   const callData = activeIntercomCalls[callId];
   res.json({ success: true, call: callData || null });
+});
+
+// 9.5 Get Active Calls for User (Direct Poll Failsafe)
+app.get('/api/intercom/active-for/:userId', (req, res) => {
+  const { userId } = req.params;
+  const ringingCall = Object.values(activeIntercomCalls).find(
+    (c) => c && c.receiverId === userId && c.status === 'ringing'
+  );
+  const connectedCall = Object.values(activeIntercomCalls).find(
+    (c) => c && (c.callerId === userId || c.receiverId === userId) && c.status === 'connected'
+  );
+  res.json({ success: true, ringingCall: ringingCall || null, connectedCall: connectedCall || null });
 });
 
 // Serve frontend build in production with no-cache headers

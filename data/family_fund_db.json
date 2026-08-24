@@ -126,6 +126,12 @@
           "name": "بنزين وسفر ⛽",
           "limit": 500000,
           "spent": 50000
+        },
+        {
+          "id": "f-1787541751196-523",
+          "name": "حليب للأطفال 🥛",
+          "limit": 500000,
+          "spent": 0
         }
       ]
     }
@@ -205,6 +211,13 @@
     }
   ],
   "notifications": [
+    {
+      "id": "notif-1787541751196",
+      "title": "📥 طلب أموال جديد (حليب للأطفال 🥛): 1000 د.ع",
+      "message": "طلب الأخ (محمد عجمي) مبلغ 1000 د.ع لبند [حليب للأطفال 🥛] لحاجة: (شراء حليب ومستلزمات للأطفال). بانتظار موافقة الأدمن.",
+      "timestamp": "2026-08-24T03:22:31.196Z",
+      "readBy": []
+    },
     {
       "id": "notif-1787503326657",
       "title": "💰 تحويل مالي: 25000 د.ع",
@@ -382,6 +395,20 @@
   "yearlyArchives": [],
   "invitations": [],
   "fundRequests": [
+    {
+      "id": "req-1787541751196",
+      "brotherId": "b-1787243535948",
+      "brotherName": "محمد عجمي",
+      "brotherAccountNumber": "1003",
+      "bankAccountNumber": "7145810946",
+      "phone": "077027959161",
+      "amount": 1000,
+      "fieldId": "f-1787541751196-523",
+      "fieldName": "حليب للأطفال 🥛",
+      "reason": "شراء حليب ومستلزمات للأطفال",
+      "status": "pending",
+      "createdAt": "2026-08-24T03:22:31.196Z"
+    },
     {
       "id": "req-1787244666311",
       "brotherId": "b-1787243535948",
@@ -679,6 +706,141 @@
       "audioDuration": 0,
       "type": "text",
       "timestamp": "2026-08-24T03:08:11.671Z",
+      "readBy": [
+        "b-1787243535948"
+      ]
+    },
+    {
+      "id": "msg-1787541827016-701",
+      "senderId": "b-1787243535948",
+      "senderName": "محمد عجمي",
+      "senderAvatarColor": "#10b981",
+      "recipientId": "b-2",
+      "text": "⛽",
+      "audioUrl": null,
+      "audioDuration": 0,
+      "type": "text",
+      "timestamp": "2026-08-24T03:23:47.016Z",
+      "readBy": [
+        "b-1787243535948"
+      ]
+    },
+    {
+      "id": "msg-1787541837547-683",
+      "senderId": "b-1787243535948",
+      "senderName": "محمد عجمي",
+      "senderAvatarColor": "#10b981",
+      "recipientId": "b-2",
+      "text": "بابلابلت",
+      "audioUrl": null,
+      "audioDuration": 0,
+      "type": "text",
+      "timestamp": "2026-08-24T03:23:57.547Z",
+      "readBy": [
+        "b-1787243535948"
+      ]
+    },
+    {
+      "id": "msg-1787541852241-23",
+      "senderId": "b-1787243535948",
+      "senderName": "محمد عجمي",
+      "senderAvatarColor": "#10b981",
+      "recipientId": "b-2",
+      "text": "❤️",
+      "audioUrl": null,
+      "audioDuration": 0,
+      "type": "text",
+      "timestamp": "2026-08-24T03:24:12.241Z",
+      "readBy": [
+        "b-1787243535948"
+      ]
+    },
+    {
+      "id": "msg-1787541852738-819",
+      "senderId": "b-1787243535948",
+      "senderName": "محمد عجمي",
+      "senderAvatarColor": "#10b981",
+      "recipientId": "b-2",
+      "text": "❤️",
+      "audioUrl": null,
+      "audioDuration": 0,
+      "type": "text",
+      "timestamp": "2026-08-24T03:24:12.738Z",
+      "readBy": [
+        "b-1787243535948"
+      ]
+    },
+    {
+      "id": "msg-1787541852946-649",
+      "senderId": "b-1787243535948",
+      "senderName": "محمد عجمي",
+      "senderAvatarColor": "#10b981",
+      "recipientId": "b-2",
+      "text": "❤️",
+      "audioUrl": null,
+      "audioDuration": 0,
+      "type": "text",
+      "timestamp": "2026-08-24T03:24:12.946Z",
+      "readBy": [
+        "b-1787243535948"
+      ]
+    },
+    {
+      "id": "msg-1787541853155-69",
+      "senderId": "b-1787243535948",
+      "senderName": "محمد عجمي",
+      "senderAvatarColor": "#10b981",
+      "recipientId": "b-2",
+      "text": "❤️",
+      "audioUrl": null,
+      "audioDuration": 0,
+      "type": "text",
+      "timestamp": "2026-08-24T03:24:13.155Z",
+      "readBy": [
+        "b-1787243535948"
+      ]
+    },
+    {
+      "id": "msg-1787541853364-876",
+      "senderId": "b-1787243535948",
+      "senderName": "محمد عجمي",
+      "senderAvatarColor": "#10b981",
+      "recipientId": "b-2",
+      "text": "❤️",
+      "audioUrl": null,
+      "audioDuration": 0,
+      "type": "text",
+      "timestamp": "2026-08-24T03:24:13.364Z",
+      "readBy": [
+        "b-1787243535948"
+      ]
+    },
+    {
+      "id": "msg-1787541853584-692",
+      "senderId": "b-1787243535948",
+      "senderName": "محمد عجمي",
+      "senderAvatarColor": "#10b981",
+      "recipientId": "b-2",
+      "text": "❤️",
+      "audioUrl": null,
+      "audioDuration": 0,
+      "type": "text",
+      "timestamp": "2026-08-24T03:24:13.584Z",
+      "readBy": [
+        "b-1787243535948"
+      ]
+    },
+    {
+      "id": "msg-1787541853625-313",
+      "senderId": "b-1787243535948",
+      "senderName": "محمد عجمي",
+      "senderAvatarColor": "#10b981",
+      "recipientId": "b-2",
+      "text": "❤️",
+      "audioUrl": null,
+      "audioDuration": 0,
+      "type": "text",
+      "timestamp": "2026-08-24T03:24:13.625Z",
       "readBy": [
         "b-1787243535948"
       ]
