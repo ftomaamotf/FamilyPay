@@ -305,16 +305,29 @@ export const BrothersCards = ({
               );
             })}
 
-            {/* Add User Button for Admin */}
+            {/* Join via Barcode / QR Code Button */}
+            {isCurrentAdmin && onOpenJoinQr && (
+              <button
+                type="button"
+                onClick={onOpenJoinQr}
+                className="w-full py-3 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition active:scale-95 mt-2 shadow-md shadow-amber-500/20 border border-amber-400 shrink-0"
+                title="عرض رمز QR لإضافة وانضمام مستخدم جديد عبر كاميرا الهاتف"
+              >
+                <QrCode className="w-4 h-4" />
+                <span>باركود إضافة مستخدم جديد 📷</span>
+              </button>
+            )}
+
+            {/* Manual Add User Button for Admin */}
             {isCurrentAdmin && onOpenAddBrother && (
               <button
                 type="button"
                 onClick={onOpenAddBrother}
-                className="w-full py-3 px-3 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border-2 border-dashed border-emerald-500/40 hover:border-emerald-400 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition active:scale-95 mt-2 shadow-sm shrink-0"
-                title="إضافة مستخدم جديد إلى الدوائر"
+                className="w-full py-2.5 px-3 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border-2 border-dashed border-emerald-500/40 hover:border-emerald-400 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition active:scale-95 mt-1.5 shadow-sm shrink-0"
+                title="إضافة مستخدم جديد يدوياً إلى الدوائر"
               >
                 <UserPlus className="w-4 h-4 text-emerald-400" />
-                <span>إضافة مستخدم جديد +</span>
+                <span>إضافة مستخدم جديد ✍️</span>
               </button>
             )}
           </div>

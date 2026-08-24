@@ -652,6 +652,36 @@
       "readBy": [
         "b-1787243535948"
       ]
+    },
+    {
+      "id": "msg-1787540881694-608",
+      "senderId": "b-1787243535948",
+      "senderName": "محمد عجمي",
+      "senderAvatarColor": "#10b981",
+      "recipientId": "b-1787243535948",
+      "text": "❤️",
+      "audioUrl": null,
+      "audioDuration": 0,
+      "type": "text",
+      "timestamp": "2026-08-24T03:08:01.694Z",
+      "readBy": [
+        "b-1787243535948"
+      ]
+    },
+    {
+      "id": "msg-1787540891671-118",
+      "senderId": "b-1787243535948",
+      "senderName": "محمد عجمي",
+      "senderAvatarColor": "#10b981",
+      "recipientId": "all",
+      "text": "بلبالالات",
+      "audioUrl": null,
+      "audioDuration": 0,
+      "type": "text",
+      "timestamp": "2026-08-24T03:08:11.671Z",
+      "readBy": [
+        "b-1787243535948"
+      ]
     }
   ]
 }
