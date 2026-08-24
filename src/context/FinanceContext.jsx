@@ -13,13 +13,10 @@ import { STORAGE_KEYS, loadFromStorage, saveToStorage, exportAllDataBackup, read
 const FinanceContext = createContext(null);
 
 const API_BASE = (() => {
-  if (typeof window === 'undefined') return 'https://familypay-aw26.onrender.com';
-  if (window.location.port === '5173') return 'http://localhost:5000';
-  if (window.location.port === '5000') return '';
-  if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return 'https://familypay-aw26.onrender.com';
+  if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+    return '';
   }
-  return '';
+  return 'https://familypay-aw26.onrender.com';
 })();
 
 export const FinanceProvider = ({ children }) => {
