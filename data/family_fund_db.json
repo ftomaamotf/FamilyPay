@@ -61,7 +61,7 @@
   "brothers": [
     {
       "id": "b-2",
-      "name": "عبدالله عجمي مطشر",
+      "name": "عبدالله عجمي",
       "email": "abduallh_ajmi@yahoo.com",
       "accountNumber": "1002",
       "phone": "07702206214",
@@ -99,7 +99,7 @@
     },
     {
       "id": "b-1787243535948",
-      "name": "محمد عجمي مطشر",
+      "name": "محمد عجمي",
       "email": "mohammed@familyfund.iq",
       "accountNumber": "1003",
       "phone": "077027959161",
@@ -621,6 +621,36 @@
       "timestamp": "2026-08-23T17:13:17.951Z",
       "readBy": [
         "b-2"
+      ]
+    },
+    {
+      "id": "msg-1787540854364-549",
+      "senderId": "b-1787243535948",
+      "senderName": "محمد عجمي",
+      "senderAvatarColor": "#10b981",
+      "recipientId": "b-2",
+      "text": "❤️",
+      "audioUrl": null,
+      "audioDuration": 0,
+      "type": "text",
+      "timestamp": "2026-08-24T03:07:34.364Z",
+      "readBy": [
+        "b-1787243535948"
+      ]
+    },
+    {
+      "id": "msg-1787540881031-603",
+      "senderId": "b-1787243535948",
+      "senderName": "محمد عجمي",
+      "senderAvatarColor": "#10b981",
+      "recipientId": "b-1787243535948",
+      "text": "❤️",
+      "audioUrl": null,
+      "audioDuration": 0,
+      "type": "text",
+      "timestamp": "2026-08-24T03:08:01.031Z",
+      "readBy": [
+        "b-1787243535948"
       ]
     }
   ]

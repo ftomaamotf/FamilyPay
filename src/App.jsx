@@ -205,6 +205,7 @@ function MainApp() {
             <BrothersCards
               onOpenTransferModal={handleOpenTransfer}
               onOpenFieldsModal={handleOpenFieldsEdit}
+              onOpenAddBrother={handleOpenAddBrother}
               onOpenEditBrother={handleOpenEditBrother}
               onOpenJoinQr={() => setJoinQrOpen(true)}
               onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
@@ -218,6 +219,7 @@ function MainApp() {
           <BrothersCards
             onOpenTransferModal={handleOpenTransfer}
             onOpenFieldsModal={handleOpenFieldsEdit}
+            onOpenAddBrother={handleOpenAddBrother}
             onOpenEditBrother={handleOpenEditBrother}
             onOpenJoinQr={() => setJoinQrOpen(true)}
             onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}

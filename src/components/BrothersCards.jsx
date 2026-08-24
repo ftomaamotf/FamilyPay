@@ -304,6 +304,19 @@ export const BrothersCards = ({
                 </div>
               );
             })}
+
+            {/* Add User Button for Admin */}
+            {isCurrentAdmin && onOpenAddBrother && (
+              <button
+                type="button"
+                onClick={onOpenAddBrother}
+                className="w-full py-3 px-3 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border-2 border-dashed border-emerald-500/40 hover:border-emerald-400 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition active:scale-95 mt-2 shadow-sm shrink-0"
+                title="إضافة مستخدم جديد إلى الدوائر"
+              >
+                <UserPlus className="w-4 h-4 text-emerald-400" />
+                <span>إضافة مستخدم جديد +</span>
+              </button>
+            )}
           </div>
         </div>
 
