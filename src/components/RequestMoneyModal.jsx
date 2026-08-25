@@ -27,6 +27,8 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
   const [commodityName, setCommodityName] = useState('');
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
+  const [userPassword, setUserPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -40,6 +42,8 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       }
       setFieldId(initialFieldId || '');
       setCommodityName('');
+      setUserPassword('');
+      setShowPassword(false);
       setErrorMsg('');
       setSuccessMsg('');
     }
@@ -63,6 +67,10 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       setErrorMsg('يرجى كتابة اسم السلعة المطلوبة');
       return;
     }
+    if (!userPassword.trim()) {
+      setErrorMsg('⚠️ يرجى إدخال كلمة المرور الخاصة بحسابك لتأكيد إرسال الطلب');
+      return;
+    }
 
     setLoading(true);
     setErrorMsg('');
@@ -80,7 +88,8 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       amount: numAmount,
       fieldId: commodityName.trim() ? null : (fieldId || null),
       commodityName: finalCommodity,
-      reason: reason.trim() || finalCommodity
+      reason: reason.trim() || finalCommodity,
+      password: userPassword.trim()
     });
 
     setLoading(false);
@@ -90,6 +99,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       setAmount('');
       setReason('');
       setCommodityName('');
+      setUserPassword('');
       setTimeout(() => {
         onClose();
       }, 1800);
@@ -294,6 +304,37 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
                 placeholder="اكتب أي تفاصيل إضافية عن الطلب إن وجدت..."
                 className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-xl pr-9 pl-3 py-2 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 leading-relaxed"
               />
+            </div>
+          </div>
+
+          {/* 4. User Password Input (إجباري لتأكيد هوية صاحب الحساب) */}
+          <div>
+            <label className="block font-black text-slate-800 dark:text-slate-200 mb-1 flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                <Lock className="w-3.5 h-3.5 text-teal-600" />
+                <span>4. كلمة المرور الخاصة بحسابك <span className="text-rose-500">*</span>:</span>
+              </span>
+              <span className="text-[10px] text-slate-400 font-normal">
+                إجبارية لتأكيد الطلب 🔒
+              </span>
+            </label>
+            <div className="relative">
+              <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={userPassword}
+                onChange={(e) => setUserPassword(e.target.value)}
+                placeholder="أدخل كلمة المرور الخاصة بحسابك"
+                className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-300 dark:border-slate-700 rounded-xl pr-9 pl-9 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 font-mono font-bold"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 

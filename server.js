@@ -1634,6 +1634,18 @@ app.post('/api/requests', (req, res) => {
     return res.status(404).json({ success: false, message: '⚠️ لم يتم العثور على صاحب الحساب برقم الحساب المحدد' });
   }
 
+  // 🔒 Verify User's Account Password (إجباري لتأكيد هوية صاحب الحساب)
+  const providedPass = String(password || req.body.userPassword || '').trim();
+  if (brother.password) {
+    const expectedPass = String(brother.password).trim();
+    if (!providedPass || providedPass !== expectedPass) {
+      return res.status(401).json({
+        success: false,
+        message: '❌ كلمة المرور الخاصة بحسابك غير صحيحة! يرجى كتابة كلمة المرور الصحيحة لتأكيد إرسال الطلب.'
+      });
+    }
+  }
+
   // Auto-detect and match commodity/field based on reason and explicit fieldId / commodityName
   const assignedField = matchOrAssignField(brother, fieldId, reason, req.body.commodityName || req.body.fieldName || req.body.customItemName);
 
