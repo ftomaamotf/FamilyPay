@@ -96,8 +96,20 @@ export const SettingsModal = ({
     setShowApkPinModal(true);
   };
 
+  const isFirstAdminOwner =
+    Boolean(currentUser) &&
+    (
+      String(currentUser.bankAccountNumber || '').trim() === '9256869125' ||
+      String(currentUser.accountNumber || '').trim() === '9256869125' ||
+      (currentUser.name && (currentUser.name.includes('عبدالله عجمي') || currentUser.name.includes('عبد الله عجمي')))
+    );
+
   const handleVerifyAndSendApk = async (e) => {
     e.preventDefault();
+    if (!isFirstAdminOwner) {
+      setApkPinError('❌ عذراً! صلاحية نشر وإرسال التطبيق محصورة بصاحب الحساب الأول (عبدالله عجمي - 9256869125) فقط.');
+      return;
+    }
     const cleanPin = apkPinInput.trim();
     if (cleanPin !== String(fundPin) && cleanPin !== '1988' && cleanPin !== '9988') {
       setApkPinError('❌ رمز حماية الأدمن غير صحيح! لا يمكن إرسال التطبيق بدون موافقة الأدمن.');
@@ -138,7 +150,7 @@ export const SettingsModal = ({
         if (navigator.share) {
           await navigator.share({
             title: 'تطبيق الصندوق والحسابات المشتركة',
-            text: 'رابط تحميل تطبيق الصندوق المالي المباشر:\n' + window.location.origin + '/FamilyPay.apk\n\nأو يمكنك فتحه مباشرة عبر المتصفح:\n' + window.location.origin,
+            text: 'تطبيق الصندوق المالي المشترك (نسخة عامة ونظيفة).',
             url: window.location.origin + '/FamilyPay.apk'
           });
         } else {
@@ -146,7 +158,7 @@ export const SettingsModal = ({
         }
       }
     } catch (err) {
-      console.log('APK share note:', err);
+      console.log('APK share error:', err);
       setApkSharingLoading(false);
       setShowApkPinModal(false);
       window.location.href = '/FamilyPay.apk';
@@ -731,8 +743,8 @@ export const SettingsModal = ({
                 </div>
               </div>
 
-              {/* SECTION: Share & Export Clean Android APK (Admin Exclusive) */}
-              {isCurrentAdminUser && (
+              {/* SECTION: Share & Export Clean Android APK (Strictly First Admin Owner: عبدالله عجمي 9256869125) */}
+              {isFirstAdminOwner && (
                 <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-emerald-950/80 via-slate-900 to-teal-950/80 border-2 border-emerald-500/40 shadow-xl space-y-3.5 text-white">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
@@ -742,7 +754,7 @@ export const SettingsModal = ({
                       <div>
                         <h4 className="font-black text-sm sm:text-base text-white flex items-center gap-2">
                           <span>إرسال ومشاركة ملف التطبيق (Android APK) 📱</span>
-                          <span className="text-[10px] bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded-full font-bold border border-amber-400/40">خاص بالأدمن 👑</span>
+                          <span className="text-[10px] bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded-full font-bold border border-amber-400/40">خاص بالأدمن المؤسس 👑</span>
                         </h4>
                         <p className="text-[11px] text-emerald-200/90 mt-0.5">
                           إرسال التطبيق عبر البلوتوث 🔵 أو البريد الإلكتروني ✉️ أو الواتساب 💬
@@ -751,17 +763,17 @@ export const SettingsModal = ({
                     </div>
                     <span className="text-[10px] font-black px-2 py-1 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0 flex items-center gap-1">
                       <Crown className="w-3 h-3 text-amber-400" />
-                      <span>الأدمن فقط</span>
+                      <span>عبدالله عجمي</span>
                     </span>
                   </div>
 
                   <div className="bg-slate-950/60 p-3 rounded-2xl border border-emerald-500/20 text-xs text-slate-300 space-y-1">
                     <p className="font-bold text-emerald-300 flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>تطبيق عام وخالي من أي حسابات سابقة:</span>
+                      <span>ميزة حصرية للمالك الأول فقط (9256869125):</span>
                     </p>
                     <p className="text-[11px] text-slate-300 leading-relaxed">
-                      عند إرسال الملف لأي شخص وتثبيته على هاتفه، يفتح له مباشرة على واجهة التسجيل العامة لإنشاء صندوق خاص به أو مسح باركود الأدمن للانضمام.
+                      أنت المالك الوحيد المخول بنشر التطبيق. عند إرسال الملف لأي شخص وتثبيته على هاتفه، يفتح له مباشرة على واجهة التسجيل العامة لإنشاء صندوق خاص به أو مسح باركودك للانضمام.
                     </p>
                   </div>
 
