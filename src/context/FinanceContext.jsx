@@ -1922,11 +1922,11 @@ export const FinanceProvider = ({ children }) => {
     return { success: false, message: 'حدث خطأ أثناء الاشتراك بالإشعارات' };
   };
 
-  // Auto-subscribe when user logs in if permission already granted
+  // Auto-subscribe when user logs in so background push alerts work even when app is closed
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
       setIsPushSupported(true);
-      if (currentUser?.id && Notification.permission === 'granted') {
+      if (currentUser?.id) {
         subscribePushNotifications(currentUser.id);
       }
     }

@@ -734,6 +734,14 @@ app.post('/api/security/toggle-freeze', (req, res) => {
     notification: notif
   });
 
+  // Background Push Alert to all devices even when app is closed
+  sendPushToUser('all', {
+    title: notif.title,
+    body: notif.message,
+    type: 'SECURITY',
+    url: '/'
+  });
+
   res.json({
     success: true,
     isCardFrozen: db.security.isCardFrozen,
@@ -813,6 +821,14 @@ app.put('/api/cards/:cardId/balance', (req, res) => {
     balance: card.balance,
     bankCards: db.bankCards,
     notification: notif
+  });
+
+  // Background Push Alert to all devices even when app is closed
+  sendPushToUser('all', {
+    title: notif.title,
+    body: notif.message,
+    type: 'BALANCE',
+    url: '/'
   });
 
   res.json({
@@ -997,6 +1013,15 @@ app.post('/api/brothers', (req, res) => {
     saveDB(db);
 
     broadcastEvent('GUEST_JOIN_REQUEST', { request: newReq, notif });
+
+    // Background Push Alert to Admin
+    sendPushToUser(db.activeAdminId, {
+      title: '👤 طلب إضافة مستخدم جديد',
+      body: notif.message,
+      type: 'GUEST_JOIN',
+      url: '/'
+    });
+
     return res.json({
       success: true,
       isPendingApproval: true,
@@ -1340,6 +1365,22 @@ app.post('/api/transfers', (req, res) => {
     transactions: db.transactions
   });
 
+  // Background Push Alert to recipient and admin
+  sendPushToUser(recipient.id, {
+    title: `💰 تحويل مالي: ${numAmount} ${db.currency.symbol}`,
+    body: newNotification.message,
+    type: 'TRANSFER',
+    url: '/'
+  });
+  if (recipient.id !== db.activeAdminId) {
+    sendPushToUser(db.activeAdminId, {
+      title: `💰 تحويل مالي للأخ (${recipient.name}): ${numAmount} ${db.currency.symbol}`,
+      body: newNotification.message,
+      type: 'TRANSFER',
+      url: '/'
+    });
+  }
+
   res.json({
     success: true,
     message: `تم تحويل ${numAmount} ${db.currency.symbol} إلى حساب الأخ ${recipient.name} وتوثيق العملية بنجاح 🚀`,
@@ -1577,6 +1618,14 @@ app.post('/api/requests', (req, res) => {
 
     broadcastEvent('BROTHERS_UPDATED', { brothers: db.brothers });
 
+    // Background Push Alert to all devices even when app is closed
+    sendPushToUser('all', {
+      title: `💰 صرف مباشر للأدمن (${assignedField.name}): ${numAmount} ${db.currency.symbol}`,
+      body: notif.message,
+      type: 'TRANSFER',
+      url: '/'
+    });
+
     return res.json({
       success: true,
       isAutoApproved: true,
@@ -1623,6 +1672,14 @@ app.post('/api/requests', (req, res) => {
     fundRequests: db.fundRequests,
     notification: notif,
     brothers: db.brothers
+  });
+
+  // Background Push Alert to Admin
+  sendPushToUser(db.activeAdminId, {
+    title: `📥 طلب أموال جديد (${assignedField.name}): ${numAmount} ${db.currency.symbol}`,
+    body: notif.message,
+    type: 'REQUEST',
+    url: '/'
   });
 
   res.json({
@@ -1770,6 +1827,14 @@ app.post('/api/requests/:requestId/approve', (req, res) => {
     brothers: db.brothers
   });
 
+  // Background Push Alert to brother that money request is approved and sent
+  sendPushToUser(reqItem.brotherId, {
+    title: `💰 تمت الموافقة وتحويل طلبك: ${reqItem.amount} ${db.currency.symbol}`,
+    body: notif.message,
+    type: 'TRANSFER',
+    url: '/'
+  });
+
   res.json({
     success: true,
     message: `✅ تمت الموافقة على طلب (${reqItem.brotherName}) وإضافته لبند [${finalField ? finalField.name : reqItem.fieldName}] وتنفيذ التحويل بنجاح!`,
@@ -1864,6 +1929,14 @@ app.post('/api/messages', (req, res) => {
   broadcastEvent('NEW_MESSAGE', {
     message: newMsg,
     messages: db.messages
+  });
+
+  // Background Push Alert for chat message or voice note
+  sendPushToUser(finalRecipientId, {
+    title: `💬 رسالة من (${newMsg.senderName})`,
+    body: newMsg.text || (newMsg.type === 'voice' ? '🎙️ أرسل رسالة وبصمة صوتية' : 'رسالة جديدة'),
+    type: 'MESSAGE',
+    url: '/'
   });
 
   res.json({
