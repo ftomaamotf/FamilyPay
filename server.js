@@ -2163,6 +2163,33 @@ app.post('/api/push/test', (req, res) => {
   res.json({ success: true, message: 'تم إرسال الإشعار التجريبي' });
 });
 
+// 11. Direct APK Download Endpoint
+app.get('/FamilyPay.apk', (req, res) => {
+  const apkPath = path.join(__dirname, 'public', 'FamilyPay.apk');
+  if (fs.existsSync(apkPath)) {
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    res.setHeader('Content-Disposition', 'attachment; filename="FamilyPay.apk"');
+    return res.sendFile(apkPath);
+  }
+  const rootApk = path.join(__dirname, '..', 'FamilyPay.apk');
+  if (fs.existsSync(rootApk)) {
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    res.setHeader('Content-Disposition', 'attachment; filename="FamilyPay.apk"');
+    return res.sendFile(rootApk);
+  }
+  res.status(404).send('APK file not found');
+});
+
+app.get('/api/download/FamilyPay.apk', (req, res) => {
+  const apkPath = path.join(__dirname, 'public', 'FamilyPay.apk');
+  if (fs.existsSync(apkPath)) {
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    res.setHeader('Content-Disposition', 'attachment; filename="FamilyPay.apk"');
+    return res.sendFile(apkPath);
+  }
+  res.status(404).json({ success: false, message: 'ملف التطبيق غير موجود' });
+});
+
 // Serve frontend build in production with no-cache headers
 const distPath = path.join(__dirname, 'dist');
 if (fs.existsSync(distPath)) {

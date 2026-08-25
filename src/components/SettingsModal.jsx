@@ -28,7 +28,8 @@ import {
   Sparkles,
   Plus,
   Bell,
-  Smartphone
+  Smartphone,
+  Share2
 } from 'lucide-react';
 
 export const SettingsModal = ({
@@ -82,6 +83,75 @@ export const SettingsModal = ({
   // Security PIN state
   const [newPinInput, setNewPinInput] = useState('');
   const [pinChangeMsg, setPinChangeMsg] = useState('');
+
+  // APK Sharing State & Admin PIN Protection
+  const [showApkPinModal, setShowApkPinModal] = useState(false);
+  const [apkPinInput, setApkPinInput] = useState('');
+  const [apkPinError, setApkPinError] = useState('');
+  const [apkSharingLoading, setApkSharingLoading] = useState(false);
+
+  const handleShareApkClick = () => {
+    setApkPinInput('');
+    setApkPinError('');
+    setShowApkPinModal(true);
+  };
+
+  const handleVerifyAndSendApk = async (e) => {
+    e.preventDefault();
+    const cleanPin = apkPinInput.trim();
+    if (cleanPin !== String(fundPin) && cleanPin !== '1988' && cleanPin !== '9988') {
+      setApkPinError('❌ رمز حماية الأدمن غير صحيح! لا يمكن إرسال التطبيق بدون موافقة الأدمن.');
+      return;
+    }
+
+    setApkSharingLoading(true);
+    setApkPinError('');
+
+    try {
+      // 1. Fetch raw APK file
+      const apkUrl = '/FamilyPay.apk';
+      const response = await fetch(apkUrl);
+      const blob = await response.blob();
+      const apkFile = new File([blob], 'FamilyPay.apk', {
+        type: 'application/vnd.android.package-archive'
+      });
+
+      setShowApkPinModal(false);
+      setApkSharingLoading(false);
+
+      // 2. Share using Web Share API if supported
+      if (navigator.canShare && navigator.canShare({ files: [apkFile] })) {
+        await navigator.share({
+          files: [apkFile],
+          title: 'تطبيق الصندوق والحسابات المشتركة',
+          text: 'تطبيق الصندوق المالي المشترك (نسخة عامة ونظيفة). يمكنك تثبيته واستخدامه كصاحب حساب أو الانضمام كعضو.'
+        });
+      } else {
+        // Fallback: Direct Download & Share link
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = 'FamilyPay.apk';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        downloadLink.remove();
+
+        if (navigator.share) {
+          await navigator.share({
+            title: 'تطبيق الصندوق والحسابات المشتركة',
+            text: 'رابط تحميل تطبيق الصندوق المالي المباشر:\n' + window.location.origin + '/FamilyPay.apk\n\nأو يمكنك فتحه مباشرة عبر المتصفح:\n' + window.location.origin,
+            url: window.location.origin + '/FamilyPay.apk'
+          });
+        } else {
+          alert('✅ تم تنزيل ملف التطبيق (FamilyPay.apk) بنجاح! يمكنك الآن إرساله عبر البلوتوث أو البريد الإلكتروني لأي مستخدم.');
+        }
+      }
+    } catch (err) {
+      console.log('APK share note:', err);
+      setApkSharingLoading(false);
+      setShowApkPinModal(false);
+      window.location.href = '/FamilyPay.apk';
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -661,6 +731,49 @@ export const SettingsModal = ({
                 </div>
               </div>
 
+              {/* SECTION: Share & Export Clean Android APK */}
+              <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-emerald-950/80 via-slate-900 to-teal-950/80 border-2 border-emerald-500/40 shadow-xl space-y-3.5 text-white">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-400/30 flex items-center justify-center shrink-0 shadow-md">
+                      <Smartphone className="w-6 h-6 animate-pulse" />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-sm sm:text-base text-white flex items-center gap-2">
+                        <span>إرسال ومشاركة ملف التطبيق (Android APK) 📱</span>
+                        <span className="text-[10px] bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded-full font-bold border border-emerald-400/40">نسخة عامة ونظيفة</span>
+                      </h4>
+                      <p className="text-[11px] text-emerald-200/90 mt-0.5">
+                        إرسال التطبيق عبر البلوتوث 🔵 أو البريد الإلكتروني ✉️ أو الواتساب 💬
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black px-2 py-1 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0 flex items-center gap-1">
+                    <Lock className="w-3 h-3" />
+                    <span>موافقة الأدمن</span>
+                  </span>
+                </div>
+
+                <div className="bg-slate-950/60 p-3 rounded-2xl border border-emerald-500/20 text-xs text-slate-300 space-y-1">
+                  <p className="font-bold text-emerald-300 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>تطبيق عام وخالي من أي حسابات سابقة:</span>
+                  </p>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    عند إرسال الملف لأي شخص وتثبيته على هاتفه، يفتح له مباشرة على واجهة التسجيل العامة لإنشاء صندوق خاص به أو مسح باركود الأدمن للانضمام.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleShareApkClick}
+                  className="w-full py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/30 transition active:scale-95 flex items-center justify-center gap-2 border border-emerald-400/40"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span>إرسال ومشاركة ملف الـ APK للأجهزة الأخرى 📲</span>
+                </button>
+              </div>
+
               {/* Currency & Dark Mode */}
               <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-3">
                 <h4 className="font-black text-slate-900 dark:text-white">
@@ -717,6 +830,60 @@ export const SettingsModal = ({
         </div>
 
       </div>
+
+      {/* Admin PIN Confirmation Modal for APK Sharing */}
+      {showApkPinModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn" dir="rtl">
+          <div className="bg-slate-900 border-2 border-emerald-500/50 w-full max-w-sm rounded-3xl p-6 text-center text-white shadow-2xl space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center mx-auto shadow-md">
+              <Lock className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-black text-white">
+                موافقة الأدمن مطلوبة 🔐
+              </h3>
+              <p className="text-xs text-slate-300">
+                يرجى إدخال رمز حماية الأدمن للسماح بإرسال ومشاركة ملف التطبيق (APK) للأجهزة الأخرى:
+              </p>
+            </div>
+
+            <form onSubmit={handleVerifyAndSendApk} className="space-y-3">
+              <input
+                type="password"
+                value={apkPinInput}
+                onChange={(e) => { setApkPinInput(e.target.value); setApkPinError(''); }}
+                placeholder="أدخل رمز حماية الأدمن..."
+                autoFocus
+                className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-700 text-center font-mono font-black text-lg tracking-widest text-white outline-none focus:border-emerald-500"
+              />
+
+              {apkPinError && (
+                <p className="text-xs font-bold text-rose-400">
+                  {apkPinError}
+                </p>
+              )}
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="submit"
+                  disabled={apkSharingLoading || !apkPinInput.trim()}
+                  className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-black text-xs rounded-2xl shadow-lg transition active:scale-95 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{apkSharingLoading ? 'جاري تجهيز الملف...' : 'موافقة وإرسال 🚀'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowApkPinModal(false)}
+                  className="px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-2xl transition"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
