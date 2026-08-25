@@ -300,8 +300,8 @@ export const BrothersCards = ({
               );
             })}
 
-            {/* Join via Barcode / QR Code Circular Button */}
-            {isCurrentAdmin && onOpenJoinQr && (
+            {/* Join via Barcode / QR Code Circular Button (ظاهر على الكمبيوتر وجميع الهواتف) */}
+            {onOpenJoinQr && (
               <div className="flex flex-col items-center shrink-0 w-auto lg:w-full">
                 <button
                   type="button"
