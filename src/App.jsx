@@ -193,12 +193,6 @@ function MainApp() {
         {/* Desktop View Switcher Tabs */}
         <DesktopNavTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {/* Live Counters & Alerts Bar */}
-        <LiveCountersBar
-          onOpenPendingRequests={() => setPendingRequestsModalOpen(true)}
-          onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
-        />
-
         {/* View Switcher */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
@@ -211,6 +205,12 @@ function MainApp() {
               onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
               onOpenRequestMoney={(brother, field) => handleOpenRequestMoney(brother, field)}
               onOpenChat={handleOpenChat}
+            />
+
+            {/* Live Counters & Summary Stats Bar (تم النقل أسفل بطاقة المستخدم) */}
+            <LiveCountersBar
+              onOpenPendingRequests={() => setPendingRequestsModalOpen(true)}
+              onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
             />
           </div>
         )}
