@@ -26,7 +26,9 @@ import {
   EyeOff,
   QrCode,
   Sparkles,
-  Plus
+  Plus,
+  Bell,
+  Smartphone
 } from 'lucide-react';
 
 export const SettingsModal = ({
@@ -54,7 +56,10 @@ export const SettingsModal = ({
     fundPin,
     changeFundPin,
     isBalanceHiddenByAdmin,
-    toggleAdminBalanceVisibility
+    toggleAdminBalanceVisibility,
+    isPushSubscribed,
+    subscribePushNotifications,
+    sendTestPush
   } = useFinance();
 
   const [activeTab, setActiveTab] = useState('cards'); // 'cards' | 'permissions' | 'security' | 'general'
@@ -592,6 +597,70 @@ export const SettingsModal = ({
           {activeTab === 'general' && (
             <div className="space-y-5">
               
+              {/* SECTION: Push Notifications & Background Ringtone */}
+              <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Bell className="w-4 h-4 text-emerald-500" />
+                    <div>
+                      <h4 className="font-black text-slate-900 dark:text-white">
+                        إشعارات ورنين الهاتف في الخلفية 📳
+                      </h4>
+                      <p className="text-[11px] text-slate-400">
+                        استقبال رنات المكالمات والتحويلات والرسائل عند إغلاق التطبيق
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${
+                    isPushSubscribed
+                      ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                      : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
+                  }`}>
+                    {isPushSubscribed ? 'مفعلة بنجاح ✅' : 'معطلة ⏸️'}
+                  </span>
+                </div>
+
+                <div className="pt-1 flex flex-col sm:flex-row items-center gap-2">
+                  {!isPushSubscribed ? (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const res = await subscribePushNotifications(currentUser?.id);
+                        if (res?.message) alert(res.message);
+                      }}
+                      className="w-full py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 font-black text-xs rounded-2xl shadow-md transition active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      <Bell className="w-4 h-4" />
+                      <span>تشغيل وتفعيل إشعارات الخلفية 📲</span>
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const res = await sendTestPush();
+                          alert(res?.message || 'تم إرسال إشعار تجريبي فوري مع هزاز 📳');
+                        }}
+                        className="w-full sm:flex-1 py-2.5 bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-400/40 font-black text-xs rounded-2xl shadow-sm transition active:scale-95 flex items-center justify-center gap-2"
+                      >
+                        <Smartphone className="w-4 h-4" />
+                        <span>تجربة إرسال إشعار فوري مع هزاز 🧪</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          localStorage.setItem('bait_finance_push_banner_dismissed', 'true');
+                          alert('تم حفظ الإعدادات');
+                        }}
+                        className="w-full sm:w-auto py-2.5 px-4 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-2xl transition"
+                      >
+                        إعادة ضبط
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
               {/* Currency & Dark Mode */}
               <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-3">
                 <h4 className="font-black text-slate-900 dark:text-white">
