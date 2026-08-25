@@ -568,15 +568,14 @@ export const BrothersCards = ({
                       </div>
                     </div>
 
-                    {/* Price & Times Counter in front of commodity */}
+                    {/* Price & Circular Quantity Counter in front of commodity */}
                     <div className="flex items-center gap-2 shrink-0">
-                      {/* Counter Badge (عداد طلب السلعة: 1، 2، ...) */}
+                      {/* Circular Count Badge (رقم العدد في دائرة أمام السعر) */}
                       <div
-                        title={`تم طلب وشراء هذه السلعة (${effectiveCount}) مرة`}
-                        className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-700 text-xs font-black shadow-xs"
+                        title={`عدد مرات طلب السلعة: ${effectiveCount}`}
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border-2 border-teal-400 dark:border-teal-600 flex items-center justify-center font-mono font-black text-xs sm:text-sm shadow-sm shrink-0"
                       >
-                        <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold">العدد:</span>
-                        <span className="text-xs sm:text-sm font-extrabold font-mono text-teal-700 dark:text-teal-300">{effectiveCount}</span>
+                        {effectiveCount}
                       </div>
 
                       <span className={`text-xs sm:text-sm font-black font-mono px-3 py-1.5 rounded-xl shadow-xs border ${
