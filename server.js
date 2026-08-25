@@ -1636,102 +1636,8 @@ app.post('/api/requests', (req, res) => {
 
   // Auto-detect and match commodity/field based on reason and explicit fieldId / commodityName
   const assignedField = matchOrAssignField(brother, fieldId, reason, req.body.commodityName || req.body.fieldName || req.body.customItemName);
-  const isAdmin = brother.id === db.activeAdminId || brother.isAdmin || req.body.requestingBrotherId === db.activeAdminId;
 
-  // 👑 IF ADMIN: Execute transfer immediately and auto-approve without waiting!
-  if (isAdmin) {
-    const sendingCard = db.bankCards.find((c) => c.isSendingCard) || db.bankCards[0];
-    if (sendingCard) {
-      sendingCard.balance = Math.max(0, sendingCard.balance - numAmount);
-      sendingCard.lastUpdated = new Date().toISOString();
-    }
-
-    assignedField.spent = (assignedField.spent || 0) + numAmount;
-
-    const newTransfer = {
-      id: 'tx-' + Date.now(),
-      senderId: db.activeAdminId,
-      senderName: 'الأدمن الرئيسي',
-      recipientId: brother.id,
-      recipientName: brother.name,
-      recipientAccountNumber: brother.bankAccountNumber || brother.accountNumber,
-      accountNumber: brother.accountNumber,
-      amount: numAmount,
-      fieldId: assignedField.id,
-      fieldName: assignedField.name,
-      reason: reason.trim(),
-      sendingCardId: sendingCard ? sendingCard.id : 'card-1',
-      sendingCardName: sendingCard ? sendingCard.name : 'بطاقة الصندوق',
-      isSecurityVerified: true,
-      timestamp: new Date().toISOString(),
-      date: new Date().toISOString().split('T')[0]
-    };
-
-    db.transfers.unshift(newTransfer);
-
-    const newRequest = {
-      id: 'req-' + Date.now(),
-      brotherId: brother.id,
-      brotherName: brother.name,
-      brotherAccountNumber: brother.accountNumber,
-      bankAccountNumber: brother.bankAccountNumber,
-      phone: brother.phone,
-      amount: numAmount,
-      fieldId: assignedField.id,
-      fieldName: assignedField.name,
-      reason: reason.trim(),
-      status: 'approved',
-      approvedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString()
-    };
-
-    db.fundRequests.unshift(newRequest);
-
-    const notif = {
-      id: 'notif-' + Date.now(),
-      title: `💰 صرف مباشر للأدمن (${assignedField.name}): ${numAmount} ${db.currency.symbol}`,
-      message: `قام الأدمن (${brother.name}) بصرف وتحويل ${numAmount} ${db.currency.symbol} لبند [${assignedField.name}] لحاجة: (${reason.trim()}). تم الصرف فوراً وبدون الحاجة للموافقة.`,
-      timestamp: new Date().toISOString(),
-      readBy: []
-    };
-
-    db.notifications.unshift(notif);
-    saveDB(db);
-
-    broadcastEvent('NEW_TRANSFER', {
-      transfer: newTransfer,
-      notification: notif,
-      sendingCardBalance: sendingCard ? sendingCard.balance : 0,
-      sendingCardId: sendingCard ? sendingCard.id : null,
-      recipientId: brother.id,
-      bankCards: db.bankCards,
-      brothers: db.brothers,
-      transfers: db.transfers
-    });
-
-    broadcastEvent('BROTHERS_UPDATED', { brothers: db.brothers });
-
-    // Background Push Alert to all devices even when app is closed
-    sendPushToUser('all', {
-      title: `💰 صرف مباشر للأدمن (${assignedField.name}): ${numAmount} ${db.currency.symbol}`,
-      body: notif.message,
-      type: 'TRANSFER',
-      url: '/'
-    });
-
-    return res.json({
-      success: true,
-      isAutoApproved: true,
-      request: newRequest,
-      transfer: newTransfer,
-      brothers: db.brothers,
-      bankCards: db.bankCards,
-      transfers: db.transfers,
-      fundRequests: db.fundRequests,
-      message: `✅ تم صرف وتحويل مبلغ (${numAmount} ${db.currency.symbol}) لبند [${assignedField.name}] مباشرة وبدون انتظار موافقة كونك الأدمن 👑`
-    });
-  }
-
+  // All money requests ALWAYS require explicit Admin approval
   const newRequest = {
     id: 'req-' + Date.now(),
     brotherId: brother.id,
@@ -1743,7 +1649,7 @@ app.post('/api/requests', (req, res) => {
     fieldId: assignedField.id,
     fieldName: assignedField.name,
     reason: reason.trim(),
-    status: 'pending', // pending | approved | rejected
+    status: 'pending', // pending | approved | rejected (Requires explicit Admin approval)
     createdAt: new Date().toISOString()
   };
 
