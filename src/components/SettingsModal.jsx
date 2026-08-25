@@ -731,48 +731,50 @@ export const SettingsModal = ({
                 </div>
               </div>
 
-              {/* SECTION: Share & Export Clean Android APK */}
-              <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-emerald-950/80 via-slate-900 to-teal-950/80 border-2 border-emerald-500/40 shadow-xl space-y-3.5 text-white">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-400/30 flex items-center justify-center shrink-0 shadow-md">
-                      <Smartphone className="w-6 h-6 animate-pulse" />
+              {/* SECTION: Share & Export Clean Android APK (Admin Exclusive) */}
+              {isCurrentAdminUser && (
+                <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-emerald-950/80 via-slate-900 to-teal-950/80 border-2 border-emerald-500/40 shadow-xl space-y-3.5 text-white">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-400/30 flex items-center justify-center shrink-0 shadow-md">
+                        <Smartphone className="w-6 h-6 animate-pulse" />
+                      </div>
+                      <div>
+                        <h4 className="font-black text-sm sm:text-base text-white flex items-center gap-2">
+                          <span>إرسال ومشاركة ملف التطبيق (Android APK) 📱</span>
+                          <span className="text-[10px] bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded-full font-bold border border-amber-400/40">خاص بالأدمن 👑</span>
+                        </h4>
+                        <p className="text-[11px] text-emerald-200/90 mt-0.5">
+                          إرسال التطبيق عبر البلوتوث 🔵 أو البريد الإلكتروني ✉️ أو الواتساب 💬
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-black text-sm sm:text-base text-white flex items-center gap-2">
-                        <span>إرسال ومشاركة ملف التطبيق (Android APK) 📱</span>
-                        <span className="text-[10px] bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded-full font-bold border border-emerald-400/40">نسخة عامة ونظيفة</span>
-                      </h4>
-                      <p className="text-[11px] text-emerald-200/90 mt-0.5">
-                        إرسال التطبيق عبر البلوتوث 🔵 أو البريد الإلكتروني ✉️ أو الواتساب 💬
-                      </p>
-                    </div>
+                    <span className="text-[10px] font-black px-2 py-1 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0 flex items-center gap-1">
+                      <Crown className="w-3 h-3 text-amber-400" />
+                      <span>الأدمن فقط</span>
+                    </span>
                   </div>
-                  <span className="text-[10px] font-black px-2 py-1 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0 flex items-center gap-1">
-                    <Lock className="w-3 h-3" />
-                    <span>موافقة الأدمن</span>
-                  </span>
-                </div>
 
-                <div className="bg-slate-950/60 p-3 rounded-2xl border border-emerald-500/20 text-xs text-slate-300 space-y-1">
-                  <p className="font-bold text-emerald-300 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>تطبيق عام وخالي من أي حسابات سابقة:</span>
-                  </p>
-                  <p className="text-[11px] text-slate-300 leading-relaxed">
-                    عند إرسال الملف لأي شخص وتثبيته على هاتفه، يفتح له مباشرة على واجهة التسجيل العامة لإنشاء صندوق خاص به أو مسح باركود الأدمن للانضمام.
-                  </p>
-                </div>
+                  <div className="bg-slate-950/60 p-3 rounded-2xl border border-emerald-500/20 text-xs text-slate-300 space-y-1">
+                    <p className="font-bold text-emerald-300 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>تطبيق عام وخالي من أي حسابات سابقة:</span>
+                    </p>
+                    <p className="text-[11px] text-slate-300 leading-relaxed">
+                      عند إرسال الملف لأي شخص وتثبيته على هاتفه، يفتح له مباشرة على واجهة التسجيل العامة لإنشاء صندوق خاص به أو مسح باركود الأدمن للانضمام.
+                    </p>
+                  </div>
 
-                <button
-                  type="button"
-                  onClick={handleShareApkClick}
-                  className="w-full py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/30 transition active:scale-95 flex items-center justify-center gap-2 border border-emerald-400/40"
-                >
-                  <Share2 className="w-4 h-4" />
-                  <span>إرسال ومشاركة ملف الـ APK للأجهزة الأخرى 📲</span>
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={handleShareApkClick}
+                    className="w-full py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/30 transition active:scale-95 flex items-center justify-center gap-2 border border-emerald-400/40"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    <span>إرسال ومشاركة ملف الـ APK للأجهزة الأخرى 📲</span>
+                  </button>
+                </div>
+              )}
 
               {/* Currency & Dark Mode */}
               <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-3">
