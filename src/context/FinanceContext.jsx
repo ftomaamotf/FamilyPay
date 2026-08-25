@@ -1099,6 +1099,12 @@ export const FinanceProvider = ({ children }) => {
         if (data.request) {
           setFundRequests((prev) => [data.request, ...prev.filter((r) => r.id !== data.request.id)]);
         }
+        if (data.transfer) {
+          setTransfers((prev) => [data.transfer, ...prev.filter((t) => t.id !== data.transfer.id)]);
+        }
+        if (data.bankCards) {
+          setBankCards(data.bankCards);
+        }
         if (data.brothers) {
           syncAndMergeBrothers(data.brothers);
         }
