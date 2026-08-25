@@ -26,6 +26,156 @@ import {
 } from 'lucide-react';
 import { EditTransferModal } from './EditTransferModal';
 
+// 🌈 Curated Vibrant Color Themes for Distinct Brother Circles
+export const CIRCLE_COLOR_PALETTES = [
+  {
+    name: 'emerald',
+    color: '#059669',
+    ring: 'ring-emerald-500',
+    border: 'border-emerald-500/50',
+    gradient: 'from-emerald-600 via-teal-600 to-emerald-400',
+    badge: 'bg-emerald-500 text-slate-950',
+    badgeInactive: 'bg-slate-800 text-emerald-400 border-slate-700',
+    text: 'text-emerald-400',
+    shadow: 'shadow-emerald-500/40',
+    glow: 'shadow-emerald-500/20',
+    accentBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+  },
+  {
+    name: 'indigo',
+    color: '#4f46e5',
+    ring: 'ring-indigo-500',
+    border: 'border-indigo-500/50',
+    gradient: 'from-indigo-600 via-blue-600 to-indigo-400',
+    badge: 'bg-indigo-500 text-white',
+    badgeInactive: 'bg-slate-800 text-indigo-400 border-slate-700',
+    text: 'text-indigo-400',
+    shadow: 'shadow-indigo-500/40',
+    glow: 'shadow-indigo-500/20',
+    accentBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
+  },
+  {
+    name: 'amber',
+    color: '#d97706',
+    ring: 'ring-amber-500',
+    border: 'border-amber-500/50',
+    gradient: 'from-amber-600 via-yellow-500 to-amber-400',
+    badge: 'bg-amber-500 text-slate-950',
+    badgeInactive: 'bg-slate-800 text-amber-400 border-slate-700',
+    text: 'text-amber-400',
+    shadow: 'shadow-amber-500/40',
+    glow: 'shadow-amber-500/20',
+    accentBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+  },
+  {
+    name: 'rose',
+    color: '#e11d48',
+    ring: 'ring-rose-500',
+    border: 'border-rose-500/50',
+    gradient: 'from-rose-600 via-pink-600 to-rose-400',
+    badge: 'bg-rose-500 text-white',
+    badgeInactive: 'bg-slate-800 text-rose-400 border-slate-700',
+    text: 'text-rose-400',
+    shadow: 'shadow-rose-500/40',
+    glow: 'shadow-rose-500/20',
+    accentBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+  },
+  {
+    name: 'purple',
+    color: '#9333ea',
+    ring: 'ring-purple-500',
+    border: 'border-purple-500/50',
+    gradient: 'from-purple-600 via-violet-600 to-purple-400',
+    badge: 'bg-purple-500 text-white',
+    badgeInactive: 'bg-slate-800 text-purple-400 border-slate-700',
+    text: 'text-purple-400',
+    shadow: 'shadow-purple-500/40',
+    glow: 'shadow-purple-500/20',
+    accentBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+  },
+  {
+    name: 'cyan',
+    color: '#0891b2',
+    ring: 'ring-cyan-500',
+    border: 'border-cyan-500/50',
+    gradient: 'from-cyan-600 via-teal-500 to-cyan-400',
+    badge: 'bg-cyan-500 text-slate-950',
+    badgeInactive: 'bg-slate-800 text-cyan-400 border-slate-700',
+    text: 'text-cyan-400',
+    shadow: 'shadow-cyan-500/40',
+    glow: 'shadow-cyan-500/20',
+    accentBg: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20'
+  },
+  {
+    name: 'orange',
+    color: '#ea580c',
+    ring: 'ring-orange-500',
+    border: 'border-orange-500/50',
+    gradient: 'from-orange-600 via-amber-500 to-orange-400',
+    badge: 'bg-orange-500 text-white',
+    badgeInactive: 'bg-slate-800 text-orange-400 border-slate-700',
+    text: 'text-orange-400',
+    shadow: 'shadow-orange-500/40',
+    glow: 'shadow-orange-500/20',
+    accentBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20'
+  },
+  {
+    name: 'blue',
+    color: '#2563eb',
+    ring: 'ring-blue-500',
+    border: 'border-blue-500/50',
+    gradient: 'from-blue-600 via-sky-500 to-blue-400',
+    badge: 'bg-blue-500 text-white',
+    badgeInactive: 'bg-slate-800 text-blue-400 border-slate-700',
+    text: 'text-blue-400',
+    shadow: 'shadow-blue-500/40',
+    glow: 'shadow-blue-500/20',
+    accentBg: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+  },
+  {
+    name: 'fuchsia',
+    color: '#c026d3',
+    ring: 'ring-fuchsia-500',
+    border: 'border-fuchsia-500/50',
+    gradient: 'from-fuchsia-600 via-pink-500 to-fuchsia-400',
+    badge: 'bg-fuchsia-500 text-white',
+    badgeInactive: 'bg-slate-800 text-fuchsia-400 border-slate-700',
+    text: 'text-fuchsia-400',
+    shadow: 'shadow-fuchsia-500/40',
+    glow: 'shadow-fuchsia-500/20',
+    accentBg: 'bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/20'
+  },
+  {
+    name: 'teal',
+    color: '#0d9488',
+    ring: 'ring-teal-500',
+    border: 'border-teal-500/50',
+    gradient: 'from-teal-600 via-emerald-500 to-teal-400',
+    badge: 'bg-teal-500 text-slate-950',
+    badgeInactive: 'bg-slate-800 text-teal-400 border-slate-700',
+    text: 'text-teal-400',
+    shadow: 'shadow-teal-500/40',
+    glow: 'shadow-teal-500/20',
+    accentBg: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20'
+  }
+];
+
+function hashStringCode(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
+}
+
+export const getCirclePalette = (brother, index = 0, allBrothers = []) => {
+  if (!brother) return CIRCLE_COLOR_PALETTES[0];
+  const idx = allBrothers && allBrothers.length > 0 ? allBrothers.findIndex((b) => b.id === brother.id) : index;
+  const safeIdx = idx >= 0 ? idx : Math.abs(hashStringCode(brother.id || brother.name || '0'));
+  return CIRCLE_COLOR_PALETTES[safeIdx % CIRCLE_COLOR_PALETTES.length];
+};
+
 export const BrothersCards = ({
   onOpenTransferModal,
   onOpenFieldsModal,
@@ -206,11 +356,12 @@ export const BrothersCards = ({
 
           {/* Vertical Stack of Interactive Circles */}
           <div className="flex flex-row lg:flex-col items-center justify-start gap-4 sm:gap-5 overflow-x-auto lg:overflow-y-auto max-h-[620px] p-2 scrollbar-thin scrollbar-thumb-slate-700">
-            {sortedBrothers.map((b) => {
+            {sortedBrothers.map((b, idx) => {
               const isSenderAdmin = b.id === activeAdminId;
               const isMe = b.id === currentUser?.id;
               const isSelected = b.id === selectedBrotherId;
               const isCopied = copiedId === b.id;
+              const palette = getCirclePalette(b, idx, sortedBrothers);
 
               // Total spent for this brother (strictly isolated to transfers where this brother is the recipient)
               const brotherTransfers = transfers.filter((t) => isTransferStrictlyForBrother(t, b));
@@ -233,29 +384,28 @@ export const BrothersCards = ({
                       isSelected ? 'scale-105' : 'opacity-85 hover:opacity-100 hover:scale-102'
                     }`}
                   >
-                    {/* Outer Circular Ring */}
+                    {/* Outer Circular Ring with unique palette */}
                     <div
                       className={`relative p-1 rounded-full transition-all duration-300 ${
                         isCopied
                           ? 'ring-4 ring-emerald-400 scale-110 shadow-xl shadow-emerald-400/50'
                           : isSelected
-                          ? 'ring-4 ring-emerald-500 ring-offset-4 ring-offset-slate-950 shadow-lg shadow-emerald-500/30'
-                          : 'ring-2 ring-slate-700 group-hover:ring-slate-500'
+                          ? `ring-4 ${palette.ring} ring-offset-4 ring-offset-slate-950 shadow-lg ${palette.shadow}`
+                          : `ring-2 ring-slate-700/80 group-hover:${palette.ring}`
                       }`}
                     >
-                      {/* The Inner Avatar Circle */}
+                      {/* The Inner Avatar Circle with Unique Gradient */}
                       <div
-                        className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-black shadow-inner relative overflow-hidden"
-                        style={{ backgroundColor: b.avatarColor || '#10b981' }}
+                        className={`w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-black shadow-inner relative overflow-hidden bg-gradient-to-tr ${palette.gradient}`}
                       >
                         {isCopied ? (
                           <Check className="w-8 h-8 text-white animate-pulse" />
                         ) : (
-                          <span>{b.name[0]}</span>
+                          <span className="drop-shadow-md">{b.name[0]}</span>
                         )}
 
                         {/* Gradient Overlay for luxury effect */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/20 pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/20 pointer-events-none" />
                       </div>
 
                       {/* Admin Crown Badge */}
@@ -270,29 +420,29 @@ export const BrothersCards = ({
 
                       {/* 'You' Badge */}
                       {isMe && !isSenderAdmin && (
-                        <div className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[9px] font-black shadow border border-slate-950">
+                        <div className={`absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full ${palette.badge} text-[9px] font-black shadow border border-slate-950`}>
                           أنت
                         </div>
                       )}
                     </div>
 
-                    {/* Brother Name */}
+                    {/* Brother Name with Theme Color */}
                     <span
                       className={`mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center ${
-                        isSelected ? 'text-emerald-400' : 'text-slate-200 group-hover:text-white'
+                        isSelected ? palette.text : 'text-slate-200 group-hover:text-white'
                       }`}
                     >
                       {b.name}
                     </span>
 
-                    {/* Total Spent Pill Badge */}
+                    {/* Total Spent Pill Badge with Individual Theme */}
                     <div
                       className={`mt-1 px-3 py-1 rounded-full text-[11px] font-black font-mono shadow-sm flex items-center gap-1 transition-all ${
                         isCopied
                           ? 'bg-emerald-400 text-slate-950 font-bold scale-105'
                           : isSelected
-                          ? 'bg-emerald-500 text-slate-950 scale-105'
-                          : 'bg-slate-800 text-emerald-400 border border-slate-700 group-hover:bg-slate-700'
+                          ? `${palette.badge} scale-105 shadow-md`
+                          : `${palette.badgeInactive} group-hover:bg-slate-700`
                       }`}
                     >
                       <span>{isCopied ? 'تم نسخ الحساب!' : formatMoney(totalReceived, currency)}</span>
@@ -427,35 +577,36 @@ export const BrothersCards = ({
 
         {/* 2. LEFT AREA: The Expanded Details Card for Selected Brother */}
         <div className="flex-1 w-full min-w-0">
-          {selectedBrother && (
-            <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-800 border-2 border-emerald-500/40 dark:border-emerald-500/30 shadow-2xl space-y-6 animate-fadeIn">
-              
-              {/* Selected Brother Clean Header Banner */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-4">
-                  <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-md shrink-0 ring-4 ring-emerald-500/20"
-                    style={{ backgroundColor: selectedBrother.avatarColor || '#10b981' }}
-                  >
-                    {selectedBrother.name[0]}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-black text-xl text-slate-800 dark:text-white">
-                        {selectedBrother.name}
-                      </h4>
-                      {selectedBrother.id === activeAdminId && (
-                        <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700 flex items-center gap-1">
-                          <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                          الأدمن الرئيسي
-                        </span>
-                      )}
-                      {selectedBrother.id === currentUser?.id && (
-                        <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
-                          حسابك الحالي
-                        </span>
-                      )}
+          {selectedBrother && (() => {
+            const selectedPalette = getCirclePalette(selectedBrother, 0, sortedBrothers);
+            return (
+              <div className={`p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-800 border-2 ${selectedPalette.border} shadow-2xl space-y-6 animate-fadeIn`}>
+                
+                {/* Selected Brother Clean Header Banner */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-md shrink-0 ring-4 ${selectedPalette.ring}/30 bg-gradient-to-tr ${selectedPalette.gradient}`}
+                    >
+                      <span className="drop-shadow">{selectedBrother.name[0]}</span>
                     </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-black text-xl text-slate-800 dark:text-white">
+                          {selectedBrother.name}
+                        </h4>
+                        {selectedBrother.id === activeAdminId && (
+                          <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700 flex items-center gap-1">
+                            <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                            الأدمن الرئيسي
+                          </span>
+                        )}
+                        {selectedBrother.id === currentUser?.id && (
+                          <span className={`text-xs font-black px-2.5 py-1 rounded-xl ${selectedPalette.accentBg} border`}>
+                            حسابك الحالي
+                          </span>
+                        )}
+                      </div>
                     <div className="flex flex-wrap items-center gap-2.5 mt-1.5 text-xs text-slate-400 font-bold">
                       {selectedBrother.phone && (
                         <div className="flex items-center gap-2 flex-wrap">
@@ -650,7 +801,7 @@ export const BrothersCards = ({
           </div>
 
         </div>
-      )}
+      ); })()}
 
       </div>
 
