@@ -1932,12 +1932,12 @@ export const FinanceProvider = ({ children }) => {
 
   // Fast Call Poller (1.0 second) to ensure instant ringing & call connection across devices
   useEffect(() => {
-    if (!currentUser?.id) return;
     let isPolling = true;
 
     const checkActiveCalls = async () => {
+      const activeId = currentUser?.id || 'all';
       try {
-        const res = await fetch(`${API_BASE}/api/intercom/active-for/${currentUser.id}`);
+        const res = await fetch(`${API_BASE}/api/intercom/active-for/${activeId}`);
         const data = await res.json();
         if (!isPolling || !data.success) return;
 

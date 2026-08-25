@@ -191,9 +191,14 @@ function MainApp() {
     setAddBrotherModalOpen(true);
   };
 
-  // 1. If not logged in, show AuthScreen
+  // 1. If not logged in, show AuthScreen with Incoming Call Banner
   if (!currentUser) {
-    return <AuthScreen onLoginSuccess={() => setActiveTab('dashboard')} />;
+    return (
+      <>
+        <GlobalIncomingCallBanner />
+        <AuthScreen onLoginSuccess={() => setActiveTab('dashboard')} />
+      </>
+    );
   }
 
   // 2. If in Guest Mode, show Dedicated Isolated Guest Portal (No access to Admin/Dashboard)

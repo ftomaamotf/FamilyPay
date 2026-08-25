@@ -2183,14 +2183,16 @@ app.get('/api/intercom/active-for/:userId', (req, res) => {
     if (matchedBrother.phone) userIds.push(String(matchedBrother.phone));
   }
 
+  const isWildcard = userId === 'all' || userId === 'guest' || userId === 'anonymous';
+
   const ringingCall = Object.values(activeIntercomCalls).find(
-    (c) => c && userIds.includes(c.receiverId) && c.status === 'ringing'
+    (c) => c && (userIds.includes(c.receiverId) || isWildcard) && c.status === 'ringing'
   );
   const callerRingingCall = Object.values(activeIntercomCalls).find(
     (c) => c && userIds.includes(c.callerId) && c.status === 'ringing'
   );
   const connectedCall = Object.values(activeIntercomCalls).find(
-    (c) => c && (userIds.includes(c.callerId) || userIds.includes(c.receiverId)) && c.status === 'connected'
+    (c) => c && (userIds.includes(c.callerId) || userIds.includes(c.receiverId) || isWildcard) && c.status === 'connected'
   );
   res.json({
     success: true,
