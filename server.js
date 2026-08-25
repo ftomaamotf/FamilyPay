@@ -2182,10 +2182,18 @@ app.get('/api/intercom/active-for/:userId', (req, res) => {
   const ringingCall = Object.values(activeIntercomCalls).find(
     (c) => c && userIds.includes(c.receiverId) && c.status === 'ringing'
   );
+  const callerRingingCall = Object.values(activeIntercomCalls).find(
+    (c) => c && userIds.includes(c.callerId) && c.status === 'ringing'
+  );
   const connectedCall = Object.values(activeIntercomCalls).find(
     (c) => c && (userIds.includes(c.callerId) || userIds.includes(c.receiverId)) && c.status === 'connected'
   );
-  res.json({ success: true, ringingCall: ringingCall || null, connectedCall: connectedCall || null });
+  res.json({
+    success: true,
+    ringingCall: ringingCall || null,
+    callerRingingCall: callerRingingCall || null,
+    connectedCall: connectedCall || null
+  });
 });
 
 // ================= 10. Web Push Background Notifications (Android & iPhone PWA) =================

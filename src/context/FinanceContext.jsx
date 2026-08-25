@@ -606,14 +606,22 @@ export const FinanceProvider = ({ children }) => {
           // ================= Intercom & Walkie-Talkie Events =================
           if (payload.type === 'INTERCOM_RINGING') {
             const { call } = payload.data;
-            if (call && currentUser && call.receiverId === currentUser.id && call.status === 'ringing') {
-              setIncomingCall(call);
-              playIntercomRingtone();
-              if (Notification.permission === 'granted') {
-                new Notification(`📻 جهاز المناداة: مناداة مباشرة من ${call.callerName}`, {
-                  body: 'يطلب الأخ التحدث المباشر معك الآن.. اضغط للموافقة أو الرد.',
-                  icon: '/favicon.svg'
-                });
+            if (call && currentUser && call.status === 'ringing') {
+              const isMeReceiver =
+                call.receiverId === currentUser.id ||
+                (currentUser.accountNumber && call.receiverId === currentUser.accountNumber) ||
+                (currentUser.bankAccountNumber && call.receiverId === currentUser.bankAccountNumber) ||
+                (currentUser.phone && String(call.receiverId).replace(/[\s\-\+]/g, '') === String(currentUser.phone).replace(/[\s\-\+]/g, ''));
+
+              if (isMeReceiver) {
+                setIncomingCall(call);
+                playIntercomRingtone();
+                if (Notification.permission === 'granted') {
+                  new Notification(`📞 مكالمة واردة من ${call.callerName}`, {
+                    body: 'يرن عليك الآن.. اضغط للموافقة والتحدث المباشر 📲',
+                    icon: '/favicon.svg'
+                  });
+                }
               }
             }
           }
@@ -621,39 +629,48 @@ export const FinanceProvider = ({ children }) => {
           if (payload.type === 'INTERCOM_STATUS') {
             const { call, action } = payload.data;
             if (call) {
-              setActiveCall((prev) => {
-                if (prev && prev.id === call.id) return call;
-                if (currentUser && (call.callerId === currentUser.id || call.receiverId === currentUser.id)) {
+              const isParty = currentUser && (
+                call.callerId === currentUser.id ||
+                call.receiverId === currentUser.id ||
+                (currentUser.accountNumber && (call.callerId === currentUser.accountNumber || call.receiverId === currentUser.accountNumber)) ||
+                (currentUser.bankAccountNumber && (call.callerId === currentUser.bankAccountNumber || call.receiverId === currentUser.bankAccountNumber))
+              );
+
+              if (isParty) {
+                setActiveCall((prev) => {
                   if (call.status === 'connected') return call;
-                }
-                return prev;
-              });
+                  if (call.status === 'ended' || call.status === 'rejected') return null;
+                  if (prev && prev.id === call.id) return call;
+                  return prev;
+                });
 
-              setIncomingCall((prev) => {
-                if (prev && prev.id === call.id) {
-                  return call.status === 'ringing' ? call : null;
-                }
-                return prev;
-              });
+                setIncomingCall((prev) => {
+                  if (prev && prev.id === call.id) {
+                    return call.status === 'ringing' ? call : null;
+                  }
+                  return prev;
+                });
 
-              if (call.status === 'connected') {
-                setIsWalkieTalkieOpen(true);
-                playWalkieTalkieChirp();
-              } else if (call.status === 'rejected' || call.status === 'ended') {
-                playWalkieTalkieChirp();
+                if (call.status === 'connected') {
+                  playWalkieTalkieChirp();
+                } else if (call.status === 'rejected' || call.status === 'ended') {
+                  playWalkieTalkieChirp();
+                }
               }
             }
           }
 
           if (payload.type === 'INTERCOM_VOICE_BURST') {
             const { callId, senderId, audioData } = payload.data;
-            if (currentUser && senderId !== currentUser.id) {
+            if (currentUser && senderId !== currentUser.id && audioData) {
               setIncomingVoiceBurst(payload.data);
               try {
-                const burstAudio = new Audio(audioData);
-                burstAudio.play().catch((e) => console.log('Burst autoplay note:', e));
+                audioQueueRef.current.push(audioData);
+                if (!isAudioPlayingRef.current) {
+                  playNextBurstInQueue();
+                }
               } catch (e) {
-                console.log('Intercom audio burst error:', e);
+                console.log('Intercom audio burst queue error:', e);
               }
             }
           }
@@ -1770,6 +1787,14 @@ export const FinanceProvider = ({ children }) => {
 
   const startIntercomCall = async (targetBrotherId) => {
     unlockAudioContext();
+    if (navigator.mediaDevices?.getUserMedia) {
+      try {
+        const testStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        testStream.getTracks().forEach((t) => t.stop());
+      } catch (e) {
+        console.log('Mic pre-warm note:', e);
+      }
+    }
     const activeUser = currentUser || { id: 'guest', name: 'مستخدم' };
 
     // Auto-resolve valid target if calling self or empty
@@ -1901,7 +1926,7 @@ export const FinanceProvider = ({ children }) => {
     };
   }, [activeCall?.status]);
 
-  // Fast Call Poller (1.5 seconds) to ensure instant ringing & call connection across devices
+  // Fast Call Poller (1.0 second) to ensure instant ringing & call connection across devices
   useEffect(() => {
     if (!currentUser?.id) return;
     let isPolling = true;
@@ -1912,7 +1937,7 @@ export const FinanceProvider = ({ children }) => {
         const data = await res.json();
         if (!isPolling || !data.success) return;
 
-        // 1. Check for incoming ringing call
+        // 1. Check for incoming ringing call (as receiver)
         if (data.ringingCall) {
           setIncomingCall((prev) => {
             if (!prev || prev.id !== data.ringingCall.id) {
@@ -1936,7 +1961,12 @@ export const FinanceProvider = ({ children }) => {
             return data.connectedCall;
           });
           setIncomingCall(null);
-        } else if (activeCall && !data.connectedCall && !data.ringingCall && activeCall.status !== 'ringing') {
+        } else if (activeCall?.status === 'ringing') {
+          // If caller was ringing, but server no longer has active caller ringing call, peer ended/rejected
+          if (!data.callerRingingCall && !data.connectedCall) {
+            setActiveCall(null);
+          }
+        } else if (activeCall && !data.connectedCall && !data.ringingCall) {
           // Ended by peer
           setActiveCall(null);
         }
@@ -1944,7 +1974,7 @@ export const FinanceProvider = ({ children }) => {
     };
 
     checkActiveCalls();
-    const interval = setInterval(checkActiveCalls, 1500);
+    const interval = setInterval(checkActiveCalls, 1000);
     return () => {
       isPolling = false;
       clearInterval(interval);
