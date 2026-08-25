@@ -13,13 +13,12 @@ import {
   Smile,
   CheckCheck,
   Radio,
-  Phone,
   MessageCircle
 } from 'lucide-react';
 import { useFinance } from '../context/FinanceContext';
 
-// Sleek Voice Note Player
-const VoiceMessagePlayer = ({ audioUrl, duration, isMe }) => {
+// High-Fidelity Voice Note Player with Click-to-Seek & Audio Context Resilience
+const VoiceMessagePlayer = ({ audioUrl, duration = 0, isMe }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(duration || 0);
@@ -30,8 +29,10 @@ const VoiceMessagePlayer = ({ audioUrl, duration, isMe }) => {
     if (!audio) return;
 
     const handleLoadedMetadata = () => {
-      if (audio.duration && !isNaN(audio.duration)) {
+      if (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
         setAudioDuration(Math.round(audio.duration));
+      } else if (duration) {
+        setAudioDuration(duration);
       }
     };
     const handleTimeUpdate = () => {
@@ -41,76 +42,103 @@ const VoiceMessagePlayer = ({ audioUrl, duration, isMe }) => {
       setIsPlaying(false);
       setCurrentTime(0);
     };
+    const handleError = (e) => {
+      console.log('Audio playback error:', e);
+      setIsPlaying(false);
+    };
 
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
 
     return () => {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
     };
-  }, [audioUrl]);
+  }, [audioUrl, duration]);
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
+    try {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      }
+    } catch (err) {
+      console.log('Audio play toggle note:', err);
       setIsPlaying(false);
-    } else {
-      audioRef.current.play();
-      setIsPlaying(true);
     }
   };
 
+  const handleSeek = (idx) => {
+    if (!audioRef.current || !audioDuration) return;
+    const targetPercent = idx / 18;
+    const targetTime = targetPercent * audioDuration;
+    audioRef.current.currentTime = targetTime;
+    setCurrentTime(targetTime);
+  };
+
   const formatTime = (secs) => {
+    if (!secs || isNaN(secs) || !isFinite(secs)) return '0:00';
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
-    return m + ':' + (s < 10 ? '0' : '') + s;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
   const progress = audioDuration > 0 ? (currentTime / audioDuration) * 100 : 0;
 
   return (
-    <div className="flex items-center gap-3 py-1 px-2 min-w-[200px] sm:min-w-[240px]">
-      <audio ref={audioRef} src={audioUrl} preload="metadata" />
+    <div className="flex items-center gap-3 py-1.5 px-2.5 min-w-[210px] sm:min-w-[250px]" dir="ltr">
+      <audio ref={audioRef} src={audioUrl} preload="auto" playsInline />
 
       <button
         type="button"
         onClick={togglePlay}
-        className={'w-9 h-9 rounded-full flex items-center justify-center transition shadow-md shrink-0 ' + (
+        className={`w-10 h-10 rounded-2xl flex items-center justify-center transition shadow-md shrink-0 active:scale-95 ${
           isMe
-            ? 'bg-white text-emerald-700 hover:scale-105 active:scale-95'
-            : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95'
-        )}
+            ? 'bg-white text-emerald-700 hover:bg-slate-100 hover:scale-105'
+            : 'bg-emerald-600 text-white hover:bg-emerald-700 hover:scale-105'
+        }`}
       >
-        {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
+        {isPlaying ? (
+          <Pause className="w-5 h-5 fill-current" />
+        ) : (
+          <Play className="w-5 h-5 fill-current ml-0.5" />
+        )}
       </button>
 
       <div className="flex-1 flex flex-col gap-1">
-        <div className="flex items-center gap-1 h-5">
-          {[20, 45, 75, 30, 90, 60, 40, 85, 50, 70, 95, 40, 60, 30, 80, 50, 90, 35].map((height, idx) => {
+        {/* Interactive Audio Waveform with Click-to-Seek */}
+        <div className="flex items-center gap-1 h-6 cursor-pointer py-1" title="اضغط للانتقال">
+          {[25, 55, 80, 40, 95, 65, 45, 90, 60, 75, 100, 45, 70, 35, 85, 55, 90, 40].map((height, idx) => {
             const barProgress = (idx / 18) * 100;
             const isPlayed = progress >= barProgress;
             return (
               <div
                 key={idx}
-                className={'flex-1 rounded-full transition-all duration-150 ' + (
+                onClick={() => handleSeek(idx)}
+                className={`flex-1 rounded-full transition-all duration-150 hover:opacity-100 ${
                   isPlayed
                     ? isMe ? 'bg-white' : 'bg-emerald-600'
-                    : isMe ? 'bg-emerald-300/50' : 'bg-slate-300 dark:bg-slate-600'
-                )}
-                style={{ height: height + '%' }}
+                    : isMe ? 'bg-white/40' : 'bg-slate-300 dark:bg-slate-700'
+                }`}
+                style={{ height: `${height}%` }}
               />
             );
           })}
         </div>
 
-        <div className="flex items-center justify-between text-[10px] font-mono opacity-85">
+        {/* Timers */}
+        <div className="flex items-center justify-between text-[10px] font-mono font-bold opacity-90">
           <span>{formatTime(currentTime)}</span>
           <span className="flex items-center gap-1">
-            <Volume2 className="w-3 h-3 opacity-60" />
+            <Volume2 className="w-3 h-3 opacity-70" />
             <span>{formatTime(audioDuration || duration || 0)}</span>
           </span>
         </div>
@@ -126,8 +154,7 @@ export const CircleChatModal = ({ isOpen, onClose, initialRecipientId = 'all' })
     deleteMessage,
     currentUser,
     brothers = [],
-    activeAdminId,
-    startVoiceCall
+    activeAdminId
   } = useFinance();
 
   const [activeTab, setActiveTab] = useState(initialRecipientId || 'all');
@@ -139,6 +166,26 @@ export const CircleChatModal = ({ isOpen, onClose, initialRecipientId = 'all' })
 
   const messagesEndRef = useRef(null);
   const recordingTimerRef = useRef(null);
+  const recordingStartTimeRef = useRef(0);
+  const mediaStreamRef = useRef(null);
+
+  const getBestMimeType = () => {
+    if (typeof MediaRecorder === 'undefined') return '';
+    const types = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+      'audio/aac',
+      'audio/ogg;codecs=opus',
+      'audio/wav'
+    ];
+    for (const type of types) {
+      if (MediaRecorder.isTypeSupported(type)) {
+        return type;
+      }
+    }
+    return '';
+  };
 
   useEffect(() => {
     if (initialRecipientId) {
@@ -181,59 +228,92 @@ export const CircleChatModal = ({ isOpen, onClose, initialRecipientId = 'all' })
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      const chunks = [];
+      if (navigator.mediaDevices?.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
+        mediaStreamRef.current = stream;
 
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.push(e.data);
-      };
+        const mimeType = getBestMimeType();
+        const options = mimeType ? { mimeType } : undefined;
+        const recorder = new MediaRecorder(stream, options);
+        const chunks = [];
 
-      recorder.onstop = async () => {
-        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = async () => {
-          const base64Audio = reader.result;
-          await sendMessage({
-            recipientId: activeTab,
-            audioUrl: base64Audio,
-            audioDuration: recordingSeconds,
-            type: 'voice'
-          });
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            chunks.push(e.data);
+          }
         };
-        stream.getTracks().forEach((track) => track.stop());
-      };
 
-      recorder.start();
-      setMediaRecorder(recorder);
-      setIsRecording(true);
-      setRecordingSeconds(0);
+        recorder.onstop = async () => {
+          const finalDuration = Math.max(1, Math.round((Date.now() - recordingStartTimeRef.current) / 1000));
+          const actualMime = mimeType || 'audio/webm';
+          const audioBlob = new Blob(chunks, { type: actualMime });
 
-      recordingTimerRef.current = setInterval(() => {
-        setRecordingSeconds((prev) => prev + 1);
-      }, 1000);
+          const reader = new FileReader();
+          reader.readAsDataURL(audioBlob);
+          reader.onloadend = async () => {
+            const base64Audio = reader.result;
+            if (base64Audio) {
+              await sendMessage({
+                recipientId: activeTab,
+                audioUrl: base64Audio,
+                audioDuration: finalDuration,
+                type: 'voice'
+              });
+            }
+          };
+
+          if (mediaStreamRef.current) {
+            mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+            mediaStreamRef.current = null;
+          }
+        };
+
+        recordingStartTimeRef.current = Date.now();
+        recorder.start(250);
+        setMediaRecorder(recorder);
+        setIsRecording(true);
+        setRecordingSeconds(0);
+
+        if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = setInterval(() => {
+          setRecordingSeconds((prev) => prev + 1);
+        }, 1000);
+      } else {
+        alert('المتصفح لا يدعم تسجيل الصوت.');
+      }
     } catch (err) {
-      alert('تعذر الوصول إلى المايكروفون. يرجى التأكد من منح إذن المايكروفون في المتصفح.');
-      console.error(err);
+      alert('تعذر الوصول إلى المايكروفون. يرجى التأكد من منح إذن المايكروفون في إعدادات الهاتف.');
+      console.error('Audio recording error:', err);
     }
   };
 
   const stopRecordingAndSend = () => {
-    if (mediaRecorder && isRecording) {
-      clearInterval(recordingTimerRef.current);
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
-      setIsRecording(false);
     }
+    setIsRecording(false);
   };
 
   const cancelRecording = () => {
-    if (mediaRecorder && isRecording) {
-      clearInterval(recordingTimerRef.current);
-      mediaRecorder.stream.getTracks().forEach((t) => t.stop());
-      setIsRecording(false);
-      setRecordingSeconds(0);
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.ondataavailable = null;
+      mediaRecorder.onstop = null;
+      mediaRecorder.stop();
     }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
+    }
+    setIsRecording(false);
+    setRecordingSeconds(0);
   };
 
   const quickEmojis = ['👍', '❤️', '👏', '💸', '⛽', '🥛', '🩺', '🤲', '🌹', '✅'];
@@ -320,20 +400,9 @@ export const CircleChatModal = ({ isOpen, onClose, initialRecipientId = 'all' })
               }
             </span>
 
-            {/* In-App Direct Voice Call & WhatsApp Actions */}
+            {/* WhatsApp Actions */}
             {activeTab !== 'all' && (
               <div className="flex items-center gap-1.5 mr-1">
-                {/* In-App Live Voice Call Button */}
-                <button
-                  type="button"
-                  onClick={() => startVoiceCall(activeTab)}
-                  className="px-3 py-1 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-black text-[11px] rounded-xl shadow-sm transition flex items-center gap-1.5 active:scale-95 border border-emerald-400/40"
-                  title={`بدء مكالمة صوتية مباشرة داخل البرنامج مع ${selectedBrother?.name || 'المستخدم'}`}
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  <span>اتصال صوتي 📞</span>
-                </button>
-
                 {/* WhatsApp Chat & Call Button */}
                 {selectedBrother?.phone && (
                   <a

@@ -479,48 +479,6 @@ export const AuthScreen = ({ onLoginSuccess }) => {
               </button>
             </div>
 
-            {/* Quick 1-Click Profile Selection for Mobile Users */}
-            {brothers && brothers.length > 0 && (
-              <div className="p-3 bg-slate-950/90 rounded-2xl border border-emerald-500/30 space-y-2">
-                <span className="text-[11px] font-bold text-emerald-300 flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>اختر حسابك للتعبئة والدخول السريع:</span>
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  {brothers.map((b) => {
-                    const isAdmin = b.isAdmin || b.id === 'b-2';
-                    return (
-                      <button
-                        key={b.id}
-                        type="button"
-                        onClick={() => {
-                          setIdentifier(b.phone || b.email || b.accountNumber);
-                          setPassword(b.password || (isAdmin ? '1988' : '123'));
-                          setErrorMsg('');
-                        }}
-                        className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-emerald-500/60 flex items-center gap-2 transition active:scale-95 text-right group"
-                      >
-                        <div
-                          className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-black text-xs shrink-0 shadow"
-                          style={{ backgroundColor: b.avatarColor || '#6366f1' }}
-                        >
-                          {b.name[0]}
-                        </div>
-                        <div className="min-w-0">
-                          <span className="font-black text-xs text-white block truncate group-hover:text-emerald-300 transition">
-                            {b.name}
-                          </span>
-                          <span className="text-[10px] text-slate-400 block font-mono">
-                            {isAdmin ? '👑 الأدمن' : `#${b.accountNumber}`}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
             {/* Email or Phone Input */}
             <div>
               <label className="block font-bold text-slate-300 mb-1.5 text-xs">

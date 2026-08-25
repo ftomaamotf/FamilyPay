@@ -672,63 +672,18 @@ export const FinanceProvider = ({ children }) => {
     return () => {
       if (eventSource) eventSource.close();
     };
-  }, [playChimeSound, playMessageNotificationSound, playIntercomRingtone, playWalkieTalkieChirp, currentUser]);
+  }, [playChimeSound, playMessageNotificationSound, currentUser]);
 
-  // Periodic polling for Admin and Brothers to guarantee instantaneous real-time sync & calls
+  // Periodic polling for Admin and Brothers to guarantee instantaneous real-time sync
   useEffect(() => {
     fetchGuestRequests();
     fetchFundRequests();
     const interval = setInterval(() => {
       fetchGuestRequests();
       fetchFundRequests();
-
-      // Intercom & Live Call polling failsafe
-      if (currentUser?.id) {
-        fetch(`${API_BASE}/api/intercom/active-for/${currentUser.id}`)
-          .then((r) => r.json())
-          .then((data) => {
-            if (data.success) {
-              if (data.ringingCall && (!incomingCall || incomingCall.id !== data.ringingCall.id)) {
-                setIncomingCall(data.ringingCall);
-                playIntercomRingtone();
-              } else if (!data.ringingCall && incomingCall) {
-                setIncomingCall(null);
-              }
-              if (data.connectedCall && (!activeCall || activeCall.id !== data.connectedCall.id)) {
-                setActiveCall(data.connectedCall);
-                setIsWalkieTalkieOpen(true);
-              }
-            }
-          })
-          .catch(() => {});
-      }
-    }, 2000);
+    }, 3000);
     return () => clearInterval(interval);
-  }, [fetchGuestRequests, fetchFundRequests, currentUser, incomingCall, activeCall, playIntercomRingtone]);
-
-  // Continuous Ringing & Strong Vibration for Incoming Calls until answered or rejected
-  useEffect(() => {
-    let callRingtoneInterval = null;
-    if (incomingCall && (!activeCall || activeCall.status !== 'connected')) {
-      playIntercomRingtone();
-      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-        window.navigator.vibrate([1000, 400, 1000, 400, 1000]);
-      }
-      callRingtoneInterval = setInterval(() => {
-        playIntercomRingtone();
-        if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-          window.navigator.vibrate([1000, 400, 1000, 400, 1000]);
-        }
-      }, 2500);
-    }
-
-    return () => {
-      if (callRingtoneInterval) clearInterval(callRingtoneInterval);
-      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-        window.navigator.vibrate(0);
-      }
-    };
-  }, [incomingCall, activeCall?.status, playIntercomRingtone]);
+  }, [fetchGuestRequests, fetchFundRequests]);
 
   // Active Sending Card
   const sendingCard = useMemo(() => {

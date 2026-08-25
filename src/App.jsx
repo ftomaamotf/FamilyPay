@@ -30,7 +30,6 @@ import { GuestJoinBanner } from './components/GuestJoinBanner';
 import { GuestJoinApprovalsModal } from './components/GuestJoinApprovalsModal';
 import { GuestPortalView } from './components/GuestPortalView';
 import { CircleChatModal } from './components/CircleChatModal';
-import { InAppVoiceCallModal } from './components/InAppVoiceCallModal';
 import { UserCheck, Send, Bell, X } from 'lucide-react';
 
 const PushNotificationBanner = () => {
@@ -423,8 +422,6 @@ function MainApp() {
         onClose={() => setChatModalOpen(false)}
         initialRecipientId={chatRecipientId}
       />
-
-      <InAppVoiceCallModal />
 
     </div>
   );
