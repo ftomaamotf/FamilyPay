@@ -823,6 +823,7 @@ export const BrothersCards = ({
 
               {/* 2. HALF 2: In-App Voice Call Button (بدون نافذة منبثقة + يصبح أحمر عند الرد + زر السماعة الخارجية) */}
               {(() => {
+                const isMe = selectedBrother?.id === currentUser?.id;
                 const isThisIncoming = Boolean(incomingCall && incomingCall.callerId === selectedBrother.id);
                 const isConnected = activeCall && activeCall.status === 'connected';
                 const isRinging = activeCall && activeCall.status === 'ringing';
