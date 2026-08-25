@@ -94,7 +94,8 @@ export const AddEditBrotherModal = ({ isOpen, onClose, brotherToEdit = null }) =
         bankAccountNumber: bankAccountNumber.trim() || accountNumber.trim(),
         bankName: bankName.trim(),
         password: password.trim(),
-        avatarColor
+        avatarColor,
+        requestingBrotherId: currentUser?.id
       });
       setLoading(false);
       if (res.success) {

@@ -858,17 +858,58 @@ app.post('/api/admin/delegate', (req, res) => {
   });
 });
 
-// 5.1 Admin: Add New Brother / Account
+// 5.1 Add New Brother / Request Addition (Routes to Admin if non-admin)
 app.post('/api/brothers', (req, res) => {
-  const { name, accountNumber, phone, bankAccountNumber, bankName, password, avatarColor, approvedFields } = req.body;
-  if (!name) {
+  const { name, accountNumber, phone, bankAccountNumber, bankName, password, avatarColor, approvedFields, requestingBrotherId } = req.body;
+  if (!name || !name.trim()) {
     return res.status(400).json({ success: false, message: 'يرجى إدخال اسم المستخدم' });
   }
 
   const db = readDB();
   const cleanAcc = accountNumber ? String(accountNumber).trim() : String(1000 + db.brothers.length + 1);
+  const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#ef4444', '#6366f1'];
 
-  // Check if brother already exists by id or account number -> update it (upsert)
+  // Check if requester is Admin
+  const requester = db.brothers.find((b) => b.id === requestingBrotherId);
+  const isAdmin = !requestingBrotherId || (requester && (requester.id === db.activeAdminId || requester.isAdmin));
+
+  // If NON-ADMIN requests adding a new user, route to Admin approval!
+  if (!isAdmin) {
+    if (!db.guestJoinRequests) db.guestJoinRequests = [];
+    const newReq = {
+      id: 'g-req-' + Date.now(),
+      name: name.trim(),
+      phone: phone ? String(phone).trim() : '',
+      bankAccountNumber: bankAccountNumber ? String(bankAccountNumber).trim() : cleanAcc,
+      bankName: bankName ? bankName.trim() : 'ماستر كي / Qi Card',
+      password: password ? String(password).trim() : '123',
+      avatarColor: avatarColor || colors[db.brothers.length % colors.length],
+      status: 'pending',
+      suggestedBy: requester ? requester.name : 'مستخدم',
+      createdAt: new Date().toISOString()
+    };
+    db.guestJoinRequests.unshift(newReq);
+
+    const notif = {
+      id: 'notif-' + Date.now(),
+      title: '👤 طلب إضافة مستخدم جديد',
+      message: `طلب الأخ (${requester ? requester.name : 'مستخدم'}) إضافة مستخدم جديد باسم (${newReq.name}) برقم بطاقة (${newReq.bankAccountNumber}) بانتظار موافقة الأدمن.`,
+      timestamp: new Date().toISOString(),
+      readBy: []
+    };
+    db.notifications.unshift(notif);
+    saveDB(db);
+
+    broadcastEvent('GUEST_JOIN_REQUEST', { request: newReq, notif });
+    return res.json({
+      success: true,
+      isPendingApproval: true,
+      message: `✅ تم إرسال طلب إضافة المستخدم (${newReq.name}) إلى الأدمن للموافقة عليه واعتماده!`,
+      brothers: db.brothers
+    });
+  }
+
+  // Admin directly adds or updates
   const existingIndex = db.brothers.findIndex((b) => (req.body.id && b.id === req.body.id) || (accountNumber && String(b.accountNumber) === cleanAcc));
   if (existingIndex !== -1) {
     db.brothers[existingIndex] = {
@@ -891,7 +932,6 @@ app.post('/api/brothers', (req, res) => {
     });
   }
 
-  const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#ef4444', '#6366f1'];
   const newBrother = {
     id: req.body.id || 'b-' + Date.now(),
     name: name.trim(),
@@ -902,10 +942,7 @@ app.post('/api/brothers', (req, res) => {
     password: password ? String(password).trim() : '123',
     avatarColor: avatarColor || colors[db.brothers.length % colors.length],
     isAdmin: false,
-    approvedFields: approvedFields && approvedFields.length > 0 ? approvedFields : [
-      { id: 'f-' + Date.now() + '-1', name: 'حليب ومواد غذائية 🥛', limit: 1000, spent: 0 },
-      { id: 'f-' + Date.now() + '-2', name: 'بنزين ومواصلات ⛽', limit: 800, spent: 0 }
-    ]
+    approvedFields: approvedFields && approvedFields.length > 0 ? approvedFields : []
   };
 
   db.brothers.push(newBrother);
@@ -915,7 +952,7 @@ app.post('/api/brothers', (req, res) => {
 
   res.json({
     success: true,
-    message: `تمت إضافة المستخدم (${newBrother.name}) برقم حساب (#${newBrother.accountNumber}) بنجاح`,
+    message: `تمت إضافة المستخدم (${newBrother.name}) بنجاح`,
     brother: newBrother,
     brothers: db.brothers
   });
