@@ -1737,7 +1737,16 @@ export const FinanceProvider = ({ children }) => {
   const startIntercomCall = async (targetBrotherId) => {
     unlockAudioContext();
     const activeUser = currentUser || { id: 'guest', name: 'مستخدم' };
-    const receiver = brothers.find((b) => b.id === targetBrotherId) || { name: 'المستخدم' };
+
+    // Auto-resolve valid target if calling self or empty
+    let realTargetId = targetBrotherId;
+    if (!realTargetId || realTargetId === activeUser.id) {
+      const otherBrother = (brothers || []).find((b) => b.id !== activeUser.id);
+      if (otherBrother) realTargetId = otherBrother.id;
+    }
+    if (!realTargetId) return { success: false, message: 'لا يوجد مستخدم آخر للاتصال به' };
+
+    const receiver = (brothers || []).find((b) => b.id === realTargetId) || { name: 'المستخدم' };
     try {
       const res = await fetch(`${API_BASE}/api/intercom/call`, {
         method: 'POST',
@@ -1746,7 +1755,7 @@ export const FinanceProvider = ({ children }) => {
           callerId: activeUser.id,
           callerName: activeUser.name,
           callerAvatar: activeUser.avatarColor || '#10b981',
-          receiverId: targetBrotherId,
+          receiverId: realTargetId,
           receiverName: receiver.name
         })
       });
@@ -1762,7 +1771,7 @@ export const FinanceProvider = ({ children }) => {
         callerId: activeUser.id,
         callerName: activeUser.name,
         callerAvatar: activeUser.avatarColor || '#10b981',
-        receiverId: targetBrotherId,
+        receiverId: realTargetId,
         receiverName: receiver.name,
         status: 'ringing',
         createdAt: new Date().toISOString()

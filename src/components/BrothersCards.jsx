@@ -436,6 +436,22 @@ export const BrothersCards = ({
                           أنت
                         </div>
                       )}
+
+                      {/* Quick 1-Touch Direct Call Button for Admin & Users */}
+                      {!isMe && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedBrotherId(b.id);
+                            startVoiceCall(b.id);
+                          }}
+                          className="absolute -bottom-1 -left-1 w-6 h-6 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-lg border border-slate-950 transition active:scale-90 z-10"
+                          title={`اتصال مباشر بـ ${b.name}`}
+                        >
+                          <Phone className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
 
                     {/* Brother Name with Theme Color */}
@@ -916,15 +932,35 @@ export const BrothersCards = ({
                 }
 
                 // Case 4: Idle (اللون الأخضر المبدئي للاتصال الصوتي المباشر)
+                if (isMe) {
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const other = sortedBrothers.find((b) => b.id !== currentUser?.id);
+                        if (other) {
+                          setSelectedBrotherId(other.id);
+                          startVoiceCall(other.id);
+                        }
+                      }}
+                      className="flex-1 py-3 px-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition active:scale-98 border border-emerald-400/30"
+                      title="اختر مستخدماً للاتصال به"
+                    >
+                      <Phone className="w-4 h-4 shrink-0" />
+                      <span className="truncate">اتصال بمستخدم 📞</span>
+                    </button>
+                  );
+                }
+
                 return (
                   <button
                     type="button"
                     onClick={() => startVoiceCall(selectedBrother.id)}
-                    className="flex-1 py-3 px-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition active:scale-98 border border-emerald-400/30"
-                    title={`اتصال صوتي مباشر مع ${selectedBrother.name} بدون نوافذ منبثقة`}
+                    className="flex-1 py-3 px-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition active:scale-95 border border-emerald-400/40"
+                    title={`اتصال صوتي مباشر مع ${selectedBrother.name}`}
                   >
                     <Phone className="w-4 h-4 shrink-0" />
-                    <span className="truncate">اتصال صوتي 📞</span>
+                    <span className="truncate">اتصال بـ ({selectedBrother.name}) 📞</span>
                   </button>
                 );
               })()}

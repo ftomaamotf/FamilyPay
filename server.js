@@ -2119,14 +2119,31 @@ app.get('/api/intercom/status/:callId', (req, res) => {
   res.json({ success: true, call: callData || null });
 });
 
-// 9.5 Get Active Calls for User (Direct Poll Failsafe)
+// 9.5 Get Active Calls for User (Direct Poll Failsafe with multi-attribute brother match)
 app.get('/api/intercom/active-for/:userId', (req, res) => {
   const { userId } = req.params;
+  const db = readDB();
+
+  const userIds = [userId];
+  const cleanId = String(userId).replace(/[\s\-\+]/g, '');
+  const matchedBrother = (db.brothers || []).find(
+    (b) => b.id === userId ||
+      String(b.accountNumber) === userId ||
+      String(b.bankAccountNumber) === userId ||
+      (b.phone && String(b.phone).replace(/[\s\-\+]/g, '') === cleanId)
+  );
+  if (matchedBrother) {
+    if (matchedBrother.id) userIds.push(matchedBrother.id);
+    if (matchedBrother.accountNumber) userIds.push(String(matchedBrother.accountNumber));
+    if (matchedBrother.bankAccountNumber) userIds.push(String(matchedBrother.bankAccountNumber));
+    if (matchedBrother.phone) userIds.push(String(matchedBrother.phone));
+  }
+
   const ringingCall = Object.values(activeIntercomCalls).find(
-    (c) => c && c.receiverId === userId && c.status === 'ringing'
+    (c) => c && userIds.includes(c.receiverId) && c.status === 'ringing'
   );
   const connectedCall = Object.values(activeIntercomCalls).find(
-    (c) => c && (c.callerId === userId || c.receiverId === userId) && c.status === 'connected'
+    (c) => c && (userIds.includes(c.callerId) || userIds.includes(c.receiverId)) && c.status === 'connected'
   );
   res.json({ success: true, ringingCall: ringingCall || null, connectedCall: connectedCall || null });
 });
@@ -2139,9 +2156,24 @@ function sendPushToUser(userId, payload) {
     const db = readDB();
     if (!db.pushSubscriptions || db.pushSubscriptions.length === 0) return;
 
+    let targetIds = [userId];
+    const cleanId = String(userId).replace(/[\s\-\+]/g, '');
+    const b = (db.brothers || []).find(
+      (br) => br.id === userId ||
+        String(br.accountNumber) === userId ||
+        String(br.bankAccountNumber) === userId ||
+        (br.phone && String(br.phone).replace(/[\s\-\+]/g, '') === cleanId)
+    );
+    if (b) {
+      if (b.id) targetIds.push(b.id);
+      if (b.accountNumber) targetIds.push(String(b.accountNumber));
+      if (b.bankAccountNumber) targetIds.push(String(b.bankAccountNumber));
+      if (b.phone) targetIds.push(String(b.phone));
+    }
+
     const targets = userId === 'all'
       ? db.pushSubscriptions
-      : db.pushSubscriptions.filter((s) => s.userId === userId);
+      : db.pushSubscriptions.filter((s) => targetIds.includes(s.userId));
 
     targets.forEach((subObj) => {
       if (subObj.subscription && subObj.subscription.endpoint) {
