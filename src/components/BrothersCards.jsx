@@ -436,22 +436,6 @@ export const BrothersCards = ({
                           أنت
                         </div>
                       )}
-
-                      {/* Quick 1-Touch Direct Call Button for Admin & Users */}
-                      {!isMe && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedBrotherId(b.id);
-                            startVoiceCall(b.id);
-                          }}
-                          className="absolute -bottom-1 -left-1 w-6 h-6 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-lg border border-slate-950 transition active:scale-90 z-10"
-                          title={`اتصال مباشر بـ ${b.name}`}
-                        >
-                          <Phone className="w-3 h-3" />
-                        </button>
-                      )}
                     </div>
 
                     {/* Brother Name with Theme Color */}

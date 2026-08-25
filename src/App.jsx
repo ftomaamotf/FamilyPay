@@ -198,7 +198,12 @@ function MainApp() {
 
   // 2. If in Guest Mode, show Dedicated Isolated Guest Portal (No access to Admin/Dashboard)
   if (currentUser.isGuest) {
-    return <GuestPortalView />;
+    return (
+      <>
+        <GlobalIncomingCallBanner />
+        <GuestPortalView />
+      </>
+    );
   }
 
   return (
