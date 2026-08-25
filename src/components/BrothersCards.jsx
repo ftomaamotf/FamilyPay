@@ -520,6 +520,27 @@ export const BrothersCards = ({
                 const priceAmount = Math.max(f.spent || 0, calculatedSpent, pending?.amount || f.limit || 0);
                 const isPending = calculatedSpent === 0 && (f.spent || 0) === 0 && Boolean(pending);
 
+                // Calculate how many times this commodity was requested / transferred
+                const normF = normalizeArabicText(f.name);
+                const timesTransferred = transfers.filter((t) => {
+                  if (!isTransferStrictlyForBrother(t, selectedBrother)) return false;
+                  if (t.fieldId === f.id) return true;
+                  const normT = normalizeArabicText(t.fieldName || t.reason);
+                  return normT && normF && (normT === normF || normT.includes(normF) || normF.includes(normT));
+                }).length;
+
+                const timesPending = (fundRequests || []).filter((r) =>
+                  r.status === 'pending' &&
+                  (r.brotherId === selectedBrother.id || r.brotherName === selectedBrother.name) &&
+                  (r.fieldId === f.id || (r.fieldName && f.name && (r.fieldName.includes(f.name) || f.name.includes(r.fieldName))))
+                ).length;
+
+                const effectiveCount = Math.max(
+                  timesTransferred + timesPending,
+                  f.count || 0,
+                  1
+                );
+
                 return (
                   <div
                     key={f.id}
@@ -545,8 +566,17 @@ export const BrothersCards = ({
                       </div>
                     </div>
 
-                    {/* Price / Transferred Amount in front of commodity */}
+                    {/* Price & Times Counter in front of commodity */}
                     <div className="flex items-center gap-2 shrink-0">
+                      {/* Counter Badge (عداد طلب السلعة: 1، 2، ...) */}
+                      <div
+                        title={`تم طلب وشراء هذه السلعة (${effectiveCount}) مرة`}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-700 text-xs font-black shadow-xs"
+                      >
+                        <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold">العدد:</span>
+                        <span className="text-xs sm:text-sm font-extrabold font-mono text-teal-700 dark:text-teal-300">{effectiveCount}</span>
+                      </div>
+
                       <span className={`text-xs sm:text-sm font-black font-mono px-3 py-1.5 rounded-xl shadow-xs border ${
                         isPending
                           ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
