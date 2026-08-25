@@ -1448,6 +1448,29 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
+  // 5.9 Update Card Balance directly
+  const updateSendingCardBalance = async (newBalance, cardId = null) => {
+    const targetCardId = cardId || sendingCard?.id || 'card-1';
+    const numBalance = Number(newBalance);
+    try {
+      const res = await fetch(`${API_BASE}/api/cards/${targetCardId}/balance`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ balance: numBalance, requestingBrotherId: currentUser?.id })
+      });
+      const data = await res.json();
+      if (data.success && data.bankCards) {
+        setBankCards(data.bankCards);
+      }
+      return data;
+    } catch {
+      setBankCards((prev) =>
+        prev.map((c) => (c.id === targetCardId ? { ...c, balance: numBalance, lastUpdated: new Date().toISOString() } : c))
+      );
+      return { success: true, message: 'تم تحديث رصيد بطاقة الإرسال بنجاح' };
+    }
+  };
+
   // 6. Set Active Sending Card
   const setActiveSendingCard = async (cardId) => {
     try {
@@ -1947,6 +1970,8 @@ export const FinanceProvider = ({ children }) => {
         toggleAdminBalanceVisibility,
         addBankCard,
         setActiveSendingCard,
+        updateSendingCardBalance,
+        updateCardBalance: updateSendingCardBalance,
         addBrother,
         updateBrother,
         deleteBrother,

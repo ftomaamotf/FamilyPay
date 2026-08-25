@@ -13,7 +13,9 @@ import {
   Clock,
   ArrowDownLeft,
   Send,
-  UserCheck
+  UserCheck,
+  Edit2,
+  Check
 } from 'lucide-react';
 
 export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals }) => {
@@ -28,10 +30,15 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
     settings,
     isBalanceHiddenByAdmin,
     currentUser,
-    activeAdminId
+    activeAdminId,
+    updateSendingCardBalance
   } = useFinance();
 
   const [isNotifsOpen, setIsNotifsOpen] = useState(false);
+  const [isEditBalanceOpen, setIsEditBalanceOpen] = useState(false);
+  const [newBalanceInput, setNewBalanceInput] = useState('');
+  const [isUpdatingBalance, setIsUpdatingBalance] = useState(false);
+
   const currency = settings.currencySymbol;
   const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
   const canSeeBalance = isCurrentAdmin || !isBalanceHiddenByAdmin;
@@ -43,6 +50,26 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
     }
   };
 
+  const handleOpenEditBalance = () => {
+    setNewBalanceInput(String(sendingCard?.balance || ''));
+    setIsEditBalanceOpen(true);
+  };
+
+  const handleSaveBalance = async (e) => {
+    e.preventDefault();
+    if (newBalanceInput === '' || isNaN(Number(newBalanceInput))) {
+      alert('يرجى إدخال مبلغ رصيد صحيح');
+      return;
+    }
+    setIsUpdatingBalance(true);
+    const res = await updateSendingCardBalance(Number(newBalanceInput), sendingCard?.id);
+    setIsUpdatingBalance(false);
+    if (res && res.message) {
+      alert(res.message);
+    }
+    setIsEditBalanceOpen(false);
+  };
+
   return (
     <div className="relative">
       
@@ -50,9 +77,23 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         
         {/* Card 1: Sending Card Balance */}
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm relative overflow-hidden">
+        <div
+          onClick={() => isCurrentAdmin && handleOpenEditBalance()}
+          className={`bg-white dark:bg-slate-800 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm relative overflow-hidden transition-all ${
+            isCurrentAdmin ? 'cursor-pointer hover:border-emerald-500 hover:shadow-md active:scale-98 group' : ''
+          }`}
+          title={isCurrentAdmin ? 'اضغط هنا لتعديل رصيد بطاقة الإرسال مباشرة ✏️' : ''}
+        >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">رصيد بطاقة الإرسال</span>
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+              <span>رصيد بطاقة الإرسال</span>
+              {isCurrentAdmin && (
+                <span className="p-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-600 opacity-80 group-hover:opacity-100 flex items-center gap-0.5 text-[9px] font-extrabold px-1">
+                  <Edit2 className="w-2.5 h-2.5" />
+                  <span>تعديل</span>
+                </span>
+              )}
+            </span>
             <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
               <CreditCard className="w-3.5 h-3.5" />
             </div>
@@ -63,7 +104,7 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
             </div>
             <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-              {canSeeBalance ? 'محدث لحظياً' : 'مخفي بقرار الأدمن 🔒'}
+              {canSeeBalance ? (isCurrentAdmin ? 'اضغط لتعديل الرصيد ✏️' : 'محدث لحظياً') : 'مخفي بقرار الأدمن 🔒'}
             </span>
           </div>
         </div>
@@ -204,6 +245,89 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
           ) : (
             <p className="text-center text-xs text-slate-400 py-6">لا توجد إشعارات مسجلة</p>
           )}
+        </div>
+      )}
+
+      {/* Edit Sending Card Balance Modal (تعديل رصيد بطاقة الإرسال مباشرة للأدمن) */}
+      {isEditBalanceOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn" dir="rtl">
+          <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl border-2 border-emerald-500/40 space-y-5 animate-scaleUp">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-800 dark:text-white">
+                    تعديل رصيد بطاقة الإرسال
+                  </h3>
+                  <p className="text-xs text-slate-400 font-bold">
+                    {sendingCard?.name || 'بطاقة الصندوق المشترك'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditBalanceOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSaveBalance} className="space-y-4">
+              
+              <div>
+                <label className="block text-xs font-black text-slate-700 dark:text-slate-300 mb-1.5">
+                  الرصيد المالي الجديد للبطاقة ({currency}):
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={newBalanceInput}
+                    onChange={(e) => setNewBalanceInput(e.target.value)}
+                    placeholder="أدخل مبلغ الرصيد الجديد..."
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-lg font-black font-mono text-emerald-600 dark:text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500 text-left"
+                    dir="ltr"
+                    required
+                    autoFocus
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
+                    {currency}
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-400 mt-1 block">
+                  سيتم تحديث رصيد الصندوق لحظياً وتعميم المبلغ المحدث على جميع الأجهزة.
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={isUpdatingBalance}
+                  className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{isUpdatingBalance ? 'جاري الحفظ والتحديث...' : 'حفظ الرصيد الجديد 💾'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditBalanceOpen(false)}
+                  className="px-5 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-2xl transition"
+                >
+                  إلغاء
+                </button>
+              </div>
+
+            </form>
+
+          </div>
         </div>
       )}
 

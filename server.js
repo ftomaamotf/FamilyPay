@@ -778,6 +778,102 @@ app.post('/api/security/change-pin', (req, res) => {
   res.json({ success: true, message: 'تم تحديث إعدادات الحماية بنجاح' });
 });
 
+// 4.0.1 Bank Cards: Update Balance directly for Sending Card or any Card
+app.put('/api/cards/:cardId/balance', (req, res) => {
+  const { cardId } = req.params;
+  const { balance } = req.body;
+  const db = readDB();
+
+  const numBalance = Number(balance);
+  if (isNaN(numBalance) || numBalance < 0) {
+    return res.status(400).json({ success: false, message: 'يرجى إدخال مبلغ رصيد صحيح' });
+  }
+
+  if (!db.bankCards) db.bankCards = [];
+  const card = db.bankCards.find((c) => c.id === cardId) || db.bankCards.find((c) => c.isSendingCard) || db.bankCards[0];
+  if (!card) {
+    return res.status(404).json({ success: false, message: 'البطاقة غير موجودة' });
+  }
+
+  card.balance = numBalance;
+  card.lastUpdated = new Date().toISOString();
+
+  const notif = {
+    id: 'notif-' + Date.now(),
+    title: '💳 تعديل رصيد بطاقة الإرسال',
+    message: `تم تحديث رصيد (${card.name}) إلى ${numBalance} ${db.currency.symbol}.`,
+    timestamp: new Date().toISOString(),
+    readBy: []
+  };
+  db.notifications.unshift(notif);
+  saveDB(db);
+
+  broadcastEvent('CARD_BALANCE_UPDATED', {
+    cardId: card.id,
+    balance: card.balance,
+    bankCards: db.bankCards,
+    notification: notif
+  });
+
+  res.json({
+    success: true,
+    message: `✅ تم تعديل رصيد بطاقة الإرسال بنجاح إلى (${numBalance} ${db.currency.symbol})!`,
+    card,
+    bankCards: db.bankCards
+  });
+});
+
+// 4.0.2 Bank Cards: Set Sending Card
+app.put('/api/cards/set-sending', (req, res) => {
+  const { cardId } = req.body;
+  const db = readDB();
+  if (!db.bankCards) db.bankCards = [];
+
+  db.bankCards.forEach((c) => {
+    c.isSendingCard = c.id === cardId;
+  });
+  db.sendingCardId = cardId;
+  saveDB(db);
+
+  broadcastEvent('SENDING_CARD_CHANGED', {
+    sendingCardId: cardId,
+    bankCards: db.bankCards
+  });
+
+  res.json({ success: true, message: 'تم تعيين بطاقة الإرسال الرئيسية بنجاح', bankCards: db.bankCards });
+});
+
+// 4.0.3 Bank Cards: Add New Card
+app.post('/api/cards', (req, res) => {
+  const { name, bankName, accountNumber, cardHolder, balance, isSendingCard, color } = req.body;
+  const db = readDB();
+  if (!db.bankCards) db.bankCards = [];
+
+  const newCard = {
+    id: 'card-' + Date.now(),
+    name: (name || 'بطاقة جديدة').trim(),
+    bankName: (bankName || 'ماستر كي / Qi Card').trim(),
+    accountNumber: String(accountNumber || '').trim(),
+    cardHolder: (cardHolder || 'صندوق العائلة').trim(),
+    balance: Number(balance) || 0,
+    isSendingCard: Boolean(isSendingCard),
+    isFrozen: false,
+    color: color || '#059669',
+    lastUpdated: new Date().toISOString()
+  };
+
+  if (newCard.isSendingCard) {
+    db.bankCards.forEach((c) => (c.isSendingCard = false));
+    db.sendingCardId = newCard.id;
+  }
+
+  db.bankCards.push(newCard);
+  saveDB(db);
+
+  broadcastEvent('BANK_CARDS_UPDATED', { bankCards: db.bankCards });
+  res.json({ success: true, message: `تمت إضافة البطاقة (${newCard.name}) بنجاح`, card: newCard, bankCards: db.bankCards });
+});
+
 // 4.1 Update Transfer Permissions (Admin specifies who can send money)
 app.post('/api/security/transfer-permissions', (req, res) => {
   const { mode, allowedSenderIds, requestingBrotherId } = req.body;
