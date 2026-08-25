@@ -94,6 +94,9 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
 
     const res = await executeTransfer({
       recipientId: targetRecipientId,
+      recipientAccountNumber: selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber,
+      brotherAccountNumber: selectedRecipient?.accountNumber,
+      bankAccountNumber: selectedRecipient?.bankAccountNumber,
       amount: Number(amount),
       fieldId: commodityName.trim() ? null : (fieldId || null),
       commodityName: finalCommodity,
@@ -271,10 +274,10 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                       type="button"
                       onClick={() => {
                         setRecipientId(b.id);
-                        if (b.approvedFields?.length > 0) setFieldId(b.approvedFields[0].id);
-                        else setFieldId('');
+                        setFieldId('');
+                        setCommodityName('');
                       }}
-                      className={`p-2 rounded-2xl flex flex-col items-center gap-1 transition border text-xs font-bold ${
+                      className={`p-2.5 rounded-2xl flex flex-col items-center gap-1 transition border text-xs font-bold ${
                         isSelected
                           ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500'
                           : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-700 dark:text-slate-300'
@@ -286,7 +289,8 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                       >
                         {b.name[0]}
                       </span>
-                      <span className="truncate">{b.name}</span>
+                      <span className="truncate font-black">{b.name}</span>
+                      <span className="text-[10px] text-slate-400 font-mono">#{b.accountNumber}</span>
                     </button>
                   );
                 })}
@@ -301,7 +305,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                     <span>رقم الحساب المصرفي المحفوظ للأخ ({selectedRecipient.name}):</span>
                   </span>
-                  <span className="text-emerald-600 font-bold">جاهز تلقائياً</span>
+                  <span className="text-emerald-600 font-bold">حساب #{selectedRecipient.accountNumber}</span>
                 </div>
 
                 <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs">
@@ -317,22 +321,6 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                     <span>{copied ? 'تم النسخ' : 'نسخ'}</span>
                   </button>
                 </div>
-
-                {/* Direct Qi Card Quick Launcher */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    const acc = selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber;
-                    navigator.clipboard.writeText(acc);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2500);
-                    window.open('https://online.qi.iq', '_blank');
-                  }}
-                  className="w-full mt-1 py-2 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 font-black text-[11px] rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95"
-                >
-                  <CreditCard className="w-3.5 h-3.5" />
-                  <span>نسخ رقم الحساب وفتح تطبيق ماستر كي / Qi Card 📲</span>
-                </button>
               </div>
             )}
 

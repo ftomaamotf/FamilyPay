@@ -239,8 +239,8 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
               <h4 className="font-black text-base text-slate-900 dark:text-white">
                 تأكيد الموافقة وتحويل المبلغ 💸
               </h4>
-              <p className="text-xs text-slate-500 mt-1">
-                سيتم تحويل <strong>{Number(selectedReq.amount).toLocaleString()} {currency}</strong> إلى حساب الأخ (<strong>{selectedReq.brotherName}</strong>) وخصمه من بطاقة الصندوق فوراً.
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                سيتم تحويل <strong>{Number(selectedReq.amount).toLocaleString()} {currency}</strong> إلى حساب (<strong>{selectedReq.brotherName}</strong>) - رقم الحساب: <strong className="font-mono text-emerald-600">#{selectedReq.brotherAccountNumber}</strong> (المصرفي: <strong className="font-mono text-emerald-600">{selectedReq.bankAccountNumber || selectedReq.brotherAccountNumber}</strong>) وخصمه من بطاقة الصندوق فوراً.
               </p>
             </div>
 

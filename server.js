@@ -1076,17 +1076,20 @@ app.post('/api/transfers', (req, res) => {
     return res.status(400).json({ success: false, message: '⚠️ يجب كتابة سبب طلب المال (الحاجة) إجبارياً قبل الإرسال' });
   }
 
-  // 3. Find Recipient Strictly (by id, account number, or exact name)
-  let recipient = db.brothers.find((b) => b.id === recipientId);
-  if (!recipient && recipientId) {
-    recipient = db.brothers.find((b) =>
-      String(b.accountNumber) === String(recipientId) ||
-      String(b.bankAccountNumber) === String(recipientId) ||
-      normalizeArabicText(b.name) === normalizeArabicText(recipientId)
-    );
-  }
+  // 3. Find Recipient Strictly by Account Number or ID (No name matching so father/family name does not interfere)
+  const cleanRecId = String(recipientId || '').trim();
+  const cleanRecAcc = String(req.body.recipientAccountNumber || req.body.accountNumber || '').trim();
+  const cleanRecBank = String(req.body.bankAccountNumber || '').trim();
+
+  let recipient = db.brothers.find((b) =>
+    (cleanRecId && b.id === cleanRecId) ||
+    (cleanRecAcc && String(b.accountNumber) === cleanRecAcc) ||
+    (cleanRecBank && String(b.bankAccountNumber) === cleanRecBank) ||
+    (cleanRecId && (String(b.accountNumber) === cleanRecId || String(b.bankAccountNumber) === cleanRecId))
+  );
+
   if (!recipient) {
-    return res.status(404).json({ success: false, message: '⚠️ لم يتم العثور على دائرة الأخ المستلم المحدد بدقة' });
+    return res.status(404).json({ success: false, message: '⚠️ لم يتم العثور على دائرة الأخ المستلم برقم الحساب المحدد' });
   }
 
   const sender = db.brothers.find((b) => b.id === senderId) || db.brothers.find((b) => b.id === db.activeAdminId) || db.brothers[0];
@@ -1347,39 +1350,21 @@ app.post('/api/requests', (req, res) => {
     return res.status(400).json({ success: false, message: 'يرجى كتابة سبب طلب الأموال (الحاجة)' });
   }
 
-  const cleanSearch = String(brotherId || '').trim().toLowerCase();
+  // Strictly find brother by Account Number or ID (No name guessing so shared father/family names do not interfere)
+  const cleanBrotherId = String(brotherId || '').trim();
+  const cleanAccNumber = String(req.body.brotherAccountNumber || req.body.accountNumber || '').trim();
+  const cleanBankAcc = String(bankAccountNumber || '').trim();
   const cleanPhone = String(phone || '').replace(/[\s\-\+]/g, '');
 
   let brother = db.brothers.find((b) =>
-    b.id === brotherId ||
-    (cleanSearch && String(b.id).toLowerCase() === cleanSearch) ||
-    (cleanSearch && String(b.accountNumber).toLowerCase() === cleanSearch) ||
-    (cleanPhone && b.phone && String(b.phone).replace(/[\s\-\+]/g, '') === cleanPhone) ||
-    (brotherName && b.name && b.name.trim().toLowerCase() === String(brotherName).trim().toLowerCase())
+    (cleanBrotherId && b.id === cleanBrotherId) ||
+    (cleanAccNumber && String(b.accountNumber) === cleanAccNumber) ||
+    (cleanBankAcc && String(b.bankAccountNumber) === cleanBankAcc) ||
+    (cleanPhone && b.phone && String(b.phone).replace(/[\s\-\+]/g, '') === cleanPhone)
   );
 
-  // If still not found in db.brothers, auto-create or recover brother account
   if (!brother) {
-    const nextAcc = String(1000 + db.brothers.length + 1);
-    const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1'];
-    brother = {
-      id: brotherId || ('b-' + Date.now()),
-      name: (brotherName || 'مستخدم مسجل').trim(),
-      accountNumber: nextAcc,
-      phone: cleanPhone || ('0770' + Math.floor(1000000 + Math.random() * 9000000)),
-      bankAccountNumber: bankAccountNumber || nextAcc,
-      bankName: 'ماستر كي / Qi Card',
-      password: '123',
-      avatarColor: colors[db.brothers.length % colors.length],
-      isAdmin: false,
-      approvedFields: [
-        { id: `f-${Date.now()}-1`, name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
-        { id: `f-${Date.now()}-2`, name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
-      ]
-    };
-    db.brothers.push(brother);
-    saveDB(db);
-    broadcastEvent('BROTHERS_UPDATED', { brothers: db.brothers });
+    return res.status(404).json({ success: false, message: '⚠️ لم يتم العثور على صاحب الحساب برقم الحساب المحدد' });
   }
 
   // Auto-detect and match commodity/field based on reason and explicit fieldId / commodityName
@@ -1480,72 +1465,30 @@ app.post('/api/requests/:requestId/approve', (req, res) => {
   sendingCard.balance = Math.max(0, sendingCard.balance - reqItem.amount);
   sendingCard.lastUpdated = new Date().toISOString();
 
-  // Find recipient and ensure amount goes exactly to the matched commodity field
-  const admin = db.brothers.find((b) => b.id === db.activeAdminId || b.isAdmin);
-  const reqName = String(reqItem.brotherName || '').trim().toLowerCase();
-  const adminName = String(admin?.name || '').trim().toLowerCase();
-  const isRequestForAdmin = reqName && adminName && (reqName === adminName || reqName.includes('عبدالله') || adminName.includes(reqName));
+  // Strictly resolve recipient by Account Number or Brother ID (No Name guessing so shared names do not interfere)
+  const cleanBrotherId = String(reqItem.brotherId || '').trim();
+  const cleanAccNumber = String(reqItem.brotherAccountNumber || reqItem.accountNumber || '').trim();
+  const cleanBankAcc = String(reqItem.bankAccountNumber || '').trim();
+  const cleanPhone = String(reqItem.phone || '').replace(/[\s\-\+]/g, '');
 
-  let recipient = null;
-  if (!isRequestForAdmin && reqName) {
-    // Strictly find non-admin brother matching name, phone, or bank account
-    recipient = db.brothers.find((b) =>
-      b.id !== db.activeAdminId && (
-        (b.name && b.name.trim().toLowerCase() === reqName) ||
-        (reqItem.phone && b.phone && String(b.phone).replace(/[\s\-\+]/g, '') === String(reqItem.phone).replace(/[\s\-\+]/g, '')) ||
-        (reqItem.bankAccountNumber && String(b.bankAccountNumber) === String(reqItem.bankAccountNumber))
-      )
-    );
-  }
+  let recipient = db.brothers.find((b) =>
+    (cleanBrotherId && b.id === cleanBrotherId) ||
+    (cleanAccNumber && String(b.accountNumber) === cleanAccNumber) ||
+    (cleanBankAcc && String(b.bankAccountNumber) === cleanBankAcc) ||
+    (cleanPhone && b.phone && String(b.phone).replace(/[\s\-\+]/g, '') === cleanPhone)
+  );
 
   if (!recipient) {
-    if (isRequestForAdmin) {
-      recipient = admin;
-    } else {
-      recipient = db.brothers.find((b) => b.id === reqItem.brotherId && b.id !== db.activeAdminId);
-    }
+    return res.status(404).json({
+      success: false,
+      message: `⚠️ لم يتم العثور على الحساب برقم الحساب (${reqItem.brotherAccountNumber || reqItem.bankAccountNumber})`
+    });
   }
 
-  // If recipient is not yet in db.brothers, auto-create them so they have a unique circle on the dashboard
-  if (!recipient && (reqItem.brotherName || reqItem.brotherId)) {
-    const nextAccNumber = String(1000 + db.brothers.length + 1);
-    const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1'];
-    recipient = {
-      id: 'b-' + Date.now(),
-      name: reqItem.brotherName || 'أخ مستلم',
-      accountNumber: nextAccNumber,
-      phone: reqItem.phone || '07700000000',
-      bankAccountNumber: reqItem.bankAccountNumber || reqItem.brotherAccountNumber || nextAccNumber,
-      bankName: 'ماستر كي / Qi Card',
-      password: '123',
-      avatarColor: colors[db.brothers.length % colors.length],
-      isAdmin: false,
-      approvedFields: [
-        { id: `f-${Date.now()}-1`, name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
-        { id: `f-${Date.now()}-2`, name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
-      ]
-    };
-    db.brothers.push(recipient);
-    saveDB(db);
-    broadcastEvent('BROTHERS_UPDATED', { brothers: db.brothers });
-  }
+  const realBrotherName = recipient.name;
 
-  let realBrotherName = (recipient && recipient.name && recipient.name !== 'أخ مسجل')
-    ? recipient.name
-    : (reqItem.brotherName && reqItem.brotherName !== 'أخ مسجل')
-    ? reqItem.brotherName
-    : (recipient?.name || 'الأخ');
-
-  if (recipient && recipient.name === 'أخ مسجل' && reqItem.brotherName && reqItem.brotherName !== 'أخ مسجل') {
-    recipient.name = reqItem.brotherName;
-    realBrotherName = reqItem.brotherName;
-  }
-
-  let finalField = null;
-  if (recipient) {
-    finalField = matchOrAssignField(recipient, targetFieldId || reqItem.fieldId, reqItem.reason, reqItem.fieldName);
-    finalField.spent = (finalField.spent || 0) + reqItem.amount;
-  }
+  let finalField = matchOrAssignField(recipient, targetFieldId || reqItem.fieldId, reqItem.reason, reqItem.fieldName);
+  finalField.spent = (finalField.spent || 0) + reqItem.amount;
 
   // Create transfer
   const newTransfer = {

@@ -73,6 +73,8 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
     const res = await submitMoneyRequest({
       brotherId: currentBrother?.id || currentUser?.id,
       brotherName: currentBrother?.name || currentUser?.name,
+      brotherAccountNumber: currentBrother?.accountNumber || currentUser?.accountNumber,
+      accountNumber: currentBrother?.accountNumber || currentUser?.accountNumber,
       phone: currentBrother?.phone || currentUser?.phone,
       bankAccountNumber: currentBrother?.bankAccountNumber || currentUser?.bankAccountNumber,
       amount: numAmount,
@@ -108,10 +110,10 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             </div>
             <div>
               <h3 className="font-black text-base sm:text-lg">
-                تقديم طلب أموال من الصندوق
+                طلب أموال إلى حسابك 📥
               </h3>
               <p className="text-xs text-teal-200">
-                إرسال طلب مصروف للأدمن للموافقة والتحويل
+                تسجيل السلعة وطلب المبلغ برقم الحساب لاعتماده من الصندوق
               </p>
             </div>
           </div>
@@ -124,27 +126,25 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-4 text-xs">
           
-          {/* If multiple brothers, allow selecting brother */}
+          {/* If multiple brothers, allow selecting brother strictly by account */}
           {brothers.length > 1 && (
             <div>
               <label className="block font-black text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1">
                 <User className="w-3.5 h-3.5 text-emerald-500" />
-                <span>اختيار الأخ صاحب الطلب *:</span>
+                <span>اختيار الحساب المستلم (برقم الحساب) *:</span>
               </label>
               <select
                 value={selectedRequesterId}
                 onChange={(e) => {
                   setSelectedRequesterId(e.target.value);
-                  const br = brothers.find((b) => b.id === e.target.value);
-                  if (br?.approvedFields?.length > 0) {
-                    setFieldId(br.approvedFields[0].id);
-                  }
+                  setFieldId('');
+                  setCommodityName('');
                 }}
                 className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-emerald-500/40 rounded-2xl px-3 py-2.5 text-xs font-black text-slate-800 dark:text-slate-100 outline-none focus:border-emerald-500 shadow-sm"
               >
                 {brothers.map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.name} (حساب: #{b.accountNumber}) {b.isAdmin ? '👑 الأدمن' : ''}
+                    {b.name} (رقم الحساب: #{b.accountNumber}) {b.isAdmin ? '👑 الأدمن' : ''}
                   </option>
                 ))}
               </select>
