@@ -83,6 +83,13 @@ export const EditBrotherFieldsModal = ({ isOpen, onClose, brother }) => {
   };
 
   const handleDeleteField = (id) => {
+    const fieldToDelete = fields.find((f) => f.id === id);
+    const spentAmount = fieldToDelete?.spent || 0;
+    if (spentAmount > 0) {
+      if (!window.confirm(`⚠️ هذه السلعة [${fieldToDelete.name}] مسجل عليها مبالغ مصروفة بقيمة (${spentAmount} ${currency}).\nعند مسحها، سيتم تنزيل هذا المبلغ بالكامل من الحساب الإجمالي لدائرة (${brother.name}) واسترجاع الرصيد للصندوق.\n\nهل أنت متأكد من مسح هذه السلعة؟`)) {
+        return;
+      }
+    }
     setFields((prev) => prev.filter((f) => f.id !== id));
   };
 
@@ -91,9 +98,10 @@ export const EditBrotherFieldsModal = ({ isOpen, onClose, brother }) => {
     const res = await updateBrotherFields(brother.id, fields);
     setSaving(false);
     setSaveSuccess(true);
+    setTxActionMsg(res.message || 'تم حفظ التعديلات وتحديث الحساب الإجمالي بنجاح');
     setTimeout(() => {
       onClose();
-    }, 1000);
+    }, 1200);
   };
 
   // Save specific edited transfer

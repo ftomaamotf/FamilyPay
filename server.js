@@ -1133,7 +1133,7 @@ app.delete('/api/brothers/:brotherId', (req, res) => {
   res.json({ success: true, message: `تم حذف حساب الأخ (${deletedName}) بنجاح`, brothers: db.brothers });
 });
 
-// 5.4 Admin: Update Brother Approved Fields (Commodities)
+// 5.4 Admin: Update Brother Approved Fields (Commodities & Itemized Deductions on Delete)
 app.put('/api/brothers/:brotherId/fields', (req, res) => {
   const { brotherId } = req.params;
   const { approvedFields } = req.body;
@@ -1144,16 +1144,109 @@ app.put('/api/brothers/:brotherId/fields', (req, res) => {
     return res.status(404).json({ success: false, message: 'الأخ غير موجود' });
   }
 
-  brother.approvedFields = Array.isArray(approvedFields) ? approvedFields : [];
+  const oldFields = Array.isArray(brother.approvedFields) ? brother.approvedFields : [];
+  const newFields = Array.isArray(approvedFields) ? approvedFields : [];
+  const newFieldIds = new Set(newFields.map((f) => f.id));
+
+  // 1. Identify deleted commodities / fields
+  const deletedFields = oldFields.filter((oldF) => !newFieldIds.has(oldF.id));
+  const deletedFieldIds = new Set(deletedFields.map((f) => f.id));
+  const deletedFieldNames = new Set(deletedFields.map((f) => normalizeArabicText(f.name)).filter(Boolean));
+
+  let totalDeductedAmount = 0;
+  let deletedTransfersCount = 0;
+
+  // 2. If any commodity was deleted by Admin, deduct its entire balance from the circle and remove its transfers!
+  if (deletedFields.length > 0) {
+    if (!db.transfers) db.transfers = [];
+
+    const remainingTransfers = [];
+    for (const t of db.transfers) {
+      // Check if transfer belongs strictly to this brother
+      const isForThisBrother = 
+        (t.recipientId && String(t.recipientId) === String(brother.id)) ||
+        (t.recipientAccountNumber && (String(t.recipientAccountNumber) === String(brother.bankAccountNumber || brother.accountNumber))) ||
+        (t.accountNumber && String(t.accountNumber) === String(brother.accountNumber)) ||
+        (t.recipientName && normalizeArabicText(t.recipientName) === normalizeArabicText(brother.name));
+
+      if (isForThisBrother) {
+        const normTFieldName = normalizeArabicText(t.fieldName || '');
+        const isMatchingDeletedField = 
+          (t.fieldId && deletedFieldIds.has(t.fieldId)) ||
+          (normTFieldName && deletedFieldNames.has(normTFieldName));
+
+        if (isMatchingDeletedField) {
+          totalDeductedAmount += (Number(t.amount) || 0);
+          deletedTransfersCount++;
+          continue; // Remove transfer from total
+        }
+      }
+      remainingTransfers.push(t);
+    }
+    db.transfers = remainingTransfers;
+
+    // Also remove any fundRequests matching deleted commodities
+    if (db.fundRequests && Array.isArray(db.fundRequests)) {
+      db.fundRequests = db.fundRequests.filter((r) => {
+        const isForThisBrother = 
+          (r.brotherId && String(r.brotherId) === String(brother.id)) ||
+          (r.bankAccountNumber && (String(r.bankAccountNumber) === String(brother.bankAccountNumber || brother.accountNumber))) ||
+          (r.brotherAccountNumber && String(r.brotherAccountNumber) === String(brother.accountNumber));
+
+        if (isForThisBrother) {
+          const normRFieldName = normalizeArabicText(r.fieldName || '');
+          const isMatchingDeletedField = 
+            (r.fieldId && deletedFieldIds.has(r.fieldId)) ||
+            (normRFieldName && deletedFieldNames.has(normRFieldName));
+          if (isMatchingDeletedField) return false;
+        }
+        return true;
+      });
+    }
+
+    // Refund deducted amount back to active sending card
+    if (totalDeductedAmount > 0) {
+      const sendingCard = db.bankCards.find((c) => c.isSendingCard) || db.bankCards[0];
+      if (sendingCard) {
+        sendingCard.balance += totalDeductedAmount;
+        sendingCard.lastUpdated = new Date().toISOString();
+      }
+    }
+  }
+
+  // 3. Update brother's approved fields
+  brother.approvedFields = newFields;
   saveDB(db);
 
-  broadcastEvent('BROTHERS_UPDATED', { brothers: db.brothers });
+  // 4. Broadcast updates across all connected devices
+  broadcastEvent('BROTHERS_UPDATED', {
+    brothers: db.brothers,
+    transfers: db.transfers,
+    bankCards: db.bankCards,
+    fundRequests: db.fundRequests
+  });
+
+  broadcastEvent('STATE_UPDATED', {
+    brothers: db.brothers,
+    transfers: db.transfers,
+    bankCards: db.bankCards,
+    fundRequests: db.fundRequests
+  });
+
+  const message = deletedFields.length > 0 && totalDeductedAmount > 0
+    ? `✅ تم مسح السلعة وتنزيل مبلغ (${totalDeductedAmount} ${db.currency.symbol}) من الحساب الكلي لدائرة (${brother.name}) واسترجاع المبلغ للصندوق بنجاح!`
+    : `✅ تم تحديث جدول السلع والحقول للأخ (${brother.name}) بنجاح!`;
 
   res.json({
     success: true,
-    message: `✅ تم تحديث جدول السلع والحقول للأخ (${brother.name}) بنجاح!`,
+    message,
     brother,
-    brothers: db.brothers
+    brothers: db.brothers,
+    transfers: db.transfers,
+    bankCards: db.bankCards,
+    fundRequests: db.fundRequests,
+    totalDeductedAmount,
+    deletedTransfersCount
   });
 });
 

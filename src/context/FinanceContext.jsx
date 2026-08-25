@@ -516,8 +516,11 @@ export const FinanceProvider = ({ children }) => {
             setIsBalanceHiddenByAdmin(payload.data.isBalanceHiddenByAdmin);
           }
 
-          if (payload.type === 'BROTHERS_UPDATED') {
+          if (payload.type === 'BROTHERS_UPDATED' || payload.type === 'STATE_UPDATED') {
             if (payload.data.brothers) syncAndMergeBrothers(payload.data.brothers);
+            if (payload.data.transfers) setTransfers(payload.data.transfers);
+            if (payload.data.bankCards) setBankCards(payload.data.bankCards);
+            if (payload.data.fundRequests) setFundRequests(payload.data.fundRequests);
           }
 
           if (payload.type === 'FIELDS_UPDATED') {
@@ -1627,8 +1630,11 @@ export const FinanceProvider = ({ children }) => {
         body: JSON.stringify({ approvedFields })
       });
       const data = await res.json();
-      if (data.success && data.brothers) {
-        setBrothers(data.brothers);
+      if (data.success) {
+        if (data.brothers) setBrothers(data.brothers);
+        if (data.transfers) setTransfers(data.transfers);
+        if (data.bankCards) setBankCards(data.bankCards);
+        if (data.fundRequests) setFundRequests(data.fundRequests);
         return { success: true, message: data.message };
       }
     } catch {
