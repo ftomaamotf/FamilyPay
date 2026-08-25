@@ -149,11 +149,11 @@ export const Navbar = ({
                   className="w-7 h-7 rounded-xl flex items-center justify-center text-white text-xs font-black"
                   style={{ backgroundColor: currentUser.avatarColor || '#10b981' }}
                 >
-                  {currentUser.name[0]}
+                  {currentUser.name ? currentUser.name[0] : 'ع'}
                 </span>
                 <div className="text-right hidden sm:block">
                   <span className="text-xs font-black text-slate-800 dark:text-white block leading-none">
-                    {currentUser.name}
+                    {currentUser.name || 'مستخدم'}
                   </span>
                   <span className="text-[10px] text-slate-400">
                     {isCurrentAdmin ? '👑 الأدمن' : 'أخ'}

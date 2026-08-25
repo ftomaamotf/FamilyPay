@@ -245,7 +245,8 @@ function MainApp() {
         <GuestJoinBanner />
 
         {/* 🚨 Admin Pending Guest Join Requests Alert Banner 🚨 */}
-        {isCurrentAdmin && guestRequests && guestRequests.length > 0 && (
+        {/* 🚨 Admin Pending Guest Join Requests Alert Banner 🚨 */}
+        {isCurrentAdmin && Array.isArray(guestRequests) && guestRequests.length > 0 && guestRequests[0] && (
           <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 p-4 sm:p-5 rounded-3xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 border-2 border-amber-300 animate-pulse" dir="rtl">
             <div className="flex items-center gap-3 text-right">
               <div className="w-12 h-12 rounded-2xl bg-slate-950 text-amber-400 flex items-center justify-center font-black text-lg shrink-0 shadow-lg shadow-black/20">
@@ -256,7 +257,7 @@ function MainApp() {
                   🔔 لديك ({guestRequests.length}) طلب انضمام ضيف جديد بانتظار موافقتك!
                 </span>
                 <span className="text-xs font-extrabold text-slate-900 mt-0.5 block">
-                  الأخ ({guestRequests[0].name}) بانتظار إدخال كلمة المرور لتفعيل حسابه في الصندوق
+                  الأخ ({guestRequests[0]?.name || 'مستخدم جديد'}) بانتظار إدخال كلمة المرور لتفعيل حسابه في الصندوق
                 </span>
               </div>
             </div>
@@ -271,7 +272,7 @@ function MainApp() {
         )}
 
         {/* 💰 Admin Pending Money Requests (طلبات الصرف المعلقة) Alert Banner 💰 */}
-        {isCurrentAdmin && pendingMoneyRequests && pendingMoneyRequests.length > 0 && (
+        {isCurrentAdmin && Array.isArray(pendingMoneyRequests) && pendingMoneyRequests.length > 0 && pendingMoneyRequests[0] && (
           <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-white p-4 sm:p-5 rounded-3xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 border-2 border-emerald-300 animate-pulse" dir="rtl">
             <div className="flex items-center gap-3 text-right">
               <div className="w-12 h-12 rounded-2xl bg-slate-950 text-emerald-300 flex items-center justify-center font-black text-lg shrink-0 shadow-lg shadow-black/20">
@@ -282,7 +283,7 @@ function MainApp() {
                   📥 لديك ({pendingMoneyRequests.length}) طلب صرف أموال جديد من الإخوة!
                 </span>
                 <span className="text-xs font-bold text-emerald-100 mt-0.5 block">
-                  طلب الأخ ({pendingMoneyRequests[0].brotherName}) مبلغ {pendingMoneyRequests[0].amount} لـ [{pendingMoneyRequests[0].fieldName}] - ({pendingMoneyRequests[0].reason})
+                  طلب الأخ ({pendingMoneyRequests[0]?.brotherName || 'أحد الإخوة'}) مبلغ {pendingMoneyRequests[0]?.amount || 0} لـ [{pendingMoneyRequests[0]?.fieldName || 'بند عام'}] {pendingMoneyRequests[0]?.reason ? `- (${pendingMoneyRequests[0].reason})` : ''}
                 </span>
               </div>
             </div>
