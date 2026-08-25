@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { formatMoney, normalizeArabicText } from '../utils/formatters';
+import { formatMoney, normalizeArabicText, formatArabicDate } from '../utils/formatters';
 import {
   Users,
   Copy,
@@ -21,7 +21,8 @@ import {
   MessageSquare,
   Radio,
   Phone,
-  MessageCircle
+  MessageCircle,
+  X
 } from 'lucide-react';
 import { EditTransferModal } from './EditTransferModal';
 
@@ -53,6 +54,7 @@ export const BrothersCards = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBrotherId, setSelectedBrotherId] = useState(null);
   const [editingTransfer, setEditingTransfer] = useState(null);
+  const [inspectedCommodity, setInspectedCommodity] = useState(null);
   const pressTimerRef = React.useRef(null);
   const currency = settings.currencySymbol;
 
@@ -548,21 +550,34 @@ export const BrothersCards = ({
                     key={f.id}
                     className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between relative group/field hover:border-emerald-400 transition shadow-xs"
                   >
-                    {/* Commodity Name & Index */}
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    {/* Commodity Name & Index (Clickable to view order history) */}
+                    <div
+                      onClick={() => setInspectedCommodity({
+                        field: f,
+                        brother: selectedBrother,
+                        effectiveCount,
+                        priceAmount
+                      })}
+                      className="flex items-center gap-2.5 min-w-0 cursor-pointer flex-1 select-none"
+                      title="اضغط هنا لعرض تفاصيل وسجل مرات طلب هذه السلعة 📋"
+                    >
                       <span className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-black flex items-center justify-center shrink-0">
                         {index + 1}
                       </span>
-                      <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-500/20">
+                      <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-500/20 group-hover/field:scale-110 transition">
                         🛒
                       </div>
                       <div className="min-w-0">
-                        <span className="font-black text-slate-800 dark:text-white text-xs sm:text-sm truncate block">
+                        <span className="font-black text-slate-800 dark:text-white text-xs sm:text-sm truncate block group-hover/field:text-emerald-500 transition underline-offset-4 group-hover/field:underline">
                           {f.name}
                         </span>
-                        {isPending && (
+                        {isPending ? (
                           <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold block">
                             ⏳ بانتظار موافقة الأدمن والتحويل
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 font-bold block group-hover/field:text-emerald-500/80 transition">
+                            اضغط لعرض سجل الطلبات 📋
                           </span>
                         )}
                       </div>
@@ -654,6 +669,167 @@ export const BrothersCards = ({
         onClose={() => setEditingTransfer(null)}
         transfer={editingTransfer}
       />
+
+      {/* Commodity Orders History Modal (سجل مرات طلب السلعة) */}
+      {inspectedCommodity && (() => {
+        const f = inspectedCommodity.field;
+        const b = inspectedCommodity.brother;
+        const normF = normalizeArabicText(f.name);
+
+        // 1. Completed Transfers for this commodity
+        const itemTransfers = (transfers || []).filter((t) => {
+          if (!isTransferStrictlyForBrother(t, b)) return false;
+          if (t.fieldId && t.fieldId === f.id) return true;
+          const normT = normalizeArabicText(t.fieldName || t.reason);
+          return normT && normF && (normT === normF || normT.includes(normF) || normF.includes(normT));
+        }).map((t) => ({
+          id: t.id,
+          type: 'transfer',
+          amount: t.amount,
+          reason: t.reason,
+          timestamp: t.timestamp || t.date,
+          date: t.date || t.timestamp,
+          senderName: t.senderName || 'الأدمن الرئيسي',
+          cardName: t.sendingCardName || 'بطاقة الصندوق'
+        }));
+
+        // 2. Pending requests for this commodity
+        const itemRequests = (fundRequests || []).filter((r) => {
+          if (r.status !== 'pending') return false;
+          const isForThisBrother = r.brotherId === b.id ||
+            (b.bankAccountNumber && r.bankAccountNumber === b.bankAccountNumber) ||
+            (b.accountNumber && r.brotherAccountNumber === b.accountNumber);
+          if (!isForThisBrother) return false;
+          if (r.fieldId && r.fieldId === f.id) return true;
+          const normR = normalizeArabicText(r.fieldName || r.commodityName || r.reason);
+          return normR && normF && (normR === normF || normR.includes(normF) || normF.includes(normR));
+        }).map((r) => ({
+          id: r.id,
+          type: 'pending_request',
+          amount: r.amount,
+          reason: r.reason,
+          timestamp: r.createdAt,
+          date: r.createdAt
+        }));
+
+        const allRecords = [...itemRequests, ...itemTransfers];
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn" dir="rtl">
+            <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl p-6 shadow-2xl border-2 border-emerald-500/40 space-y-5 max-h-[90vh] flex flex-col animate-scaleUp">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center text-xl shadow-xs">
+                    🛒
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-black text-slate-800 dark:text-white">
+                        {f.name}
+                      </h3>
+                      <span className="w-6 h-6 rounded-full bg-teal-500/15 text-teal-700 dark:text-teal-300 font-mono font-black text-xs flex items-center justify-center border border-teal-500/30">
+                        {inspectedCommodity.effectiveCount}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 font-bold">
+                      سجل مرات الطلب الخاصة بالأخ: <strong className="text-slate-700 dark:text-slate-200">{b.name}</strong>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setInspectedCommodity(null)}
+                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Quick KPI Summary Box */}
+              <div className="grid grid-cols-2 gap-3 shrink-0">
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-700">
+                  <span className="text-[11px] text-slate-400 font-bold block">إجمالي عدد مرات الطلب:</span>
+                  <span className="text-base sm:text-lg font-black font-mono text-teal-600 dark:text-teal-400">
+                    {inspectedCommodity.effectiveCount} مرات
+                  </span>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-700">
+                  <span className="text-[11px] text-slate-400 font-bold block">إجمالي المبلغ المحول:</span>
+                  <span className="text-base sm:text-lg font-black font-mono text-emerald-600 dark:text-emerald-400">
+                    {formatMoney(inspectedCommodity.priceAmount, currency)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Records List (مرات طلب السلعة) */}
+              <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[360px]">
+                {allRecords.length > 0 ? (
+                  allRecords.map((rec, rIdx) => {
+                    const isTransfer = rec.type === 'transfer';
+                    return (
+                      <div
+                        key={rec.id || rIdx}
+                        className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 space-y-2 relative"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-[10px] font-mono flex items-center justify-center border border-emerald-500/20">
+                              {allRecords.length - rIdx}
+                            </span>
+                            <span className={`text-[11px] font-black px-2 py-0.5 rounded-lg ${
+                              isTransfer
+                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                                : 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+                            }`}>
+                              {isTransfer ? 'تم التحويل والصرف ✅' : 'طلب معلق بانتظار الموافقة ⏳'}
+                            </span>
+                          </div>
+
+                          <span className="text-sm font-black font-mono text-emerald-600 dark:text-emerald-400">
+                            {formatMoney(rec.amount, currency)}
+                          </span>
+                        </div>
+
+                        <div className="text-xs text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/60 leading-relaxed font-medium">
+                          <strong className="text-slate-400 block text-[10px] font-bold mb-0.5">سبب الطلب / الحاجة:</strong>
+                          {rec.reason || 'شراء سلعة من الصندوق'}
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium pt-1">
+                          <span>{rec.timestamp ? formatArabicDate(rec.timestamp) : ''}</span>
+                          {isTransfer && rec.cardName && (
+                            <span>بواسطة: {rec.cardName}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8 text-xs text-slate-400 space-y-1 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                    <span className="text-xl block">📦</span>
+                    <p className="font-bold text-slate-300">هذه السلعة مسجلة بجدول السلع بمبلغ إجمالي.</p>
+                    <p className="text-[11px] text-slate-500">عند إجراء أي طلب أو تحويل جديد لنفس السلعة ستظهر تفاصيل كل مرة هنا فوراً!</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-700 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setInspectedCommodity(null)}
+                  className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition"
+                >
+                  إغلاق النافذة
+                </button>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
 
