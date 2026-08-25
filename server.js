@@ -2016,6 +2016,7 @@ app.delete('/api/messages/:id', (req, res) => {
 
 // ================= 9. Realtime Walkie-Talkie & Live Intercom System =================
 const activeIntercomCalls = {}; // in-memory map of callId -> callData
+const callIntervalsMap = new Map(); // in-memory map of callId -> interval (keeps callData JSON serializable)
 
 // 9.1 Start Intercom Call (طلب المناداة المباشرة)
 app.post('/api/intercom/call', (req, res) => {
@@ -2064,6 +2065,7 @@ app.post('/api/intercom/call', (req, res) => {
     const current = activeIntercomCalls[callId];
     if (!current || current.status !== 'ringing' || ringCount >= 12) {
       clearInterval(ringPushInterval);
+      callIntervalsMap.delete(callId);
       return;
     }
     sendPushToUser(receiverId, {
@@ -2080,7 +2082,7 @@ app.post('/api/intercom/call', (req, res) => {
     });
   }, 3500);
 
-  callData.ringPushInterval = ringPushInterval;
+  callIntervalsMap.set(callId, ringPushInterval);
 
   res.json({
     success: true,
@@ -2098,8 +2100,10 @@ app.post('/api/intercom/respond', (req, res) => {
     return res.status(404).json({ success: false, message: 'جلسة المناداة غير موجودة أو انتهت' });
   }
 
-  if (callData.ringPushInterval) {
-    clearInterval(callData.ringPushInterval);
+  const existingInterval = callIntervalsMap.get(callId);
+  if (existingInterval) {
+    clearInterval(existingInterval);
+    callIntervalsMap.delete(callId);
   }
 
   if (action === 'accept') {
