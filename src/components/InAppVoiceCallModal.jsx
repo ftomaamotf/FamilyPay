@@ -27,13 +27,34 @@ export const InAppVoiceCallModal = () => {
   } = useFinance();
 
   const [isMuted, setIsMuted] = useState(false);
+  const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [callDuration, setCallDuration] = useState(0);
   const timerRef = useRef(null);
+  const audioPlayerRef = useRef(null);
 
   // Audio recording stream ref for continuous live conversation
   const mediaRecorderRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const isRecordingRef = useRef(false);
+
+  // Handle incoming audio bursts with speakerphone / volume control
+  useEffect(() => {
+    if (incomingVoiceBurst && incomingVoiceBurst.audioData && activeCall?.status === 'connected') {
+      try {
+        if (!audioPlayerRef.current) {
+          audioPlayerRef.current = new Audio();
+        }
+        audioPlayerRef.current.src = incomingVoiceBurst.audioData;
+        audioPlayerRef.current.volume = isSpeakerOn ? 1.0 : 0.35;
+        if (audioPlayerRef.current.setSinkId && typeof audioPlayerRef.current.setSinkId === 'function') {
+          audioPlayerRef.current.setSinkId(isSpeakerOn ? 'default' : '').catch(() => {});
+        }
+        audioPlayerRef.current.play().catch((e) => console.log('Call voice playback note:', e));
+      } catch (err) {
+        console.log('Error playing call voice stream:', err);
+      }
+    }
+  }, [incomingVoiceBurst, activeCall?.status, isSpeakerOn]);
 
   // Handle call timer when connected
   useEffect(() => {
@@ -228,12 +249,31 @@ export const InAppVoiceCallModal = () => {
           </h3>
 
           {isConnected ? (
-            <div className="flex items-center justify-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-300 font-mono font-black text-sm">
-                {formatDuration(callDuration)}
-              </span>
-              <span className="text-xs text-slate-400 font-bold">• مكالمة صوتية مباشرة</span>
+            <div className="space-y-2">
+              <div className="flex items-center justify-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-emerald-300 font-mono font-black text-sm">
+                  {formatDuration(callDuration)}
+                </span>
+                <span className="text-xs text-slate-400 font-bold">• مكالمة صوتية مباشرة</span>
+              </div>
+
+              {/* Speakerphone Mode Quick Badge */}
+              <div className="flex items-center justify-center">
+                <button
+                  type="button"
+                  onClick={() => setIsSpeakerOn(!isSpeakerOn)}
+                  className={`px-3 py-1 rounded-xl text-[11px] font-black flex items-center gap-1.5 transition active:scale-95 border shadow-sm ${
+                    isSpeakerOn
+                      ? 'bg-teal-500/20 text-teal-300 border-teal-500/40'
+                      : 'bg-slate-800 text-slate-400 border-slate-700'
+                  }`}
+                  title="اضغط للتبديل بين مكبر الصوت وسماعة الأذن"
+                >
+                  {isSpeakerOn ? <Volume2 className="w-3.5 h-3.5 text-teal-400 animate-pulse" /> : <VolumeX className="w-3.5 h-3.5" />}
+                  <span>{isSpeakerOn ? 'السماعة الخارجية: مفتوحة 🔊' : 'السماعة الداخلية: عادية 🔈'}</span>
+                </button>
+              </div>
             </div>
           ) : (
             <div className="flex items-center justify-center gap-1.5 text-amber-300 font-bold text-xs animate-pulse">
@@ -257,21 +297,43 @@ export const InAppVoiceCallModal = () => {
         )}
 
         {/* In-Call Action Controls */}
-        <div className="flex items-center justify-center gap-4 pt-2">
+        <div className="flex items-center justify-center gap-3 pt-2">
           
           {/* Mute / Unmute Button */}
           {isConnected && (
             <button
               type="button"
               onClick={() => setIsMuted(!isMuted)}
-              className={'w-12 h-12 rounded-2xl flex items-center justify-center transition active:scale-95 shadow-md ' + (
+              className={'w-13 h-13 rounded-2xl flex flex-col items-center justify-center gap-0.5 p-2 transition active:scale-95 shadow-md ' + (
                 isMuted
                   ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                   : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
               )}
               title={isMuted ? 'إلغاء كتم الصوت' : 'كتم المايكروفون'}
             >
-              {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5 text-emerald-400" />}
+              {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-emerald-400" />}
+              <span className="text-[9px] font-bold">{isMuted ? 'مكتوم' : 'المايك'}</span>
+            </button>
+          )}
+
+          {/* Speakerphone Toggle Button (زر فتح السماعة الخارجية / مكبر الصوت) */}
+          {isConnected && (
+            <button
+              type="button"
+              onClick={() => setIsSpeakerOn(!isSpeakerOn)}
+              className={'w-13 h-13 rounded-2xl flex flex-col items-center justify-center gap-0.5 p-2 transition active:scale-95 shadow-md ' + (
+                isSpeakerOn
+                  ? 'bg-teal-500/20 text-teal-300 border-2 border-teal-400/60 shadow-teal-500/20'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700'
+              )}
+              title={isSpeakerOn ? 'السماعة الخارجية مفعلة (مكبر الصوت 🔊)' : 'سماعة الهاتف العادية 🔈'}
+            >
+              {isSpeakerOn ? (
+                <Volume2 className="w-4 h-4 text-teal-400 animate-pulse" />
+              ) : (
+                <VolumeX className="w-4 h-4 text-slate-400" />
+              )}
+              <span className="text-[9px] font-bold">{isSpeakerOn ? 'مكبر الصوت' : 'سماعة الأذن'}</span>
             </button>
           )}
 
