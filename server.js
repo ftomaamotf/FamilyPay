@@ -1169,9 +1169,8 @@ function matchOrAssignField(brother, explicitFieldId, reasonText, customItemName
     existing = brother.approvedFields.find((f) => f.id === explicitFieldId);
   }
 
-  // If exact identical commodity exists, use it and increment counter
+  // If exact identical commodity exists, use it
   if (existing) {
-    existing.count = (existing.count || 1) + 1;
     return existing;
   }
 
@@ -1181,7 +1180,6 @@ function matchOrAssignField(brother, explicitFieldId, reasonText, customItemName
     name: cleanName,
     limit: 0,
     spent: 0,
-    count: 1,
     createdAt: new Date().toISOString()
   };
   brother.approvedFields.push(newField);

@@ -520,26 +520,28 @@ export const BrothersCards = ({
                 const priceAmount = Math.max(f.spent || 0, calculatedSpent, pending?.amount || f.limit || 0);
                 const isPending = calculatedSpent === 0 && (f.spent || 0) === 0 && Boolean(pending);
 
-                // Calculate how many times this commodity was requested / transferred
+                // Calculate EXACT count: (Completed transfers) + (Active pending requests)
                 const normF = normalizeArabicText(f.name);
                 const timesTransferred = transfers.filter((t) => {
                   if (!isTransferStrictlyForBrother(t, selectedBrother)) return false;
-                  if (t.fieldId === f.id) return true;
+                  if (t.fieldId && t.fieldId === f.id) return true;
                   const normT = normalizeArabicText(t.fieldName || t.reason);
                   return normT && normF && (normT === normF || normT.includes(normF) || normF.includes(normT));
                 }).length;
 
-                const timesPending = (fundRequests || []).filter((r) =>
-                  r.status === 'pending' &&
-                  (r.brotherId === selectedBrother.id || r.brotherName === selectedBrother.name) &&
-                  (r.fieldId === f.id || (r.fieldName && f.name && (r.fieldName.includes(f.name) || f.name.includes(r.fieldName))))
-                ).length;
+                const timesPending = (fundRequests || []).filter((r) => {
+                  if (r.status !== 'pending') return false;
+                  const isForThisBrother = r.brotherId === selectedBrother.id ||
+                    (selectedBrother.bankAccountNumber && r.bankAccountNumber === selectedBrother.bankAccountNumber) ||
+                    (selectedBrother.accountNumber && r.brotherAccountNumber === selectedBrother.accountNumber);
+                  if (!isForThisBrother) return false;
+                  if (r.fieldId && r.fieldId === f.id) return true;
+                  const normR = normalizeArabicText(r.fieldName || r.commodityName || r.reason);
+                  return normR && normF && (normR === normF || normR.includes(normF) || normR.includes(normR));
+                }).length;
 
-                const effectiveCount = Math.max(
-                  timesTransferred + timesPending,
-                  f.count || 0,
-                  1
-                );
+                const totalEvents = timesTransferred + timesPending;
+                const effectiveCount = totalEvents > 0 ? totalEvents : 1;
 
                 return (
                   <div
