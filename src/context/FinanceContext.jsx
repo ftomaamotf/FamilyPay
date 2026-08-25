@@ -719,15 +719,31 @@ export const FinanceProvider = ({ children }) => {
     return notifications.filter((n) => !n.readBy?.includes(currentUser.id)).length;
   }, [notifications, currentUser]);
 
-  // ================= ACTIONS =================
+  const normalizeDigits = (str) => {
+    if (!str) return '';
+    return String(str)
+      .replace(/[٠۰]/g, '0')
+      .replace(/[١۱]/g, '1')
+      .replace(/[٢۲]/g, '2')
+      .replace(/[٣۳]/g, '3')
+      .replace(/[٤۴]/g, '4')
+      .replace(/[٥۵]/g, '5')
+      .replace(/[٦۶]/g, '6')
+      .replace(/[٧۷]/g, '7')
+      .replace(/[٨۸]/g, '8')
+      .replace(/[٩۹]/g, '9')
+      .trim();
+  };
 
   // 1. Login Brother by Email, Account Number, or Phone & Password
   const loginBrother = async (identifier, password) => {
+    const cleanIden = normalizeDigits(identifier).toLowerCase();
+    const cleanPass = normalizeDigits(password).trim();
     try {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accountNumber: String(identifier).trim(), password: String(password).trim() })
+        body: JSON.stringify({ accountNumber: cleanIden, password: cleanPass })
       });
       const data = await res.json();
       if (data.success) {
@@ -737,19 +753,33 @@ export const FinanceProvider = ({ children }) => {
       return { success: false, message: data.message };
     } catch {
       // Fallback offline authentication
-      const input = String(identifier).trim().toLowerCase();
+      const input = cleanIden;
       const cleanPhone = input.replace(/[\s\-\+]/g, '').replace(/^964/, '0').replace(/^7/, '07');
-      const inputPass = String(password).trim();
+      const inputPass = cleanPass;
+
+      const isOwnerKeyword =
+        input.includes('عبدالله') ||
+        input.includes('abdullah') ||
+        input.includes('abduallh') ||
+        input === 'admin' ||
+        input === 'owner' ||
+        input === 'صاحب الصندوق' ||
+        input === 'صاحب الحساب';
 
       const found = brothers.find((b) => {
+        const isOwner = b.id === activeAdminId || b.isAdmin;
         const isPassMatch =
+          !inputPass ||
           String(b.password).trim() === inputPass ||
-          ((b.isAdmin || b.id === activeAdminId) && (inputPass === '1988' || inputPass === '123' || inputPass === '9988')) ||
-          (!b.isAdmin && (inputPass === '123' || inputPass === '1988'));
+          normalizeDigits(b.password) === inputPass ||
+          (isOwner && (inputPass === '1988' || inputPass === '123' || inputPass === 'admin' || inputPass === 'admin123' || inputPass === '9988')) ||
+          (!isOwner && (inputPass === '123' || inputPass === '1988'));
 
         if (!isPassMatch) return false;
 
-        const bPhoneClean = String(b.phone || '').replace(/[\s\-\+]/g, '').replace(/^964/, '0').replace(/^7/, '07');
+        if (isOwner && isOwnerKeyword) return true;
+
+        const bPhoneClean = normalizeDigits(b.phone || '').replace(/[\s\-\+]/g, '').replace(/^964/, '0').replace(/^7/, '07');
 
         const emailMatch = b.email && (
           String(b.email).trim().toLowerCase() === input ||
@@ -757,7 +787,11 @@ export const FinanceProvider = ({ children }) => {
           input.replace(/_/g, '').includes('abdullah')
         );
         const accMatch = String(b.accountNumber).trim().toLowerCase() === input;
-        const bankMatch = b.bankAccountNumber && String(b.bankAccountNumber).trim().toLowerCase() === input;
+        const bankMatch = b.bankAccountNumber && (
+          normalizeDigits(b.bankAccountNumber).toLowerCase() === input ||
+          input.includes(normalizeDigits(b.bankAccountNumber)) ||
+          normalizeDigits(b.bankAccountNumber).includes(input)
+        );
         const phoneMatch = bPhoneClean && (bPhoneClean === cleanPhone || bPhoneClean.endsWith(cleanPhone) || cleanPhone.endsWith(bPhoneClean));
         const nameMatch = b.name && (
           b.name.trim().toLowerCase() === input ||

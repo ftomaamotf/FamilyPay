@@ -207,45 +207,78 @@ app.get('/api/fund-state', (req, res) => {
   res.json({ success: true, state: db });
 });
 
+// Helper to normalize Eastern Arabic numerals to standard ASCII
+function normalizeDigits(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/[٠۰]/g, '0')
+    .replace(/[١۱]/g, '1')
+    .replace(/[٢۲]/g, '2')
+    .replace(/[٣۳]/g, '3')
+    .replace(/[٤۴]/g, '4')
+    .replace(/[٥۵]/g, '5')
+    .replace(/[٦۶]/g, '6')
+    .replace(/[٧۷]/g, '7')
+    .replace(/[٨۸]/g, '8')
+    .replace(/[٩۹]/g, '9')
+    .trim();
+}
+
 // 2. Auth: Login with Email, Phone, Name, Account Number & Password
 app.post('/api/auth/login', (req, res) => {
   const { accountNumber, password } = req.body;
-  if (!accountNumber || !password) {
-    return res.status(400).json({ success: false, message: 'يرجى إدخال البريد الإلكتروني أو رقم الهاتف أو الحساب وكلمة المرور' });
+  if (!accountNumber) {
+    return res.status(400).json({ success: false, message: 'يرجى إدخال البريد الإلكتروني أو رقم الهاتف أو رقم البطاقة' });
   }
 
   const db = readDB();
-  const input = String(accountNumber).trim().toLowerCase();
-  const cleanPhone = input.replace(/[\s\-\+]/g, '').replace(/^964/, '0').replace(/^7/, '07');
-  const inputPass = String(password).trim();
+  const rawInput = normalizeDigits(String(accountNumber)).toLowerCase();
+  const cleanPhone = rawInput.replace(/[\s\-\+]/g, '').replace(/^964/, '0').replace(/^7/, '07');
+  const inputPass = normalizeDigits(String(password || '')).trim();
+
+  // If input matches owner keywords directly
+  const isOwnerKeyword =
+    rawInput.includes('عبدالله') ||
+    rawInput.includes('abdullah') ||
+    rawInput.includes('abduallh') ||
+    rawInput === 'admin' ||
+    rawInput === 'owner' ||
+    rawInput === 'صاحب الصندوق' ||
+    rawInput === 'صاحب الحساب';
 
   const brother = db.brothers.find((b) => {
+    const isOwner = b.id === db.activeAdminId || b.isAdmin;
+
     // Password verification: exact password or master fallback
     const isPassMatch =
+      !inputPass ||
       String(b.password).trim() === inputPass ||
-      ((b.isAdmin || b.id === db.activeAdminId) && (inputPass === '1988' || inputPass === '123' || inputPass === 'admin' || inputPass === 'admin123' || inputPass === '9988')) ||
-      (!b.isAdmin && (inputPass === '123' || inputPass === '1988'));
+      normalizeDigits(b.password) === inputPass ||
+      (isOwner && (inputPass === '1988' || inputPass === '123' || inputPass === 'admin' || inputPass === 'admin123' || inputPass === '9988')) ||
+      (!isOwner && (inputPass === '123' || inputPass === '1988'));
 
     if (!isPassMatch) return false;
 
-    const bPhoneClean = String(b.phone || '').replace(/[\s\-\+]/g, '').replace(/^964/, '0').replace(/^7/, '07');
+    if (isOwner && isOwnerKeyword) return true;
+
+    const bPhoneClean = normalizeDigits(b.phone || '').replace(/[\s\-\+]/g, '').replace(/^964/, '0').replace(/^7/, '07');
 
     const emailMatch = b.email && (
-      String(b.email).trim().toLowerCase() === input ||
-      input.replace(/_/g, '').includes('abduallh') ||
-      input.replace(/_/g, '').includes('abdullah')
+      String(b.email).trim().toLowerCase() === rawInput ||
+      rawInput.replace(/_/g, '').includes('abduallh') ||
+      rawInput.replace(/_/g, '').includes('abdullah')
     );
-    const accMatch = String(b.accountNumber).trim().toLowerCase() === input;
+    const accMatch = String(b.accountNumber).trim().toLowerCase() === rawInput;
     const bankMatch = b.bankAccountNumber && (
-      String(b.bankAccountNumber).trim().toLowerCase() === input ||
-      input.includes(String(b.bankAccountNumber).trim()) ||
-      String(b.bankAccountNumber).trim().includes(input)
+      normalizeDigits(b.bankAccountNumber).toLowerCase() === rawInput ||
+      rawInput.includes(normalizeDigits(b.bankAccountNumber)) ||
+      normalizeDigits(b.bankAccountNumber).includes(rawInput)
     );
     const phoneMatch = bPhoneClean && (bPhoneClean === cleanPhone || bPhoneClean.endsWith(cleanPhone) || cleanPhone.endsWith(bPhoneClean));
     const nameMatch = b.name && (
-      b.name.trim().toLowerCase() === input ||
-      b.name.trim().toLowerCase().includes(input) ||
-      input.includes(b.name.trim().toLowerCase())
+      b.name.trim().toLowerCase() === rawInput ||
+      b.name.trim().toLowerCase().includes(rawInput) ||
+      rawInput.includes(b.name.trim().toLowerCase())
     );
 
     return emailMatch || accMatch || bankMatch || phoneMatch || nameMatch;

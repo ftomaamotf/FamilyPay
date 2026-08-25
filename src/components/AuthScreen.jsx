@@ -480,10 +480,47 @@ export const AuthScreen = ({ onLoginSuccess }) => {
               </button>
             </div>
 
+            {/* Quick 1-Click Fast Login for Owner (عبدالله عجمي - بدون كتابة) */}
+            <div className="p-3.5 bg-gradient-to-r from-emerald-950/80 via-slate-900 to-indigo-950/80 rounded-2xl border-2 border-emerald-500/60 flex items-center justify-between gap-3 shadow-xl">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-emerald-500 text-white flex items-center justify-center font-black text-base shrink-0 shadow-md">
+                  👑
+                </div>
+                <div className="min-w-0">
+                  <span className="font-black text-xs sm:text-sm text-white block truncate">
+                    عبدالله عجمي (صاحب الصندوق)
+                  </span>
+                  <span className="text-[11px] text-emerald-300 font-mono block">
+                    07702206214 / 9256869125
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  setLoading(true);
+                  setErrorMsg('');
+                  const res = await loginBrother('07702206214', '1988');
+                  setLoading(false);
+                  if (res.success && onLoginSuccess) onLoginSuccess();
+                  else if (!res.success) setErrorMsg(res.message);
+                }}
+                className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-xs rounded-xl shadow-lg transition active:scale-95 shrink-0 flex items-center gap-1"
+              >
+                <span>دخول فوري ⚡</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3 py-1">
+              <div className="flex-1 h-px bg-slate-800" />
+              <span className="text-[11px] text-slate-400 font-bold">أو كتابة البيانات يدوياً</span>
+              <div className="flex-1 h-px bg-slate-800" />
+            </div>
+
             {/* Email or Phone Input */}
             <div>
               <label className="block font-bold text-slate-300 mb-1.5 text-xs">
-                البريد الإلكتروني أو رقم الهاتف أو اسم المستخدم:
+                البريد الإلكتروني أو رقم الهاتف أو رقم البطاقة:
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
