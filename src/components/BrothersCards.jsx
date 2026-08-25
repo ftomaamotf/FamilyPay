@@ -336,7 +336,43 @@ export const BrothersCards = ({
               </div>
             )}
 
-            {/* Request Money Circular Button (دائرة طلب أموال من الصندوق) */}
+            {/* Send Money Circular Button (دائرة إرسال وتحويل أموال في قائمة الدوائر) */}
+            {canCurrentUserSend && canCurrentUserSend() && onOpenTransferModal && (
+              <div className="flex flex-col items-center shrink-0 w-auto lg:w-full">
+                <button
+                  type="button"
+                  onClick={() => onOpenTransferModal(selectedBrother)}
+                  title="إرسال وتحويل أموال إلى المستخدم المحدد"
+                  className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full opacity-90 hover:opacity-100 hover:scale-105 active:scale-95"
+                >
+                  {/* Outer Circular Ring */}
+                  <div className="relative p-1 rounded-full ring-2 ring-emerald-500/80 group-hover:ring-emerald-400 group-hover:ring-offset-2 group-hover:ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-emerald-500/20">
+                    {/* The Inner Circle */}
+                    <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center bg-gradient-to-tr from-emerald-600 via-teal-600 to-emerald-400 text-white shadow-inner relative overflow-hidden">
+                      <Send className="w-8 h-8 sm:w-9 sm:h-9 stroke-[2.2] -rotate-45 drop-shadow" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/30 pointer-events-none" />
+                    </div>
+
+                    {/* Money Badge on top */}
+                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-emerald-300 flex items-center justify-center shadow-md border border-emerald-400 text-[10px]">
+                      💸
+                    </div>
+                  </div>
+
+                  {/* Circle Name Label */}
+                  <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-emerald-300 group-hover:text-emerald-200">
+                    إرسال أموال
+                  </span>
+
+                  {/* Action Pill Badge */}
+                  <div className="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all">
+                    <span>تحويل مالي 💸</span>
+                  </div>
+                </button>
+              </div>
+            )}
+
+            {/* Request Money Circular Button (دائرة طلب أموال من الصندوق - حصراً في قائمة الدوائر) */}
             {onOpenRequestMoney && (
               <div className="flex flex-col items-center shrink-0 w-auto lg:w-full">
                 <button
@@ -346,26 +382,26 @@ export const BrothersCards = ({
                   className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full opacity-90 hover:opacity-100 hover:scale-105 active:scale-95"
                 >
                   {/* Outer Circular Ring */}
-                  <div className="relative p-1 rounded-full ring-2 ring-emerald-500/80 group-hover:ring-emerald-400 group-hover:ring-offset-2 group-hover:ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-emerald-500/20">
+                  <div className="relative p-1 rounded-full ring-2 ring-teal-500/80 group-hover:ring-teal-400 group-hover:ring-offset-2 group-hover:ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-teal-500/20">
                     {/* The Inner Circle */}
-                    <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center bg-gradient-to-tr from-teal-700 via-emerald-600 to-emerald-400 text-white shadow-inner relative overflow-hidden">
+                    <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center bg-gradient-to-tr from-teal-700 via-emerald-600 to-teal-400 text-white shadow-inner relative overflow-hidden">
                       <Inbox className="w-8 h-8 sm:w-9 sm:h-9 stroke-[2.2] drop-shadow" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/30 pointer-events-none" />
                     </div>
 
                     {/* Money Icon Badge on top */}
-                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-emerald-300 flex items-center justify-center shadow-md border border-emerald-400 text-[10px]">
+                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-teal-300 flex items-center justify-center shadow-md border border-teal-400 text-[10px]">
                       💰
                     </div>
                   </div>
 
                   {/* Circle Name Label */}
-                  <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-emerald-300 group-hover:text-emerald-200">
+                  <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-teal-300 group-hover:text-teal-200">
                     طلب أموال
                   </span>
 
                   {/* Action Pill Badge */}
-                  <div className="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all">
+                  <div className="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-500/20 text-teal-300 border border-teal-500/40 group-hover:bg-teal-500 group-hover:text-slate-950 transition-all">
                     <span>طلب سلفة 📥</span>
                   </div>
                 </button>
@@ -550,36 +586,18 @@ export const BrothersCards = ({
             </div>
           </div>
 
-          {/* Action Buttons: Send Transfer / Request Money + Direct Chat */}
+          {/* Action Buttons: Direct Chat + Edit Commodities */}
           <div className="pt-2 flex flex-wrap items-center gap-2.5">
-            {isCurrentAdmin ? (
-              <button
-                onClick={() => onOpenTransferModal(selectedBrother)}
-                className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition active:scale-98"
-              >
-                <Send className="w-4 h-4 -rotate-45" />
-                <span>إرسال تحويل مالي لهذا المستخدم 💸</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => onOpenRequestMoney && onOpenRequestMoney(selectedBrother)}
-                className="flex-1 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-teal-600/20 flex items-center justify-center gap-2 transition active:scale-98"
-              >
-                <Inbox className="w-4 h-4" />
-                <span>طلب أموال من الصندوق 📥</span>
-              </button>
-            )}
-
             {/* Direct Chat Button */}
             {onOpenChat && (
               <button
                 type="button"
                 onClick={() => onOpenChat(selectedBrother.id)}
-                className="px-4 py-3 bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-200 border border-teal-300 dark:border-teal-700 font-extrabold text-xs sm:text-sm rounded-2xl transition flex items-center gap-1.5 active:scale-98 shadow-sm"
+                className="flex-1 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-teal-600/20 flex items-center justify-center gap-2 transition active:scale-98"
                 title="فتح المحادثة والاتصال الصوتي وواتساب لهذا المستخدم"
               >
-                <MessageSquare className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                <span>محادثة 💬</span>
+                <MessageSquare className="w-4 h-4" />
+                <span>محادثة وتواصل مع العائلة 💬</span>
               </button>
             )}
 

@@ -162,17 +162,8 @@ export const Navbar = ({
               </div>
             )}
 
-            {/* If user is Admin: Show Transfer Button & Pending Requests */}
-            {isCurrentAdmin ? (
+            {isCurrentAdmin && (
               <>
-                <button
-                  onClick={() => onOpenTransferModal()}
-                  className="hidden md:flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm shadow-emerald-600/30 transition active:scale-95"
-                >
-                  <Send className="w-3.5 h-3.5 -rotate-45" />
-                  <span>تحويل مالي</span>
-                </button>
-
                 {/* Guest Approvals Badge Button for Admin */}
                 {onOpenGuestApprovals && (
                   <button
@@ -200,15 +191,6 @@ export const Navbar = ({
                   </button>
                 )}
               </>
-            ) : (
-              /* If Regular Brother: Show Request Money Button ONLY (NO Transfer button) */
-              <button
-                onClick={() => onOpenRequestMoney && onOpenRequestMoney()}
-                className="flex items-center gap-1.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm shadow-teal-600/30 transition active:scale-95"
-              >
-                <Inbox className="w-3.5 h-3.5" />
-                <span>طلب أموال 📥</span>
-              </button>
             )}
 
           </div>
