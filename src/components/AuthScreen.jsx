@@ -234,27 +234,28 @@ export const AuthScreen = ({ onLoginSuccess }) => {
         </div>
 
         {/* ======================================================== */}
-        {/* 🌟 VIEW 1: WELCOME SCREEN (تسجيل صاحب الصندوق | ضيف) 🌟 */}
+        {/* 🌟 VIEW 1: WELCOME SCREEN (تسجيل الدخول | ضيف | تسجيل جديد) 🌟 */}
         {/* ======================================================== */}
         {viewMode === 'welcome' && (
           <div className="space-y-4 pt-2">
             
-            {/* Option 1: Register as Fund Owner / صاحب الصندوق */}
+            {/* Option 1: Login to Existing Account (صاحب الحساب / الإخوة) */}
             <button
               type="button"
-              onClick={() => { setViewMode('register_owner'); setRegMsg(''); }}
-              className="w-full p-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-xl shadow-emerald-600/20 flex items-center justify-between transition active:scale-95 group border border-emerald-400/40 text-right"
+              onClick={() => { setViewMode('login'); setErrorMsg(''); }}
+              className="w-full p-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-xl shadow-emerald-600/30 flex items-center justify-between transition active:scale-95 group border border-emerald-400/40 text-right"
             >
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center text-amber-300 shrink-0">
-                  <Crown className="w-6 h-6 fill-amber-300" />
+                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-amber-300 shrink-0 shadow">
+                  <LogIn className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <span className="block text-sm font-black text-white">
-                    تسجيل حساب (صاحب الصندوق) 👑
+                  <span className="block text-sm font-black text-white flex items-center gap-1.5">
+                    <span>تسجيل الدخول لحسابك المسجل 🔑</span>
+                    <span className="text-[10px] bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full font-bold">صاحب الحساب</span>
                   </span>
                   <span className="text-[11px] text-emerald-100 font-medium">
-                    أنا صاحب الصندوق ومن يرسل الأموال
+                    عبدالله عجمي وجميع الإخوة المسجلين
                   </span>
                 </div>
               </div>
@@ -287,15 +288,15 @@ export const AuthScreen = ({ onLoginSuccess }) => {
               <ArrowRight className="w-5 h-5 rotate-180 group-hover:-translate-x-1 transition text-emerald-400" />
             </button>
 
-            {/* Option 3: Already have an account -> Login */}
+            {/* Option 3: Register as New Fund Owner / دعوة واتساب */}
             <div className="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2">
               <button
                 type="button"
-                onClick={() => { setViewMode('login'); setErrorMsg(''); }}
-                className="text-xs font-bold text-slate-300 hover:text-white transition flex items-center gap-1.5"
+                onClick={() => { setViewMode('register_owner'); setRegMsg(''); }}
+                className="text-xs font-bold text-amber-400 hover:text-amber-300 transition flex items-center gap-1.5"
               >
-                <LogIn className="w-4 h-4 text-emerald-400" />
-                <span>تسجيل الدخول لحساب مسجل مسبقاً 🔑</span>
+                <Crown className="w-4 h-4 fill-amber-400" />
+                <span>إنشاء حساب جديد كـ (صاحب صندوق) 👑</span>
               </button>
 
               <button
