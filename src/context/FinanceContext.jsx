@@ -1913,13 +1913,27 @@ export const FinanceProvider = ({ children }) => {
           })
         });
         setIsPushSubscribed(true);
-        return { success: true, message: '✅ تم تفعيل رنين المكالمات عند غلق البرنامج بنجاح!' };
+        return { success: true, message: '✅ تم تفعيل رنين وإشعارات الهاتف عند غلق البرنامج بنجاح!' };
       }
     } catch (err) {
       console.log('Push subscription error:', err);
       return { success: false, message: 'تعذر تفعيل الإشعارات: ' + (err.message || 'خطأ غير معروف') };
     }
     return { success: false, message: 'حدث خطأ أثناء الاشتراك بالإشعارات' };
+  };
+
+  const sendTestPush = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/push/test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser?.id || 'all' })
+      });
+      const data = await res.json();
+      return data;
+    } catch (e) {
+      return { success: false, message: e.message };
+    }
   };
 
   // Auto-subscribe when user logs in so background push alerts work even when app is closed
@@ -2020,7 +2034,8 @@ export const FinanceProvider = ({ children }) => {
         playWalkieTalkieChirp,
         isPushSupported,
         isPushSubscribed,
-        subscribePushNotifications
+        subscribePushNotifications,
+        sendTestPush
       }}
     >
       {children}

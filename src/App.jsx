@@ -31,7 +31,59 @@ import { GuestJoinApprovalsModal } from './components/GuestJoinApprovalsModal';
 import { GuestPortalView } from './components/GuestPortalView';
 import { CircleChatModal } from './components/CircleChatModal';
 import { InAppVoiceCallModal } from './components/InAppVoiceCallModal';
-import { UserCheck, Send } from 'lucide-react';
+import { UserCheck, Send, Bell } from 'lucide-react';
+
+const PushNotificationBanner = () => {
+  const { isPushSubscribed, subscribePushNotifications, sendTestPush, currentUser } = useFinance();
+  const [testSent, setTestSent] = useState(false);
+
+  return (
+    <div className="bg-gradient-to-r from-teal-950 via-slate-900 to-emerald-950 text-white p-3.5 sm:p-4 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 border-2 border-teal-500/40" dir="rtl">
+      <div className="flex items-center gap-3 text-right">
+        <div className="w-10 h-10 rounded-2xl bg-teal-500/20 text-teal-300 flex items-center justify-center text-lg font-black shrink-0 border border-teal-400/30">
+          🔔
+        </div>
+        <div>
+          <span className="font-black text-xs sm:text-sm text-white block">
+            {isPushSubscribed ? '✅ خدمة الإشعارات الخلفية مفعلة على هذا الجهاز' : 'تفعيل تنبيهات ورنين الهاتف عند إغلاق التطبيق 📳'}
+          </span>
+          <span className="text-[11px] text-teal-200/80 block">
+            {isPushSubscribed
+              ? 'تصلك تنبيهات المكالمات والتحويلات والرسائل حتى وإن كان التطبيق مغلقاً تماماً.'
+              : 'اضغط لتفعيل والسماح بالإشعارات لتصلك رنات المكالمات وصرف الأموال عند إغلاق التطبيق.'}
+          </span>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 w-full sm:w-auto">
+        {!isPushSubscribed ? (
+          <button
+            type="button"
+            onClick={async () => {
+              const res = await subscribePushNotifications(currentUser?.id);
+              if (res && res.message) alert(res.message);
+            }}
+            className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 font-black text-xs rounded-2xl shadow-lg transition active:scale-95 shrink-0 flex items-center justify-center gap-1.5"
+          >
+            <span>تفعيل والسماح بالإشعارات 📲</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={async () => {
+              setTestSent(true);
+              const res = await sendTestPush();
+              alert(res?.message || 'تم إرسال إشعار تجريبي لهاتفك 📲');
+              setTimeout(() => setTestSent(false), 3000);
+            }}
+            className="w-full sm:w-auto px-4 py-2 bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-400/40 font-black text-xs rounded-2xl shadow transition active:scale-95 shrink-0 flex items-center justify-center gap-1.5"
+          >
+            <span>{testSent ? 'جاري الإرسال... 🚀' : 'تجربة إرسال إشعار فوري 🧪'}</span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
 
 function MainApp() {
   const { currentUser, setCurrentUser, activeAdminId, guestRequests, fundRequests } = useFinance();
@@ -141,6 +193,9 @@ function MainApp() {
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
         
+        {/* Push Notification Activator & Tester Banner */}
+        <PushNotificationBanner />
+
         {/* Guest Onboarding Camera QR Banner (للمستخدمين في وضع الضيف) */}
         <GuestJoinBanner />
 
