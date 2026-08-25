@@ -2013,8 +2013,34 @@ app.post('/api/intercom/call', (req, res) => {
     callerAvatar: caller.avatarColor,
     receiverId,
     type: 'INCOMING_CALL',
+    tag: 'incoming-call-' + callData.id,
     url: '/'
   });
+
+  // 3. Persistent Repeating Background Push Loop while ringing until answered/ended
+  let ringCount = 0;
+  const ringPushInterval = setInterval(() => {
+    ringCount++;
+    const current = activeIntercomCalls[callId];
+    if (!current || current.status !== 'ringing' || ringCount >= 12) {
+      clearInterval(ringPushInterval);
+      return;
+    }
+    sendPushToUser(receiverId, {
+      title: `📞 مكالمة صوتية مستمرة من ${caller.name}`,
+      body: `يرن عليك الآن.. اضغط للرد الفوري والتحدث 📲`,
+      callId: callData.id,
+      callerId,
+      callerName: caller.name,
+      callerAvatar: caller.avatarColor,
+      receiverId,
+      type: 'INCOMING_CALL',
+      tag: 'incoming-call-' + callData.id,
+      url: '/'
+    });
+  }, 3500);
+
+  callData.ringPushInterval = ringPushInterval;
 
   res.json({
     success: true,
@@ -2030,6 +2056,10 @@ app.post('/api/intercom/respond', (req, res) => {
 
   if (!callData) {
     return res.status(404).json({ success: false, message: 'جلسة المناداة غير موجودة أو انتهت' });
+  }
+
+  if (callData.ringPushInterval) {
+    clearInterval(callData.ringPushInterval);
   }
 
   if (action === 'accept') {

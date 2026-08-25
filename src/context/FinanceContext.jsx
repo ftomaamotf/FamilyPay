@@ -1908,6 +1908,37 @@ export const FinanceProvider = ({ children }) => {
     };
   }, [currentUser?.id, activeCall?.id, activeCall?.status, playIntercomRingtone, playWalkieTalkieChirp]);
 
+  // Continuous In-App Vibration & Telephone Ring Bell Loop on Incoming Call (لا ينقطع حتى يتم الرد)
+  useEffect(() => {
+    if (!incomingCall || incomingCall.status !== 'ringing') {
+      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
+        try { window.navigator.vibrate(0); } catch {}
+      }
+      return;
+    }
+
+    // Play ringing bell and vibrate immediately
+    playIntercomRingtone();
+    if (typeof window !== 'undefined' && window.navigator?.vibrate) {
+      try { window.navigator.vibrate([1000, 400, 1000, 400, 1000, 400]); } catch {}
+    }
+
+    // Repeat telephone ring sound and heavy vibration every 2.4s non-stop until answered or rejected
+    const callRingInterval = setInterval(() => {
+      playIntercomRingtone();
+      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
+        try { window.navigator.vibrate([1000, 400, 1000, 400, 1000, 400]); } catch {}
+      }
+    }, 2400);
+
+    return () => {
+      clearInterval(callRingInterval);
+      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
+        try { window.navigator.vibrate(0); } catch {}
+      }
+    };
+  }, [incomingCall?.id, incomingCall?.status, playIntercomRingtone]);
+
   const sendIntercomVoiceBurst = async ({ callId, audioData, duration }) => {
     const activeUser = currentUser || { id: 'guest', name: 'مستخدم' };
     try {
@@ -1927,7 +1958,7 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // Realtime High-Quality Voice Stream during connected call (Zero popup / Cyclic audio chunks)
+  // Realtime Ultra Low-Latency Voice Stream (480ms Rapid Packets / Zero lag)
   const liveCallStreamRef = useRef(null);
   const liveCallRecorderRef = useRef(null);
 
@@ -1965,7 +1996,7 @@ export const FinanceProvider = ({ children }) => {
             }
 
             try {
-              const rec = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+              const rec = new MediaRecorder(stream, mimeType ? { mimeType, audioBitsPerSecond: 28000 } : undefined);
               liveCallRecorderRef.current = rec;
 
               rec.ondataavailable = (e) => {
@@ -1982,23 +2013,23 @@ export const FinanceProvider = ({ children }) => {
                       sendIntercomVoiceBurst({
                         callId: activeCall.id,
                         audioData: reader.result,
-                        duration: 1.5
+                        duration: 0.5
                       });
                     }
                   };
                 }
                 if (isStreaming) {
-                  setTimeout(recordSlice, 100);
+                  setTimeout(recordSlice, 40);
                 }
               };
 
               rec.start();
               setTimeout(() => {
                 if (rec.state === 'recording') rec.stop();
-              }, 1400); // 1.4s voice slice
+              }, 480); // 480ms ultra-low latency voice packet
             } catch (err) {
               console.log('Recorder slice error:', err);
-              if (isStreaming) setTimeout(recordSlice, 1000);
+              if (isStreaming) setTimeout(recordSlice, 500);
             }
           };
 
@@ -2023,20 +2054,36 @@ export const FinanceProvider = ({ children }) => {
     }
   }, [activeCall?.id, activeCall?.status]);
 
-  // Play incoming voice burst with loudspeaker level & smooth playback
+  // Audio Queue for smooth, jitter-free ultra-low latency playback
+  const audioQueueRef = useRef([]);
+  const isAudioPlayingRef = useRef(false);
+
+  const playNextBurstInQueue = useCallback(() => {
+    if (audioQueueRef.current.length === 0) {
+      isAudioPlayingRef.current = false;
+      return;
+    }
+    isAudioPlayingRef.current = true;
+    const nextItem = audioQueueRef.current.shift();
+    try {
+      const audio = new Audio(nextItem);
+      audio.volume = isLoudspeakerOn ? 1.0 : 0.85;
+      audio.onended = () => playNextBurstInQueue();
+      audio.onerror = () => playNextBurstInQueue();
+      audio.play().catch(() => playNextBurstInQueue());
+    } catch {
+      playNextBurstInQueue();
+    }
+  }, [isLoudspeakerOn]);
+
   useEffect(() => {
     if (incomingVoiceBurst && incomingVoiceBurst.audioData && incomingVoiceBurst.senderId !== currentUser?.id) {
-      try {
-        const audio = new Audio(incomingVoiceBurst.audioData);
-        audio.volume = isLoudspeakerOn ? 1.0 : 0.8;
-        audio.play().catch((e) => {
-          console.log('Audio burst play note (browser autoplay policy):', e);
-        });
-      } catch (e) {
-        console.log('Burst audio play exception:', e);
+      audioQueueRef.current.push(incomingVoiceBurst.audioData);
+      if (!isAudioPlayingRef.current) {
+        playNextBurstInQueue();
       }
     }
-  }, [incomingVoiceBurst, isLoudspeakerOn, currentUser?.id]);
+  }, [incomingVoiceBurst, currentUser?.id, playNextBurstInQueue]);
 
   const markAllNotifsAsRead = () => {
     if (!currentUser) return;
