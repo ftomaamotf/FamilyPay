@@ -290,7 +290,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                         {b.name[0]}
                       </span>
                       <span className="truncate font-black">{b.name}</span>
-                      <span className="text-[10px] text-slate-400 font-mono">#{b.accountNumber}</span>
+                      <span className="text-[10px] text-slate-400 font-mono" dir="ltr">{b.bankAccountNumber}</span>
                     </button>
                   );
                 })}
@@ -303,14 +303,14 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                 <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
                   <span className="flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>رقم الحساب المصرفي المحفوظ للأخ ({selectedRecipient.name}):</span>
+                    <span>رقم البطاقة المصرفية للأخ ({selectedRecipient.name}):</span>
                   </span>
-                  <span className="text-emerald-600 font-bold">حساب #{selectedRecipient.accountNumber}</span>
+                  <span className="text-emerald-600 font-bold">ماستر كي / Qi Card</span>
                 </div>
 
                 <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs">
-                  <strong className="text-emerald-700 dark:text-emerald-300 text-sm font-black tracking-wide">
-                    {selectedRecipient.bankAccountNumber || selectedRecipient.accountNumber}
+                  <strong className="text-emerald-700 dark:text-emerald-300 text-sm font-black tracking-wider" dir="ltr">
+                    {selectedRecipient.bankAccountNumber}
                   </strong>
                   <button
                     type="button"
@@ -318,7 +318,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                     className="p-1 text-slate-400 hover:text-emerald-600 transition flex items-center gap-1 text-[10px] font-bold"
                   >
                     {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copied ? 'تم النسخ' : 'نسخ'}</span>
+                    <span>{copied ? 'تم النسخ' : 'نسخ رقم البطاقة'}</span>
                   </button>
                 </div>
               </div>

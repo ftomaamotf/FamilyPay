@@ -161,8 +161,8 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                           {req.brotherName}
                         </h4>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] text-slate-400 font-mono">
-                            #{req.brotherAccountNumber}
+                          <span className="text-[10px] text-slate-400 font-mono" dir="ltr">
+                            بطاقة: {req.bankAccountNumber}
                           </span>
                           <span className="text-[11px] px-2 py-0.5 rounded-lg bg-teal-100/70 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 font-extrabold border border-teal-300/60 dark:border-teal-800">
                             🏷️ السلعة: {req.fieldName || 'مصروف عام'}
@@ -240,7 +240,7 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                 تأكيد الموافقة وتحويل المبلغ 💸
               </h4>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                سيتم تحويل <strong>{Number(selectedReq.amount).toLocaleString()} {currency}</strong> إلى حساب (<strong>{selectedReq.brotherName}</strong>) - رقم الحساب: <strong className="font-mono text-emerald-600">#{selectedReq.brotherAccountNumber}</strong> (المصرفي: <strong className="font-mono text-emerald-600">{selectedReq.bankAccountNumber || selectedReq.brotherAccountNumber}</strong>) وخصمه من بطاقة الصندوق فوراً.
+                سيتم تحويل <strong>{Number(selectedReq.amount).toLocaleString()} {currency}</strong> إلى حساب (<strong>{selectedReq.brotherName}</strong>) - رقم البطاقة المصرفية: <strong className="font-mono text-emerald-600" dir="ltr">{selectedReq.bankAccountNumber}</strong> وخصمه من بطاقة الصندوق فوراً.
               </p>
             </div>
 

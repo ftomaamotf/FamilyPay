@@ -126,12 +126,12 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-4 text-xs">
           
-          {/* If multiple brothers, allow selecting brother strictly by account */}
+          {/* If multiple brothers, allow selecting brother strictly by bank card */}
           {brothers.length > 1 && (
             <div>
               <label className="block font-black text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1">
                 <User className="w-3.5 h-3.5 text-emerald-500" />
-                <span>اختيار الحساب المستلم (برقم الحساب) *:</span>
+                <span>اختيار المستلم (البطاقة المصرفية) *:</span>
               </label>
               <select
                 value={selectedRequesterId}
@@ -144,7 +144,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
               >
                 {brothers.map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.name} (رقم الحساب: #{b.accountNumber}) {b.isAdmin ? '👑 الأدمن' : ''}
+                    {b.name} (بطاقة: {b.bankAccountNumber}) {b.isAdmin ? '👑 الأدمن' : ''}
                   </option>
                 ))}
               </select>
@@ -164,15 +164,15 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
                 <span className="font-black text-slate-900 dark:text-white block">
                   {currentBrother?.name}
                 </span>
-                <span className="text-[10px] text-slate-400 font-mono">
-                  حساب رقم: #{currentBrother?.accountNumber}
+                <span className="text-[10px] text-slate-400 font-mono" dir="ltr">
+                  بطاقة: {currentBrother?.bankAccountNumber}
                 </span>
               </div>
             </div>
             <div className="text-left">
-              <span className="text-[10px] text-slate-400 block font-bold">الحساب المصرفي المستلم:</span>
-              <span className="text-xs font-black text-slate-700 dark:text-slate-300 font-mono" dir="ltr">
-                {currentBrother?.bankAccountNumber || currentBrother?.accountNumber}
+              <span className="text-[10px] text-slate-400 block font-bold">رقم البطاقة المصرفية:</span>
+              <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 font-mono" dir="ltr">
+                {currentBrother?.bankAccountNumber}
               </span>
             </div>
           </div>

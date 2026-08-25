@@ -108,7 +108,7 @@ export const BrothersCards = ({
     const acc = brother.bankAccountNumber || brother.accountNumber;
     navigator.clipboard.writeText(acc);
     setCopiedId(brother.id);
-    setCopiedToast(`تم نسخ رقم حساب ${brother.name}: ${acc}`);
+    setCopiedToast(`تم نسخ رقم البطاقة المصرفية لـ ${brother.name}: ${acc}`);
     if (window.navigator?.vibrate) {
       window.navigator.vibrate(50);
     }
@@ -408,6 +408,7 @@ export const BrothersCards = ({
                         </div>
                       )}
                       <span>• {selectedBrother.bankName || 'ماستر كي / Qi Card'}</span>
+                      <span>• رقم البطاقة: <strong className="font-mono text-emerald-600 dark:text-emerald-400" dir="ltr">{selectedBrother.bankAccountNumber}</strong></span>
                     </div>
                   </div>
                 </div>
