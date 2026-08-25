@@ -276,15 +276,15 @@ export const FinanceProvider = ({ children }) => {
       osc2.start(now + 0.08);
       osc2.stop(now + 0.32);
 
-      if (window.navigator?.vibrate) {
-        window.navigator.vibrate([70, 40, 70]);
+      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
+        window.navigator.vibrate([300, 150, 300]);
       }
     } catch (e) {
       console.log('Message sound error:', e);
     }
   }, []);
 
-  // Intercom Walkie-Talkie Ringtone (Loud Radio Ring / Buzzer)
+  // Intercom Walkie-Talkie Ringtone (Loud Radio Ring & Strong Vibration)
   const playIntercomRingtone = useCallback(() => {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -296,7 +296,7 @@ export const FinanceProvider = ({ children }) => {
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(784, now + t); // G5
         osc.frequency.setValueAtTime(987.77, now + t + 0.09); // B5
-        gain.gain.setValueAtTime(0.35, now + t);
+        gain.gain.setValueAtTime(0.4, now + t);
         gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.18);
         osc.connect(gain);
         gain.connect(ctx.destination);
@@ -304,8 +304,8 @@ export const FinanceProvider = ({ children }) => {
         osc.stop(now + t + 0.18);
       });
 
-      if (window.navigator?.vibrate) {
-        window.navigator.vibrate([200, 100, 200, 100, 300]);
+      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
+        window.navigator.vibrate([1000, 400, 1000, 400, 1000]);
       }
     } catch (e) {
       console.log('Intercom ringtone error:', e);
@@ -328,12 +328,16 @@ export const FinanceProvider = ({ children }) => {
       gain.connect(ctx.destination);
       osc.start(now);
       osc.stop(now + 0.1);
+
+      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
+        window.navigator.vibrate([150, 80, 150]);
+      }
     } catch (e) {
       console.log('Chirp sound error:', e);
     }
   }, []);
 
-  // Audio Chime Player for transfers & alerts
+  // Audio Chime Player for transfers & alerts with Strong Vibration
   const playChimeSound = useCallback(() => {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -342,14 +346,18 @@ export const FinanceProvider = ({ children }) => {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
       osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); // A5
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.setValueAtTime(0.35, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + 0.4);
+
+      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
+        window.navigator.vibrate([600, 200, 600, 200, 600]);
+      }
     } catch (e) {
-      console.log('Audio not allowed yet:', e);
+      console.log('Chime sound error:', e);
     }
   }, []);
 
@@ -694,6 +702,30 @@ export const FinanceProvider = ({ children }) => {
     }, 2000);
     return () => clearInterval(interval);
   }, [fetchGuestRequests, fetchFundRequests, currentUser, incomingCall, activeCall, playIntercomRingtone]);
+
+  // Continuous Ringing & Strong Vibration for Incoming Calls until answered or rejected
+  useEffect(() => {
+    let callRingtoneInterval = null;
+    if (incomingCall && (!activeCall || activeCall.status !== 'connected')) {
+      playIntercomRingtone();
+      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
+        window.navigator.vibrate([1000, 400, 1000, 400, 1000]);
+      }
+      callRingtoneInterval = setInterval(() => {
+        playIntercomRingtone();
+        if (typeof window !== 'undefined' && window.navigator?.vibrate) {
+          window.navigator.vibrate([1000, 400, 1000, 400, 1000]);
+        }
+      }, 2500);
+    }
+
+    return () => {
+      if (callRingtoneInterval) clearInterval(callRingtoneInterval);
+      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
+        window.navigator.vibrate(0);
+      }
+    };
+  }, [incomingCall, activeCall?.status, playIntercomRingtone]);
 
   // Active Sending Card
   const sendingCard = useMemo(() => {
@@ -1924,6 +1956,10 @@ export const FinanceProvider = ({ children }) => {
 
   const sendTestPush = async () => {
     try {
+      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
+        window.navigator.vibrate([1000, 300, 1000, 300, 1000]);
+      }
+      playIntercomRingtone();
       const res = await fetch(`${API_BASE}/api/push/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
