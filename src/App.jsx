@@ -126,7 +126,13 @@ function MainApp() {
         onOpenRequestMoney={(brother, field) => handleOpenRequestMoney(brother, field)}
         onOpenPendingRequests={() => setPendingRequestsModalOpen(true)}
         onOpenChat={handleOpenChat}
-        onLogout={() => setCurrentUser(null)}
+        onLogout={() => {
+          try {
+            localStorage.removeItem('bait_finance_current_user');
+            localStorage.removeItem('bait_finance_guest_account');
+          } catch {}
+          setCurrentUser(null);
+        }}
       />
 
       {/* PWA Mobile Banner */}

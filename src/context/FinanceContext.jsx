@@ -970,6 +970,16 @@ export const FinanceProvider = ({ children }) => {
     return { success: true, user: guestUser };
   };
 
+  // 1.2 Logout user completely
+  const logout = () => {
+    try {
+      localStorage.removeItem('bait_finance_current_user');
+      localStorage.removeItem('bait_finance_guest_account');
+      sessionStorage.clear();
+    } catch {}
+    setCurrentUser(null);
+  };
+
   // 2. Switch Brother locally
   const switchBrotherProfile = (brotherId) => {
     const found = brothers.find((b) => b.id === brotherId);
@@ -1950,6 +1960,7 @@ export const FinanceProvider = ({ children }) => {
         updateSettings,
         loginBrother,
         loginAsGuest,
+        logout,
         resetPasswordWithPhone,
         createWhatsAppInvite,
         acceptWhatsAppInvite,
