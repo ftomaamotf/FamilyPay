@@ -1315,6 +1315,44 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
+  // 4.6 Change Password for Current User or Brother (via Settings)
+  const changeUserPassword = async ({ targetBrotherId, newPassword, requestingUserId }) => {
+    const targetId = targetBrotherId || currentUser?.id;
+    const reqId = requestingUserId || currentUser?.id;
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetBrotherId: targetId,
+          newPassword: String(newPassword).trim(),
+          requestingUserId: reqId
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.brothers) syncAndMergeBrothers(data.brothers);
+        if (currentUser && currentUser.id === targetId) {
+          const updated = { ...currentUser, password: String(newPassword).trim() };
+          setCurrentUser(updated);
+          saveToStorage('bait_finance_current_user', updated);
+        }
+      }
+      return data;
+    } catch {
+      // Local fallback
+      setBrothers((prev) =>
+        prev.map((b) => (b.id === targetId ? { ...b, password: String(newPassword).trim() } : b))
+      );
+      if (currentUser && currentUser.id === targetId) {
+        const updated = { ...currentUser, password: String(newPassword).trim() };
+        setCurrentUser(updated);
+        saveToStorage('bait_finance_current_user', updated);
+      }
+      return { success: true, message: 'تم تحديث كلمة المرور بنجاح' };
+    }
+  };
+
   // 5. Send Transfer (Direct without password + Commodity Pinning)
   const executeTransfer = async ({ recipientId, amount, fieldId, reason, commodityName, customFieldName }) => {
     if (isCardFrozen) {
@@ -2314,6 +2352,7 @@ export const FinanceProvider = ({ children }) => {
         fundPin,
         toggleCardFreeze,
         changeFundPin,
+        changeUserPassword,
         isBalanceHiddenByAdmin,
         toggleAdminBalanceVisibility,
         addBankCard,

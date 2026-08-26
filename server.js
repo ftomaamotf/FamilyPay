@@ -352,6 +352,40 @@ app.post('/api/auth/reset-password', (req, res) => {
   });
 });
 
+// 2.1.1 Direct Change Password for Current User or Brother (via Settings)
+app.post('/api/auth/change-password', (req, res) => {
+  const { targetBrotherId, newPassword, requestingUserId, oldPassword } = req.body;
+  if (!targetBrotherId || !newPassword || !String(newPassword).trim()) {
+    return res.status(400).json({ success: false, message: 'يرجى إدخال كلمة مرور جديدة صحيحة' });
+  }
+
+  const db = readDB();
+  const target = db.brothers.find((b) => b.id === targetBrotherId);
+  if (!target) {
+    return res.status(404).json({ success: false, message: 'المستخدم المطلوب غير موجود' });
+  }
+
+  const requester = db.brothers.find((b) => b.id === requestingUserId) || { id: requestingUserId };
+  const isRequesterAdmin = requester.id === db.activeAdminId || requester.isAdmin;
+  const isSelf = requester.id === target.id;
+
+  if (!isSelf && !isRequesterAdmin) {
+    return res.status(403).json({ success: false, message: '⚠️ ليس لديك صلاحية لتغيير كلمة مرور هذا المستخدم' });
+  }
+
+  target.password = String(newPassword).trim();
+  saveDB(db);
+
+  broadcastEvent('BROTHERS_UPDATED', { brothers: db.brothers });
+
+  res.json({
+    success: true,
+    message: `✅ تم تحديث وتغيير كلمة المرور لـ (${target.name}) بنجاح!`,
+    brother: target,
+    brothers: db.brothers
+  });
+});
+
 // 2.2 Create WhatsApp Invitation (Admin generates invite with secret PIN)
 app.post('/api/invitations', (req, res) => {
   const { brotherName, phone, secretPin, currentAdminId } = req.body;
@@ -1672,18 +1706,6 @@ app.post('/api/requests', (req, res) => {
 
   if (!brother) {
     return res.status(404).json({ success: false, message: '⚠️ لم يتم العثور على صاحب الحساب برقم الحساب المحدد' });
-  }
-
-  // 🔒 Verify User's Account Password (إجباري لتأكيد هوية صاحب الحساب)
-  const providedPass = String(password || req.body.userPassword || '').trim();
-  if (brother.password) {
-    const expectedPass = String(brother.password).trim();
-    if (!providedPass || providedPass !== expectedPass) {
-      return res.status(401).json({
-        success: false,
-        message: '❌ كلمة المرور الخاصة بحسابك غير صحيحة! يرجى كتابة كلمة المرور الصحيحة لتأكيد إرسال الطلب.'
-      });
-    }
   }
 
   // Auto-detect and match commodity/field based on reason and explicit fieldId / commodityName

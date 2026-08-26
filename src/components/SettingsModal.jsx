@@ -56,6 +56,7 @@ export const SettingsModal = ({
     toggleCardFreeze,
     fundPin,
     changeFundPin,
+    changeUserPassword,
     isBalanceHiddenByAdmin,
     toggleAdminBalanceVisibility,
     isPushSubscribed,
@@ -64,6 +65,22 @@ export const SettingsModal = ({
   } = useFinance();
 
   const [activeTab, setActiveTab] = useState('cards'); // 'cards' | 'permissions' | 'security' | 'general'
+
+  // User Password Management State (تغيير كلمة المرور للمستخدم والأدمن)
+  const [myNewPassword, setMyNewPassword] = useState('');
+  const [myConfirmPassword, setMyConfirmPassword] = useState('');
+  const [showMyPassword, setShowMyPassword] = useState(false);
+  const [myPasswordLoading, setMyPasswordLoading] = useState(false);
+  const [myPasswordMsg, setMyPasswordMsg] = useState('');
+  const [myPasswordSuccess, setMyPasswordSuccess] = useState(false);
+
+  // Admin Brother Password Management State (تغيير كلمة مرور أي مستخدم من قبل الأدمن)
+  const [adminTargetBrotherId, setAdminTargetBrotherId] = useState('');
+  const [adminNewPassword, setAdminNewPassword] = useState('');
+  const [showAdminNewPassword, setShowAdminNewPassword] = useState(false);
+  const [adminPasswordLoading, setAdminPasswordLoading] = useState(false);
+  const [adminPasswordMsg, setAdminPasswordMsg] = useState('');
+  const [adminPasswordSuccess, setAdminPasswordSuccess] = useState(false);
 
   // Admin Delegation State
   const [selectedTargetAdminId, setSelectedTargetAdminId] = useState('');
@@ -228,6 +245,69 @@ export const SettingsModal = ({
     }
   };
 
+  // Change My Password
+  const handleUpdateMyPassword = async (e) => {
+    e.preventDefault();
+    if (!myNewPassword.trim() || myNewPassword.trim().length < 3) {
+      setMyPasswordMsg('⚠️ يرجى إدخال كلمة مرور جديدة مكونة من 3 خانات على الأقل');
+      setMyPasswordSuccess(false);
+      return;
+    }
+    if (myConfirmPassword && myNewPassword.trim() !== myConfirmPassword.trim()) {
+      setMyPasswordMsg('⚠️ كلمتا المرور غير متطابقتين');
+      setMyPasswordSuccess(false);
+      return;
+    }
+    setMyPasswordLoading(true);
+    setMyPasswordMsg('');
+    const res = await changeUserPassword({
+      targetBrotherId: currentUser?.id,
+      newPassword: myNewPassword.trim(),
+      requestingUserId: currentUser?.id
+    });
+    setMyPasswordLoading(false);
+    if (res.success) {
+      setMyPasswordSuccess(true);
+      setMyPasswordMsg('✅ تم تغيير وتحديث كلمة المرور لحسابك بنجاح!');
+      setMyNewPassword('');
+      setMyConfirmPassword('');
+    } else {
+      setMyPasswordSuccess(false);
+      setMyPasswordMsg(res.message || '❌ حدث خطأ أثناء تغيير كلمة المرور');
+    }
+  };
+
+  // Admin Change Any Brother's Password
+  const handleAdminChangeBrotherPassword = async (e) => {
+    e.preventDefault();
+    if (!adminTargetBrotherId) {
+      setAdminPasswordMsg('⚠️ يرجى اختيار المستخدم المراد تغيير كلمة مروره');
+      setAdminPasswordSuccess(false);
+      return;
+    }
+    if (!adminNewPassword.trim() || adminNewPassword.trim().length < 3) {
+      setAdminPasswordMsg('⚠️ يرجى إدخال كلمة مرور مكونة من 3 خانات على الأقل');
+      setAdminPasswordSuccess(false);
+      return;
+    }
+    setAdminPasswordLoading(true);
+    setAdminPasswordMsg('');
+    const res = await changeUserPassword({
+      targetBrotherId: adminTargetBrotherId,
+      newPassword: adminNewPassword.trim(),
+      requestingUserId: currentUser?.id
+    });
+    setAdminPasswordLoading(false);
+    if (res.success) {
+      setAdminPasswordSuccess(true);
+      setAdminPasswordMsg(res.message || '✅ تم تعيين كلمة المرور الجديدة للمستخدم بنجاح!');
+      setAdminNewPassword('');
+    } else {
+      setAdminPasswordSuccess(false);
+      setAdminPasswordMsg(res.message || '❌ حدث خطأ في تحديث كلمة المرور');
+    }
+  };
+
   // Change Security PIN
   const handleChangePinSubmit = async (e) => {
     e.preventDefault();
@@ -318,8 +398,8 @@ export const SettingsModal = ({
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
-            <ShieldCheck className="w-4 h-4 text-blue-500" />
-            <span>حماية الصندوق</span>
+            <KeyRound className="w-4 h-4 text-amber-500" />
+            <span>الأمان وكلمات المرور 🔑</span>
           </button>
 
           <button
@@ -438,11 +518,163 @@ export const SettingsModal = ({
             </div>
           )}
 
-          {/* TAB 2: SECURITY & PIN (حماية وأمان الصندوق) */}
+          {/* TAB 2: SECURITY & PASSWORDS (كلمات المرور وحماية الصندوق) */}
           {activeTab === 'security' && (
             <div className="space-y-5">
               
-              {/* Card Freeze / Unfreeze Toggle */}
+              {/* 1. CHANGE CURRENT USER'S PASSWORD (تغيير كلمة المرور الخاصة بحسابي) */}
+              <form onSubmit={handleUpdateMyPassword} className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-3.5 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                    <KeyRound className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-sm text-slate-900 dark:text-white">
+                      تغيير كلمة المرور الخاصة بحسابك 🔑
+                    </h4>
+                    <p className="text-[11px] text-slate-400">
+                      الحساب الحالي: <span className="font-bold text-slate-700 dark:text-slate-200">{currentUser?.name || 'مستخدم'}</span> (#{currentUser?.accountNumber || '---'})
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 pt-1">
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 text-[11px]">
+                      كلمة المرور الجديدة:
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type={showMyPassword ? 'text' : 'password'}
+                        required
+                        value={myNewPassword}
+                        onChange={(e) => setMyNewPassword(e.target.value)}
+                        placeholder="أدخل كلمة مرور جديدة (مثال: 1988 أو 123)..."
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pr-9 pl-9 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono font-bold"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowMyPassword(!showMyPassword)}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                      >
+                        {showMyPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 text-[11px]">
+                      تأكيد كلمة المرور الجديدة:
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type={showMyPassword ? 'text' : 'password'}
+                        value={myConfirmPassword}
+                        onChange={(e) => setMyConfirmPassword(e.target.value)}
+                        placeholder="أعد كتابة كلمة المرور للتأكيد..."
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pr-9 pl-3 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={myPasswordLoading || !myNewPassword.trim()}
+                    className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white font-black text-xs rounded-xl shadow-md transition active:scale-98 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>{myPasswordLoading ? 'جاري الحفظ...' : 'حفظ وتحديث كلمة المرور 💾'}</span>
+                  </button>
+
+                  {myPasswordMsg && (
+                    <div className={`p-2.5 rounded-xl text-xs font-bold text-center ${myPasswordSuccess ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'}`}>
+                      {myPasswordMsg}
+                    </div>
+                  )}
+                </div>
+              </form>
+
+              {/* 2. ADMIN CHANGE ANY USER'S PASSWORD (صلاحية الأدمن لتغيير كلمة مرور أي مستخدم) */}
+              {isCurrentAdminUser && (
+                <form onSubmit={handleAdminChangeBrotherPassword} className="p-4 rounded-3xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 space-y-3.5 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                      <Crown className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-sm text-slate-900 dark:text-white">
+                        تغيير كلمة مرور أي مستخدم (صلاحية الأدمن) 👑
+                      </h4>
+                      <p className="text-[11px] text-slate-400">
+                        يمكنك كأدمن تعيين أو إعادة ضبط كلمة المرور لأي أخ أو مستخدم مسجل
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2.5 pt-1">
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 text-[11px]">
+                        اختر المستخدم:
+                      </label>
+                      <select
+                        value={adminTargetBrotherId}
+                        onChange={(e) => setAdminTargetBrotherId(e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-amber-500 font-bold"
+                      >
+                        <option value="">-- اختر المستخدم المراد تعديل كلمة مروره --</option>
+                        {brothers.map((b) => (
+                          <option key={b.id} value={b.id}>
+                            {b.name} (حساب: #{b.accountNumber}) {b.id === activeAdminId ? '👑 [الأدمن الحالي]' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 text-[11px]">
+                        كلمة المرور الجديدة لهذا المستخدم:
+                      </label>
+                      <div className="relative">
+                        <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type={showAdminNewPassword ? 'text' : 'password'}
+                          required
+                          value={adminNewPassword}
+                          onChange={(e) => setAdminNewPassword(e.target.value)}
+                          placeholder="أدخل كلمة المرور الجديدة للمستخدم..."
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pr-9 pl-9 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-amber-500 font-mono font-bold"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowAdminNewPassword(!showAdminNewPassword)}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                        >
+                          {showAdminNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={adminPasswordLoading || !adminTargetBrotherId || !adminNewPassword.trim()}
+                      className="w-full py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 text-white font-black text-xs rounded-xl shadow-md transition active:scale-98 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    >
+                      <Crown className="w-4 h-4 text-amber-200" />
+                      <span>{adminPasswordLoading ? 'جاري التحديث...' : 'تعيين كلمة المرور الجديدة للمستخدم ⚡'}</span>
+                    </button>
+
+                    {adminPasswordMsg && (
+                      <div className={`p-2.5 rounded-xl text-xs font-bold text-center ${adminPasswordSuccess ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'}`}>
+                        {adminPasswordMsg}
+                      </div>
+                    )}
+                  </div>
+                </form>
+              )}
+
+              {/* 3. Card Freeze / Unfreeze Toggle */}
               <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <div className="space-y-0.5">
                   <span className="font-black text-slate-900 dark:text-white block">
@@ -470,7 +702,7 @@ export const SettingsModal = ({
                 )}
               </div>
 
-              {/* Change Fund PIN Form */}
+              {/* 4. Change Fund PIN Form */}
               {isCurrentAdminUser && (
                 <form onSubmit={handleChangePinSubmit} className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-3">
                   <div className="flex items-center gap-2">
