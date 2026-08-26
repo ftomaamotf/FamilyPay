@@ -1324,6 +1324,153 @@ app.put('/api/brothers/:brotherId/fields', (req, res) => {
   });
 });
 
+// 5.5 Admin: Adjust Commodity Price (Correct mistakes + Automatically refund/deduct from Fund Card)
+app.post('/api/brothers/:brotherId/fields/:fieldId/adjust-price', (req, res) => {
+  const { brotherId, fieldId } = req.params;
+  const { newPrice, reason, requestingBrotherId } = req.body;
+  const db = readDB();
+
+  // Admin-only verification
+  const requester = db.brothers.find((b) => b.id === requestingBrotherId) || { id: requestingBrotherId };
+  const isReqAdmin = requester.id === db.activeAdminId || requester.isAdmin || !requestingBrotherId;
+  if (!isReqAdmin) {
+    return res.status(403).json({ success: false, message: '⚠️ صلاحية تعديل الأسعار متاحة حصرياً للأدمن فقط' });
+  }
+
+  const brother = db.brothers.find((b) => b.id === brotherId);
+  if (!brother) {
+    return res.status(404).json({ success: false, message: 'المستخدم غير موجود' });
+  }
+
+  if (!brother.approvedFields) brother.approvedFields = [];
+  const field = brother.approvedFields.find((f) => f.id === fieldId);
+  if (!field) {
+    return res.status(404).json({ success: false, message: 'السلعة المستهدفة غير موجودة' });
+  }
+
+  const numNewPrice = Number(newPrice);
+  if (isNaN(numNewPrice) || numNewPrice < 0) {
+    return res.status(400).json({ success: false, message: 'يرجى إدخال سعر صحيح أكبر من أو يساوي الصفر' });
+  }
+
+  if (!reason || !reason.trim()) {
+    return res.status(400).json({ success: false, message: 'يرجى كتابة سبب وملاحظة تعديل السعر إجبارياً' });
+  }
+
+  // Calculate current spent for this commodity
+  const normField = normalizeArabicText(field.name);
+  const matchingTransfers = (db.transfers || []).filter((t) => {
+    const isForBrother = String(t.recipientId) === String(brother.id) ||
+      (brother.bankAccountNumber && String(t.recipientAccountNumber) === String(brother.bankAccountNumber)) ||
+      (brother.accountNumber && String(t.accountNumber) === String(brother.accountNumber));
+    if (!isForBrother) return false;
+    if (t.fieldId && String(t.fieldId) === String(field.id)) return true;
+    const normT = normalizeArabicText(t.fieldName || t.reason);
+    return normT && normField && (normT === normField || normT.includes(normField) || normField.includes(normT));
+  });
+
+  const transfersTotal = matchingTransfers.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+  const currentPrice = transfersTotal > 0 ? transfersTotal : Number(field.spent || field.limit || 0);
+
+  const diff = numNewPrice - currentPrice;
+  if (diff === 0) {
+    return res.status(400).json({ success: false, message: 'لم يتم تغيير السعر، السعر الجديد يطابق السعر الحالي' });
+  }
+
+  // Sending Card balance update
+  const sendingCard = db.bankCards.find((c) => c.id === db.sendingCardId) || db.bankCards.find((c) => c.isSendingCard) || db.bankCards[0];
+  if (diff > 0 && sendingCard && sendingCard.balance < diff) {
+    return res.status(400).json({
+      success: false,
+      message: `رصيد بطاقة الصندوق (${sendingCard.balance} ${db.currency.symbol}) غير كافٍ لزيادة السعر بمقدار (${diff} ${db.currency.symbol})`
+    });
+  }
+
+  if (sendingCard) {
+    // diff < 0: sendingCard.balance increases (Refund to fund: "ترجع 5 إلى الصندوق")
+    // diff > 0: sendingCard.balance decreases (Deduction from fund)
+    sendingCard.balance = Math.max(0, sendingCard.balance - diff);
+    sendingCard.lastUpdated = new Date().toISOString();
+  }
+
+  // Update field spent and limit
+  field.spent = numNewPrice;
+  if (field.limit !== undefined) {
+    field.limit = Math.max(Number(field.limit || 0), numNewPrice);
+  }
+
+  // Reconcile transfers so that dynamicFieldSpent equals exactly numNewPrice
+  if (matchingTransfers.length > 0) {
+    if (matchingTransfers.length === 1) {
+      matchingTransfers[0].amount = numNewPrice;
+      matchingTransfers[0].reason = `[تعديل السعر: ${reason.trim()}] ${matchingTransfers[0].reason || ''}`.trim();
+    } else {
+      // Multiple transfers: adjust the most recent one
+      const latestTx = matchingTransfers[0];
+      latestTx.amount = Math.max(0, (Number(latestTx.amount) || 0) + diff);
+      latestTx.reason = `[تعديل السعر: ${reason.trim()}] ${latestTx.reason || ''}`.trim();
+    }
+  } else if (numNewPrice > 0) {
+    // If no existing transfer, create an adjustment transfer
+    const adjTransfer = {
+      id: 'tx-' + Date.now(),
+      senderId: db.activeAdminId,
+      senderName: 'الأدمن (تعديل سعر سلعة)',
+      recipientId: brother.id,
+      recipientName: brother.name,
+      recipientAccountNumber: brother.bankAccountNumber || brother.accountNumber,
+      accountNumber: brother.accountNumber,
+      amount: numNewPrice,
+      fieldId: field.id,
+      fieldName: field.name,
+      reason: `[تعديل سعر السلعة] ${reason.trim()}`,
+      sendingCardId: sendingCard ? sendingCard.id : 'c-qi',
+      sendingCardName: sendingCard ? sendingCard.name : 'بطاقة الصندوق',
+      isSecurityVerified: true,
+      timestamp: new Date().toISOString(),
+      date: new Date().toISOString().split('T')[0]
+    };
+    if (!db.transfers) db.transfers = [];
+    db.transfers.unshift(adjTransfer);
+  }
+
+  // Notification & Audit Trail
+  const notif = {
+    id: 'notif-' + Date.now(),
+    title: `✏️ تم تعديل سعر سلعة [${field.name}]`,
+    message: diff < 0
+      ? `قام الأدمن بتعديل وتخفيض سعر [${field.name}] للأخ (${brother.name}) من (${currentPrice.toLocaleString()} ${db.currency.symbol}) إلى (${numNewPrice.toLocaleString()} ${db.currency.symbol}). وتم استرجاع وإيداع (${Math.abs(diff).toLocaleString()} ${db.currency.symbol}) إلى بطاقة الصندوق بنجاح! السبب: ${reason.trim()}`
+      : `قام الأدمن بتعديل وزيادة سعر [${field.name}] للأخ (${brother.name}) من (${currentPrice.toLocaleString()} ${db.currency.symbol}) إلى (${numNewPrice.toLocaleString()} ${db.currency.symbol}). وتم خصم (${diff.toLocaleString()} ${db.currency.symbol}) من بطاقة الصندوق. السبب: ${reason.trim()}`,
+    timestamp: new Date().toISOString(),
+    readBy: []
+  };
+
+  if (!db.notifications) db.notifications = [];
+  db.notifications.unshift(notif);
+  saveDB(db);
+
+  // Broadcast all updates across all devices
+  broadcastEvent('BROTHERS_UPDATED', { brothers: db.brothers });
+  broadcastEvent('BANK_CARDS_UPDATED', { bankCards: db.bankCards });
+  broadcastEvent('TRANSFERS_UPDATED', { transfers: db.transfers });
+  broadcastEvent('NEW_TRANSFER_ALERT', { notif });
+
+  const successMsg = diff < 0
+    ? `✅ تم تعديل السعر إلى (${numNewPrice.toLocaleString()} ${db.currency.symbol}) واسترجاع مبلغ (${Math.abs(diff).toLocaleString()} ${db.currency.symbol}) إلى بطاقة الصندوق بنجاح!`
+    : `✅ تم تعديل السعر إلى (${numNewPrice.toLocaleString()} ${db.currency.symbol}) وخصم فارق (${diff.toLocaleString()} ${db.currency.symbol}) من بطاقة الصندوق بنجاح!`;
+
+  res.json({
+    success: true,
+    message: successMsg,
+    brother,
+    brothers: db.brothers,
+    bankCards: db.bankCards,
+    transfers: db.transfers,
+    diff,
+    refundAmount: Math.abs(diff)
+  });
+});
+
 // Arabic text normalizer for accurate commodity matching without duplicates
 function normalizeArabicText(text) {
   if (!text) return '';

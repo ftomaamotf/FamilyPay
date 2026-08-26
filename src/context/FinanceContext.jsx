@@ -1356,6 +1356,67 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
+  // 4.7 Admin: Adjust Commodity Price (Correct mistakes & automatically refund/deduct from Fund Card)
+  const adjustCommodityPrice = async ({ brotherId, fieldId, fieldName, oldPrice, newPrice, reason }) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/brothers/${brotherId}/fields/${fieldId}/adjust-price`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          newPrice: Number(newPrice),
+          reason: String(reason).trim(),
+          requestingBrotherId: currentUser?.id
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.brothers) syncAndMergeBrothers(data.brothers);
+        if (data.bankCards) setBankCards(data.bankCards);
+        if (data.transfers) setTransfers(data.transfers);
+      }
+      return data;
+    } catch {
+      // Local fallback
+      const numNew = Number(newPrice);
+      const numOld = Number(oldPrice || 0);
+      const diff = numNew - numOld;
+
+      setBrothers((prev) =>
+        prev.map((b) => {
+          if (b.id !== brotherId) return b;
+          const fields = (b.approvedFields || []).map((f) =>
+            f.id === fieldId ? { ...f, spent: numNew, limit: Math.max(Number(f.limit || 0), numNew) } : f
+          );
+          return { ...b, approvedFields: fields };
+        })
+      );
+
+      setBankCards((prev) =>
+        prev.map((c) => (c.isSendingCard ? { ...c, balance: Math.max(0, (c.balance || 0) - diff) } : c))
+      );
+
+      setTransfers((prev) => {
+        const idx = prev.findIndex((t) => t.recipientId === brotherId && (t.fieldId === fieldId || t.fieldName === fieldName));
+        if (idx !== -1) {
+          const updated = [...prev];
+          updated[idx] = {
+            ...updated[idx],
+            amount: numNew,
+            reason: `[تعديل السعر: ${reason}] ${updated[idx].reason || ''}`.trim()
+          };
+          return updated;
+        }
+        return prev;
+      });
+
+      const msg = diff < 0
+        ? `✅ تم تعديل السعر واسترجاع (${Math.abs(diff).toLocaleString()} ${settings.currencySymbol}) إلى بطاقة الصندوق بنجاح!`
+        : `✅ تم تعديل السعر وخصم (${diff.toLocaleString()} ${settings.currencySymbol}) من بطاقة الصندوق بنجاح!`;
+
+      return { success: true, message: msg };
+    }
+  };
+
   // 5. Send Transfer (Direct without password + Commodity Pinning)
   const executeTransfer = async ({ recipientId, amount, fieldId, reason, commodityName, customFieldName }) => {
     if (isCardFrozen) {
@@ -2366,6 +2427,7 @@ export const FinanceProvider = ({ children }) => {
         updateBrother,
         deleteBrother,
         updateBrotherFields,
+        adjustCommodityPrice,
         createMonthlyArchive,
         deleteArchiveProtected,
         markAllNotifsAsRead,

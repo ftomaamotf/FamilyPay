@@ -29,6 +29,7 @@ import {
   X
 } from 'lucide-react';
 import { EditTransferModal } from './EditTransferModal';
+import { AdjustCommodityPriceModal } from './AdjustCommodityPriceModal';
 
 // 🌈 Curated Vibrant Color Themes for Distinct Brother Circles
 export const CIRCLE_COLOR_PALETTES = [
@@ -217,6 +218,7 @@ export const BrothersCards = ({
   const [selectedBrotherId, setSelectedBrotherId] = useState(null);
   const [editingTransfer, setEditingTransfer] = useState(null);
   const [inspectedCommodity, setInspectedCommodity] = useState(null);
+  const [adjustingCommodity, setAdjustingCommodity] = useState(null);
   const pressTimerRef = React.useRef(null);
   const currency = settings.currencySymbol;
 
@@ -747,13 +749,35 @@ export const BrothersCards = ({
                         {effectiveCount}
                       </div>
 
-                      <span className={`text-xs sm:text-sm font-black font-mono px-3 py-1.5 rounded-xl shadow-xs border ${
-                        isPending
-                          ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
-                          : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
-                      }`}>
-                        {formatMoney(priceAmount, currency)}
-                      </span>
+                      {/* Price Badge (Clickable for Admin to Adjust Price & Refund/Deduct) */}
+                      <button
+                        type="button"
+                        disabled={!isCurrentAdmin}
+                        onClick={() => {
+                          if (isCurrentAdmin) {
+                            setAdjustingCommodity({
+                              field: f,
+                              brother: selectedBrother,
+                              currentPrice: priceAmount
+                            });
+                          }
+                        }}
+                        className={`text-xs sm:text-sm font-black font-mono px-3 py-1.5 rounded-xl shadow-xs border transition flex items-center gap-1.5 select-none ${
+                          isCurrentAdmin
+                            ? 'cursor-pointer hover:scale-105 hover:ring-2 hover:ring-emerald-400 active:scale-95 group/price'
+                            : 'cursor-default'
+                        } ${
+                          isPending
+                            ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                            : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
+                        }`}
+                        title={isCurrentAdmin ? 'اضغط لتعديل السعر واسترجاع أو خصم الفارق من الصندوق ✏️ (صلاحية الأدمن 👑)' : undefined}
+                      >
+                        {isCurrentAdmin && (
+                          <Edit3 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 opacity-60 group-hover/price:opacity-100 group-hover/price:scale-110 transition shrink-0" />
+                        )}
+                        <span>{formatMoney(priceAmount, currency)}</span>
+                      </button>
 
                       {/* Admin Delete Commodity */}
                       {isCurrentAdmin && (
@@ -1136,6 +1160,17 @@ export const BrothersCards = ({
           </div>
         );
       })()}
+
+      {/* Admin Adjust Commodity Price Modal */}
+      {adjustingCommodity && (
+        <AdjustCommodityPriceModal
+          isOpen={Boolean(adjustingCommodity)}
+          onClose={() => setAdjustingCommodity(null)}
+          brother={adjustingCommodity.brother}
+          field={adjustingCommodity.field}
+          currentPrice={adjustingCommodity.currentPrice}
+        />
+      )}
 
     </div>
 
