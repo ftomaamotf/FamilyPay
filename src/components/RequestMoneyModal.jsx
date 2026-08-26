@@ -63,6 +63,10 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       setErrorMsg('يرجى كتابة اسم السلعة المطلوبة');
       return;
     }
+    if (!reason.trim() || reason.trim().length < 2) {
+      setErrorMsg('⚠️ يرجى كتابة ملاحظات وتفاصيل إضافية عن سبب الصرف (إجباري قبل الإرسال)');
+      return;
+    }
 
     setLoading(true);
     setErrorMsg('');
@@ -80,7 +84,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       amount: numAmount,
       fieldId: commodityName.trim() ? null : (fieldId || null),
       commodityName: finalCommodity,
-      reason: reason.trim() || finalCommodity
+      reason: reason.trim()
     });
 
     setLoading(false);
@@ -279,19 +283,25 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             </div>
           </div>
 
-          {/* 3. Reason / Notes Input */}
+          {/* 3. Reason / Notes Input (إجباري) */}
           <div>
-            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-              <FileText className="w-3.5 h-3.5 text-teal-500" />
-              <span>3. ملاحظات أو تفاصيل إضافية (اختياري):</span>
+            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                <FileText className="w-3.5 h-3.5 text-teal-500" />
+                <span>3. ملاحظات وتفاصيل إضافية عن الصرف <span className="text-rose-500 font-black">* (إجباري)</span>:</span>
+              </span>
+              <span className="text-[10px] text-rose-500 font-bold">
+                مطلوب قبل الإرسال *
+              </span>
             </label>
             <div className="relative">
               <FileText className="w-4 h-4 absolute right-3 top-3 text-slate-400" />
               <textarea
                 rows={2}
+                required
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="اكتب أي تفاصيل إضافية عن الطلب إن وجدت..."
+                placeholder="اكتب ملاحظات وتفاصيل الصرف بدقة هنا (إجباري قبل الإرسال)..."
                 className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-xl pr-9 pl-3 py-2 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 leading-relaxed"
               />
             </div>

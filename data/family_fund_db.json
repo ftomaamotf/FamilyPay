@@ -83,7 +83,15 @@
       "bankName": "ماستر كي / Qi Card",
       "avatarColor": "#10b981",
       "isAdmin": false,
-      "approvedFields": []
+      "approvedFields": [
+        {
+          "id": "f-1787760742037-348",
+          "name": "بنزين ومواصلات ⛽",
+          "limit": 0,
+          "spent": 0,
+          "createdAt": "2026-08-26T16:12:22.037Z"
+        }
+      ]
     },
     {
       "id": "b-1",
@@ -101,6 +109,13 @@
   ],
   "transfers": [],
   "notifications": [
+    {
+      "id": "notif-1787760742037",
+      "title": "📥 طلب أموال جديد (بنزين ومواصلات ⛽): 15000 د.ع",
+      "message": "طلب الأخ (محمد عجمي) مبلغ 15000 د.ع لبند [بنزين ومواصلات ⛽] لحاجة: (بنزين تجريبي بدون كلمة مرور). بانتظار موافقة الأدمن.",
+      "timestamp": "2026-08-26T16:12:22.037Z",
+      "readBy": []
+    },
     {
       "id": "notif-1787542870723",
       "title": "📥 طلب أموال جديد (حليب للأطفال 🥛): 1555 د.ع",
@@ -302,7 +317,22 @@
   "monthlyArchives": [],
   "yearlyArchives": [],
   "invitations": [],
-  "fundRequests": [],
+  "fundRequests": [
+    {
+      "id": "req-1787760742037",
+      "brotherId": "b-1787243535948",
+      "brotherName": "محمد عجمي",
+      "brotherAccountNumber": "1003",
+      "bankAccountNumber": "7145810946",
+      "phone": "077027959161",
+      "amount": 15000,
+      "fieldId": "f-1787760742037-348",
+      "fieldName": "بنزين ومواصلات ⛽",
+      "reason": "بنزين تجريبي بدون كلمة مرور",
+      "status": "pending",
+      "createdAt": "2026-08-26T16:12:22.037Z"
+    }
+  ],
   "transactions": [],
   "messages": [
     {
