@@ -52,6 +52,11 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
   const fieldSpent = selectedField?.spent || 0;
   const fieldRemaining = Math.max(0, fieldLimit - fieldSpent);
 
+  const isReasonValid = reason.trim().length >= 2;
+  const isAmountValid = Number(amount) > 0;
+  const isCommodityValid = Boolean(commodityName.trim()) || Boolean(fieldId);
+  const canSubmit = isReasonValid && isAmountValid && isCommodityValid && !loading;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const numAmount = Number(amount);
@@ -64,7 +69,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       return;
     }
     if (!reason.trim() || reason.trim().length < 2) {
-      setErrorMsg('⚠️ يرجى كتابة ملاحظات وتفاصيل إضافية عن سبب الصرف (إجباري قبل الإرسال)');
+      setErrorMsg('⚠️ يرجى كتابة ملاحظات وتفاصيل إضافية عن سبب الصرف (إجباري لتفعيل إرسال الطلب)');
       return;
     }
 
@@ -283,16 +288,23 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             </div>
           </div>
 
-          {/* 3. Reason / Notes Input (إجباري) */}
+          {/* 3. Reason / Notes Input (إجباري لتفعيل الإرسال) */}
           <div>
             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
               <span className="flex items-center gap-1">
                 <FileText className="w-3.5 h-3.5 text-teal-500" />
-                <span>3. ملاحظات وتفاصيل إضافية عن الصرف <span className="text-rose-500 font-black">* (إجباري)</span>:</span>
+                <span>3. ملاحظات وتفاصيل الصرف <span className="text-rose-500 font-black">* (إجباري لتفعيل الزر)</span>:</span>
               </span>
-              <span className="text-[10px] text-rose-500 font-bold">
-                مطلوب قبل الإرسال *
-              </span>
+              {!isReasonValid ? (
+                <span className="text-[10px] text-rose-500 font-bold animate-pulse">
+                  🔒 مطلوب لتفعيل زر الإرسال *
+                </span>
+              ) : (
+                <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-0.5">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                  <span>تم إدخال الملاحظة</span>
+                </span>
+              )}
             </label>
             <div className="relative">
               <FileText className="w-4 h-4 absolute right-3 top-3 text-slate-400" />
@@ -301,7 +313,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
                 required
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="اكتب ملاحظات وتفاصيل الصرف بدقة هنا (إجباري قبل الإرسال)..."
+                placeholder="اكتب ملاحظة توضح سبب وتفاصيل الصرف بدقة هنا (مطلوبة لتفعيل زر الإرسال)..."
                 className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-xl pr-9 pl-3 py-2 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 leading-relaxed"
               />
             </div>
@@ -320,15 +332,36 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             </div>
           )}
 
+          {/* Submit Action (غير فعّال إلى أن يتم إدخال ملاحظات الصرف) */}
           <div className="pt-2">
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-3.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-teal-600/30 flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-50"
+              disabled={!canSubmit}
+              className={`w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition shadow-lg ${
+                canSubmit
+                  ? 'bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-teal-600/30 cursor-pointer active:scale-95'
+                  : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-300 dark:border-slate-600 shadow-none'
+              }`}
             >
-              <Send className="w-4 h-4 -rotate-45" />
-              <span>{loading ? 'جاري إرسال الطلب...' : 'إرسال طلب الأموال للأدمن 📤'}</span>
+              {loading ? (
+                <span>جاري إرسال الطلب...</span>
+              ) : !isReasonValid ? (
+                <>
+                  <Lock className="w-4 h-4 text-slate-400" />
+                  <span>اكتب ملاحظة الصرف أولاً لتفعيل زر الإرسال 🔒</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 -rotate-45" />
+                  <span>إرسال طلب الأموال للأدمن 📤</span>
+                </>
+              )}
             </button>
+            {!isReasonValid && (
+              <p className="text-center text-[10px] text-rose-500 dark:text-rose-400 font-bold mt-1.5 animate-pulse">
+                ⚠️ زر الإرسال غير فعّال حالياً — يرجى كتابة تفاصيل وملاحظات الصرف في الحقل أعلاه لتفعيله.
+              </p>
+            )}
           </div>
 
         </form>

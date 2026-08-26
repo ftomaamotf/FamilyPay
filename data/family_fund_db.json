@@ -27,11 +27,11 @@
       "bankName": "ماستر كي / Qi Card",
       "accountNumber": "9256869125",
       "cardHolder": "عبدالله عجمي مطشر",
-      "balance": 826001,
+      "balance": 825001,
       "isSendingCard": true,
       "isFrozen": false,
       "color": "#059669",
-      "lastUpdated": "2026-08-24T03:29:49.012Z"
+      "lastUpdated": "2026-08-26T16:26:44.618Z"
     },
     {
       "id": "card-2",
@@ -90,6 +90,13 @@
           "limit": 0,
           "spent": 0,
           "createdAt": "2026-08-26T16:12:22.037Z"
+        },
+        {
+          "id": "f-1787761604619-123",
+          "name": "بنزين",
+          "limit": 0,
+          "spent": 1000,
+          "createdAt": "2026-08-26T16:26:44.619Z"
         }
       ]
     },
@@ -107,8 +114,38 @@
       "approvedFields": []
     }
   ],
-  "transfers": [],
+  "transfers": [
+    {
+      "id": "tx-1787761604619",
+      "senderId": "b-2",
+      "senderName": "عبدالله عجمي",
+      "recipientId": "b-1787243535948",
+      "recipientName": "محمد عجمي",
+      "recipientAccountNumber": "7145810946",
+      "accountNumber": "1003",
+      "amount": 1000,
+      "fieldId": "f-1787761604619-123",
+      "fieldName": "بنزين",
+      "reason": "تعبئة بنزين للسيارة أثناء المشوار",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-26T16:26:44.619Z",
+      "date": "2026-08-26"
+    }
+  ],
   "notifications": [
+    {
+      "id": "notif-1787761604619",
+      "title": "💰 تحويل مالي: 1000 د.ع",
+      "message": "تم تحويل 1000 د.ع إلى حساب الأخ (محمد عجمي) رقم (7145810946) لحاجة [تعبئة بنزين للسيارة أثناء المشوار]. المتبقي في بطاقة الصندوق: 825001 د.ع",
+      "transferId": "tx-1787761604619",
+      "recipientId": "b-1787243535948",
+      "amount": 1000,
+      "reason": "تعبئة بنزين للسيارة أثناء المشوار",
+      "timestamp": "2026-08-26T16:26:44.619Z",
+      "readBy": []
+    },
     {
       "id": "notif-1787760742037",
       "title": "📥 طلب أموال جديد (بنزين ومواصلات ⛽): 15000 د.ع",
@@ -333,7 +370,24 @@
       "createdAt": "2026-08-26T16:12:22.037Z"
     }
   ],
-  "transactions": [],
+  "transactions": [
+    {
+      "id": "t-1787761604619",
+      "type": "expense",
+      "amount": 1000,
+      "categoryId": "c-transfers",
+      "categoryName": "تحويل مالي (محمد عجمي) 💸",
+      "categoryIcon": "Send",
+      "memberId": "b-1787243535948",
+      "memberName": "محمد عجمي",
+      "paymentMethodId": "pm-qi",
+      "paymentMethodName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "date": "2026-08-26",
+      "description": "تحويل مالي مباشر: تعبئة بنزين للسيارة أثناء المشوار (حساب #7145810946)",
+      "transferId": "tx-1787761604619",
+      "createdAt": "2026-08-26T16:26:44.619Z"
+    }
+  ],
   "messages": [
     {
       "id": "msg-1787505197951-718",
