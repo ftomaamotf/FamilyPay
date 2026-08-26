@@ -67,9 +67,10 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const isReasonValid = (reason.trim().length >= 2) || (commodityName.trim().length >= 2);
+  const isReasonValid = reason.trim().length >= 2;
+  const isCommodityValid = (commodityName.trim().length >= 2) || Boolean(fieldId);
   const isAmountValid = Number(amount) > 0;
-  const canSubmit = isReasonValid && isAmountValid && !isCardFrozen && !loading && isSenderAuthorized;
+  const canSubmit = isReasonValid && isCommodityValid && isAmountValid && !isCardFrozen && !loading && isSenderAuthorized;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -78,11 +79,15 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
       return;
     }
     if (!isAmountValid) {
-      setErrorMsg('⚠️ يرجى إدخال مبلغ صحيح');
+      setErrorMsg('⚠️ يرجى إدخال مبلغ صحيح أكبر من الصفر');
       return;
     }
-    if (!commodityName.trim() && !fieldId && !reason.trim()) {
-      setErrorMsg('⚠️ يجب كتابة اسم السلعة أو سبب الصرف قبل الإرسال');
+    if (!commodityName.trim() && !fieldId) {
+      setErrorMsg('⚠️ يرجى تحديد أو كتابة اسم السلعة المطلوبة');
+      return;
+    }
+    if (!reason.trim() || reason.trim().length < 2) {
+      setErrorMsg('⚠️ لا يمكن إرسال أو تحويل الأموال إلا بعد كتابة ملاحظة توضح سبب وتفاصيل الصرف بدقة!');
       return;
     }
 
@@ -90,7 +95,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     setErrorMsg('');
 
     const targetRecipientId = recipientId || selectedRecipient?.id || brothers[0]?.id;
-    const finalCommodity = commodityName.trim() || selectedRecipient?.approvedFields?.find(f => f.id === fieldId)?.name || reason.trim() || 'مصروف عام';
+    const finalCommodity = commodityName.trim() || selectedRecipient?.approvedFields?.find(f => f.id === fieldId)?.name || 'مصروف عام';
 
     const res = await executeTransfer({
       recipientId: targetRecipientId,
@@ -100,7 +105,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
       amount: Number(amount),
       fieldId: commodityName.trim() ? null : (fieldId || null),
       commodityName: finalCommodity,
-      reason: reason.trim() || finalCommodity
+      reason: reason.trim()
     });
 
     setLoading(false);
@@ -431,16 +436,16 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               </div>
             </div>
 
-            {/* 4. Notes / Reason (اختياري / إضافي) */}
+            {/* 4. Notes / Reason (إجباري 100% لإتمام التحويل) */}
             <div className="p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
                   <AlertCircle className="w-4 h-4 text-amber-600" />
-                  <span>4. سبب طلب المال / الحاجة والتفاصيل (إجباري 100%) *:</span>
+                  <span>4. ملاحظة وتفاصيل سبب الصرف <span className="text-rose-500 font-black">* (إجباري لإتمام الإرسال)</span>:</span>
                 </label>
                 {!isReasonValid && (
                   <span className="text-[10px] text-rose-600 font-bold animate-pulse">
-                    مطلوب للتأكيد
+                    مطلوب قبل الإرسال *
                   </span>
                 )}
               </div>
@@ -450,7 +455,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                 required
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="مثال: حليب مجفف للأولاد، بنزين سفر، كشف طبي..."
+                placeholder="اكتب ملاحظة توضح سبب وتفاصيل الصرف (إجباري ولا يمكن الإرسال بدونها)..."
                 className="w-full bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-amber-500 shadow-xs"
               />
             </div>

@@ -1392,13 +1392,16 @@ app.post('/api/transfers', (req, res) => {
     });
   }
 
-  // 2. Validate mandatory fields
+  // 2. Validate mandatory fields (المبلغ والملاحظة إجبارية 100%)
   const numAmount = Number(amount);
   if (!numAmount || numAmount <= 0) {
     return res.status(400).json({ success: false, message: 'يرجى تحديد مبلغ صحيح أكبر من الصفر' });
   }
-  if (!reason || !reason.trim()) {
-    return res.status(400).json({ success: false, message: '⚠️ يجب كتابة سبب طلب المال (الحاجة) إجبارياً قبل الإرسال' });
+  if (!reason || !reason.trim() || reason.trim().length < 2) {
+    return res.status(400).json({
+      success: false,
+      message: '⚠️ لا يمكن إرسال أو تحويل الأموال إلا بعد كتابة ملاحظة توضح سبب وتفاصيل الصرف بدقة!'
+    });
   }
 
   // 3. Find Recipient Strictly by Account Number or ID (No name matching so father/family name does not interfere)
@@ -1687,8 +1690,11 @@ app.post('/api/requests', (req, res) => {
   if (!numAmount || numAmount <= 0) {
     return res.status(400).json({ success: false, message: 'يرجى تحديد مبلغ صحيح لطلب الأموال' });
   }
-  if (!reason || !reason.trim()) {
-    return res.status(400).json({ success: false, message: 'يرجى كتابة سبب طلب الأموال (الحاجة)' });
+  if (!reason || !reason.trim() || reason.trim().length < 2) {
+    return res.status(400).json({
+      success: false,
+      message: '⚠️ لا يمكن إرسال طلب الأموال إلا بعد كتابة ملاحظة توضح سبب وتفاصيل الصرف بدقة!'
+    });
   }
 
   // Strictly find brother by Account Number or ID (No name guessing so shared father/family names do not interfere)

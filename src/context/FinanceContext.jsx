@@ -1131,6 +1131,9 @@ export const FinanceProvider = ({ children }) => {
 
   // 3.3 Submit Money Request (User asks for funds with commodity/item name)
   const submitMoneyRequest = async ({ brotherId, amount, fieldId, reason, commodityName, customFieldName }) => {
+    if (!reason || !reason.trim() || reason.trim().length < 2) {
+      return { success: false, message: '⚠️ يجب كتابة ملاحظة توضح سبب وتفاصيل الصرف إجبارياً قبل إرسال الطلب' };
+    }
     const activeBrother = brothers.find((br) => br.id === (brotherId || currentUser?.id)) || currentUser;
     const finalCommodityName = commodityName || customFieldName;
     try {
@@ -1363,8 +1366,8 @@ export const FinanceProvider = ({ children }) => {
     if (!numAmount || numAmount <= 0) {
       return { success: false, message: 'يرجى إدخال مبلغ صحيح' };
     }
-    if (!reason || !reason.trim()) {
-      return { success: false, message: '⚠️ يجب كتابة سبب طلب المال (الحاجة) إجبارياً قبل الإرسال' };
+    if (!reason || !reason.trim() || reason.trim().length < 2) {
+      return { success: false, message: '⚠️ يجب كتابة ملاحظة توضح سبب وتفاصيل الصرف إجبارياً قبل الإرسال' };
     }
 
     const finalCommodityName = commodityName || customFieldName;
