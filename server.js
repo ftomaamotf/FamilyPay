@@ -1916,7 +1916,7 @@ app.post('/api/requests', (req, res) => {
     brotherId: brother.id,
     brotherName: brother.name,
     brotherAccountNumber: brother.accountNumber,
-    bankAccountNumber: isGeneralExpense ? '' : brother.bankAccountNumber,
+    bankAccountNumber: brother.bankAccountNumber,
     phone: brother.phone,
     amount: numAmount,
     fieldId: assignedField.id,

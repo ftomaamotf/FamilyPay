@@ -210,9 +210,11 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                     <div className="text-[10px] text-slate-400 flex items-center gap-2">
                       <span>
                         {req.isGeneralExpense ? (
-                          <strong className="text-amber-600 dark:text-amber-400">توجيه: مصاريف عامة مشتركة (بدون رقم حساب) 🌐</strong>
+                          <>
+                            رقم حساب المستلم (مقدم الطلب): <strong className="font-mono text-emerald-600 dark:text-emerald-400 text-[11px]" dir="ltr">{req.bankAccountNumber || req.brotherAccountNumber}</strong>
+                          </>
                         ) : (
-                          <>رقم الحساب: <strong className="font-mono" dir="ltr">{req.bankAccountNumber || req.brotherAccountNumber}</strong></>
+                          <>رقم الحساب: <strong className="font-mono text-[11px]" dir="ltr">{req.bankAccountNumber || req.brotherAccountNumber}</strong></>
                         )}
                       </span>
                       <span>•</span>
