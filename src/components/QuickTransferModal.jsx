@@ -20,7 +20,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
   const { brothers, sendingCard, executeTransfer, settings, isCardFrozen, canCurrentUserSend, currentUser } = useFinance();
   const currency = settings.currencySymbol;
 
-  const [recipientId, setRecipientId] = useState(initialRecipientId || brothers[0]?.id || 'b-1');
+  const [recipientId, setRecipientId] = useState(initialRecipientId || '');
   const [fieldId, setFieldId] = useState(initialFieldId || '');
   const [commodityName, setCommodityName] = useState('');
   const [amount, setAmount] = useState('');
@@ -30,7 +30,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
   const [completedTransfer, setCompletedTransfer] = useState(null);
 
   const isSenderAuthorized = canCurrentUserSend ? canCurrentUserSend() : true;
-  const selectedRecipient = brothers.find((b) => b.id === recipientId) || brothers[0];
+  const selectedRecipient = brothers.find((b) => b.id === recipientId) || null;
 
   useEffect(() => {
     if (isOpen) {
@@ -39,15 +39,14 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
       setReason('');
       if (initialRecipientId) {
         setRecipientId(initialRecipientId);
-      } else if (brothers.length > 0) {
-        const found = brothers.find((b) => b.id !== currentUser?.id) || brothers[0];
-        setRecipientId(found.id);
+      } else {
+        setRecipientId('');
       }
       setFieldId(initialFieldId || '');
       setCommodityName('');
       setErrorMsg('');
     }
-  }, [isOpen]);
+  }, [isOpen, initialRecipientId]);
 
   const handleClose = () => {
     setErrorMsg('');
@@ -55,6 +54,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     setCommodityName('');
     setAmount('');
     setReason('');
+    setRecipientId('');
     onClose();
   };
 
@@ -72,13 +72,18 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     }
   };
 
+  const isRecipientValid = Boolean(recipientId && selectedRecipient);
   const isReasonValid = reason.trim().length >= 2;
   const isCommodityValid = (commodityName.trim().length >= 2) || Boolean(fieldId);
   const isAmountValid = Number(amount) > 0;
-  const canSubmit = isReasonValid && isCommodityValid && isAmountValid && !isCardFrozen && !loading && isSenderAuthorized;
+  const canSubmit = isRecipientValid && isReasonValid && isCommodityValid && isAmountValid && !isCardFrozen && !loading && isSenderAuthorized;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isRecipientValid) {
+      setErrorMsg('⚠️ يرجى اختيار الأخ المستلم أولاً بالضغط على اسمه أو دائرته');
+      return;
+    }
     if (isCardFrozen) {
       setErrorMsg('🔒 بطاقة الصندوق مجمدة حالياً لحمايتها. يرجى إلغاء التجميد من الأدمن أولاً.');
       return;
@@ -99,7 +104,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     setLoading(true);
     setErrorMsg('');
 
-    const targetRecipientId = recipientId || selectedRecipient?.id || brothers[0]?.id;
+    const targetRecipientId = recipientId;
     const finalCommodity = commodityName.trim() || selectedRecipient?.approvedFields?.find(f => f.id === fieldId)?.name || 'مصروف عام';
     const targetAccount = selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber;
 
