@@ -54,9 +54,13 @@ export const FinanceProvider = ({ children }) => {
   );
 
   // Money Requests from Brothers (طلبات الأموال الواردة)
-  const [fundRequests, setFundRequests] = useState(() =>
-    loadFromStorage('bait_finance_fund_requests', [])
-  );
+  const [fundRequests, setFundRequests] = useState(() => {
+    const stored = loadFromStorage('bait_finance_fund_requests', []);
+    if (Array.isArray(stored)) {
+      return stored.filter(r => !r.reason?.includes('تجريبي') && !r.reason?.includes('test') && !r.reason?.includes('بنزين تجريبي'));
+    }
+    return [];
+  });
 
   // Guest Join Requests (طلبات انضمام الضيوف المعلقة)
   const [guestRequests, setGuestRequests] = useState([]);
@@ -78,7 +82,11 @@ export const FinanceProvider = ({ children }) => {
       const res = await fetch(`${API_BASE}/api/fund-state`);
       const data = await res.json();
       if (data.success && data.state) {
-        if (data.state.fundRequests) setFundRequests(data.state.fundRequests);
+        const cleanReqs = Array.isArray(data.state.fundRequests)
+          ? data.state.fundRequests.filter(r => !r.reason?.includes('تجريبي') && !r.reason?.includes('test'))
+          : [];
+        setFundRequests(cleanReqs);
+        saveToStorage('bait_finance_fund_requests', cleanReqs);
         if (data.state.brothers) setBrothers(data.state.brothers);
         if (data.state.bankCards) setBankCards(data.state.bankCards);
         if (data.state.transfers) setTransfers(data.state.transfers);

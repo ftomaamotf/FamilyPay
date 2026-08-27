@@ -422,11 +422,19 @@ export const BrothersCards = ({
                         <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/20 pointer-events-none" />
                       </div>
 
+                      {/* Sequence Number Badge (رقم تسلسلي 1، 2، 3، 4 على كل دائرة) */}
+                      <div
+                        title={`المستخدم رقم ${idx + 1}`}
+                        className="absolute -top-1.5 -left-1.5 w-6 h-6 rounded-full bg-slate-900 text-amber-400 font-mono font-black text-xs flex items-center justify-center shadow-md border-2 border-amber-400/90 ring-2 ring-slate-950 z-10 select-none"
+                      >
+                        {idx + 1}
+                      </div>
+
                       {/* Admin Crown Badge */}
                       {isSenderAdmin && (
                         <div
                           title="الأدمن الرئيسي"
-                          className="absolute -top-2 -right-1 w-6 h-6 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center shadow-md border-2 border-slate-950 font-black animate-bounce"
+                          className="absolute -top-2 -right-1 w-6 h-6 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center shadow-md border-2 border-slate-950 font-black animate-bounce z-10"
                         >
                           <Crown className="w-3.5 h-3.5 fill-slate-950" />
                         </div>
@@ -434,7 +442,7 @@ export const BrothersCards = ({
 
                       {/* 'You' Badge */}
                       {isMe && !isSenderAdmin && (
-                        <div className={`absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full ${palette.badge} text-[9px] font-black shadow border border-slate-950`}>
+                        <div className={`absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full ${palette.badge} text-[9px] font-black shadow border border-slate-950 z-10`}>
                           أنت
                         </div>
                       )}
