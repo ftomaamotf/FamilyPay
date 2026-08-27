@@ -1,12 +1,21 @@
 // Comprehensive Registry of Financial Programs & Banking Apps (Desktop Web & Mobile Apps)
 export const ALL_TRANSFER_PROGRAMS = [
   {
+    id: 'home_screen',
+    name: 'شاشة الهاتف الرئيسية (Home Screen)',
+    shortName: 'شاشة الهاتف الرئيسية 🏠',
+    icon: '🏠',
+    category: 'أدوات الهاتف',
+    description: 'الانتقال لشاشة هاتفك الرئيسية واختيار سوبر كي أو أي تطبيق مثبت',
+    isHomeScreen: true
+  },
+  {
     id: 'qi',
-    name: 'ماستر كي / خدمات كي (Qi Services)',
-    shortName: 'ماستر كي / Qi 💳',
-    icon: '💳',
+    name: 'سوبر كي (Super Qi) / ماستر كي',
+    shortName: 'سوبر كي (Super Qi) 🟡',
+    icon: '🟡',
     category: 'رئيسي',
-    description: 'تطبيق كي كارد، ماستر كارد وموقع خدمات كي المباشر',
+    description: 'تطبيق سوبر كي الجديد وخدمات كي وماستر كارد لتحويل الأموال',
     webUrl: 'https://qi.services',
     androidPackage: 'com.isc.qi',
     androidIntent: 'intent://#Intent;package=com.isc.qi;scheme=qi;end',
@@ -15,8 +24,8 @@ export const ALL_TRANSFER_PROGRAMS = [
   },
   {
     id: 'zaincash',
-    name: 'محفظة زين كاش (ZainCash)',
-    shortName: 'زين كاش 📱',
+    name: 'محفظة زين كاش / زين العراق (ZainCash)',
+    shortName: 'زين كاش / زين العراق 📱',
     icon: '📱',
     category: 'محافظ إلكترونية',
     description: 'تطبيق وبوابة الدفع الإلكتروني زين كاش',
@@ -205,7 +214,20 @@ export const launchTransferProgram = (options = {}) => {
 
   const shareText = `تحويل مالي 💸\nالمستلم: ${recipientName}\nرقم البطاقة المصرفية: ${accountNumber}\nالمبلغ: ${amount} د.ع\nالسبب: ${reason}`;
 
-  // 2. If user chose Native Phone Apps Sheet OR launchType === 'sheet'
+  // 2. Go to Phone Home Screen (الشاشة الرئيسية للهاتف)
+  if (programId === 'home_screen' || launchType === 'home') {
+    const isAndroid = /android/i.test(navigator.userAgent);
+    if (isAndroid) {
+      window.location.href = 'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.HOME;end';
+      return { success: true, message: 'تم نسخ رقم البطاقة والانتقال لشاشة هاتفك' };
+    }
+    if (navigator.share) {
+      navigator.share({ title: 'تحويل مالي', text: shareText }).catch(() => {});
+    }
+    return { success: true, message: 'تم نسخ رقم البطاقة وتجهيز التحويل' };
+  }
+
+  // 3. If user chose Native Phone Apps Sheet OR launchType === 'sheet'
   if (programId === 'native_phone_sheet' || launchType === 'sheet') {
     if (navigator.share) {
       navigator.share({

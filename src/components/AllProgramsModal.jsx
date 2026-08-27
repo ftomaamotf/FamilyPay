@@ -13,7 +13,8 @@ import {
   Zap,
   ArrowUpRight,
   ShoppingBag,
-  Share2
+  Share2,
+  Home
 } from 'lucide-react';
 import { ALL_TRANSFER_PROGRAMS, launchTransferProgram, copyToClipboard } from '../utils/bankAppLauncher';
 
@@ -36,10 +37,10 @@ export const AllProgramsModal = ({
 
   const categories = [
     { id: 'all', label: 'كافة البرامج والتطبيقات 🌐' },
-    { id: 'رئيسي', label: 'كي وماستر كارد 💳' },
+    { id: 'رئيسي', label: 'سوبر كي وماستر كارد 💳' },
     { id: 'محافظ إلكترونية', label: 'المحافظ الإلكترونية 📱' },
     { id: 'مصارف', label: 'المصارف والبنوك 🏛️' },
-    { id: 'أدوات الهاتف', label: 'تطبيقات الهاتف 📲' }
+    { id: 'أدوات الهاتف', label: 'أدوات وشاشة الهاتف 📲' }
   ];
 
   const filteredPrograms = ALL_TRANSFER_PROGRAMS.filter((p) => {
@@ -83,6 +84,20 @@ export const AllProgramsModal = ({
     }
 
     setToastMsg(res.message || `🚀 جاري فتح (${program.name}) وتجهيز رقم البطاقة!`);
+    setTimeout(() => setToastMsg(''), 4000);
+  };
+
+  const handleGoHome = () => {
+    handleCopyAccount();
+    launchTransferProgram({
+      programId: 'home_screen',
+      accountNumber,
+      amount,
+      recipientName,
+      reason,
+      launchType: 'home'
+    });
+    setToastMsg('🏠 تم نسخ رقم البطاقة والانتقال لشاشة هاتفك الرئيسية!');
     setTimeout(() => setToastMsg(''), 4000);
   };
 
@@ -139,7 +154,7 @@ export const AllProgramsModal = ({
                 {accountNumber}
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={handleCopyAccount}
@@ -147,6 +162,16 @@ export const AllProgramsModal = ({
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copied ? 'تم النسخ ✅' : 'نسخ رقم البطاقة 📋'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleGoHome}
+                className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-lg shadow-xs flex items-center gap-1 transition active:scale-95 cursor-pointer"
+                title="الانتقال لشاشة وتطبيقات الهاتف الرئيسية"
+              >
+                <Home className="w-3.5 h-3.5" />
+                <span>شاشة الهاتف 🏠</span>
               </button>
 
               <button
@@ -177,7 +202,7 @@ export const AllProgramsModal = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ابحث عن اسم البرنامج أو المصرف (ماستر كي، زين كاش، رافدين، FIB...)..."
+              placeholder="ابحث عن اسم البرنامج أو المصرف (سوبر كي، زين كاش، رافدين، FIB...)..."
               className="w-full pr-10 pl-4 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 shadow-xs"
             />
           </div>
@@ -206,7 +231,11 @@ export const AllProgramsModal = ({
             {filteredPrograms.map((prog) => (
               <div
                 key={prog.id}
-                className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 hover:border-teal-500 transition flex flex-col justify-between gap-2 shadow-xs group"
+                className={`p-3 rounded-2xl border transition flex flex-col justify-between gap-2 shadow-xs group ${
+                  prog.id === 'qi'
+                    ? 'bg-gradient-to-br from-amber-500/10 via-slate-50 to-amber-500/5 dark:from-amber-950/40 dark:via-slate-800/80 dark:to-amber-950/20 border-amber-400/60 dark:border-amber-600/50 shadow-amber-500/10 ring-1 ring-amber-400/30'
+                    : 'bg-slate-50 dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 hover:border-teal-500'
+                }`}
               >
                 <div className="flex items-start gap-2.5">
                   <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xl shrink-0 shadow-xs">
@@ -245,6 +274,15 @@ export const AllProgramsModal = ({
                       <span>فتح الرابط المخصص 🚀</span>
                     </button>
                   </div>
+                ) : prog.isHomeScreen ? (
+                  <button
+                    type="button"
+                    onClick={handleGoHome}
+                    className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+                  >
+                    <Home className="w-4 h-4" />
+                    <span>الانتقال لشاشة وتطبيقات الهاتف الرئيسية 🏠</span>
+                  </button>
                 ) : prog.isNativeSheet ? (
                   <button
                     type="button"
@@ -259,7 +297,11 @@ export const AllProgramsModal = ({
                     <button
                       type="button"
                       onClick={() => handleLaunch(prog, 'auto')}
-                      className="w-full py-2 bg-teal-600 hover:bg-teal-700 text-white font-black text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+                      className={`w-full py-2 text-white font-black text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
+                        prog.id === 'qi'
+                          ? 'bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 text-slate-950'
+                          : 'bg-teal-600 hover:bg-teal-700'
+                      }`}
                     >
                       <span>تشغيل التطبيق / البرنامج فوراً 🚀</span>
                       <ExternalLink className="w-3 h-3 opacity-80" />

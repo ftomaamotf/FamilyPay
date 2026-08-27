@@ -22,9 +22,10 @@ import {
   Share2,
   ChevronDown,
   ChevronUp,
-  Monitor
+  Monitor,
+  Home
 } from 'lucide-react';
-import { openPhoneAppsChooser, launchQiDirect } from '../utils/bankAppLauncher';
+import { openPhoneAppsChooser, launchQiDirect, launchTransferProgram } from '../utils/bankAppLauncher';
 import { AllProgramsModal } from './AllProgramsModal';
 
 export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null, initialFieldId = null }) => {
@@ -85,6 +86,24 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     setTimeout(() => setCopied(false), 2500);
   };
 
+  const handleGoHome = () => {
+    handleCopyAccount();
+    launchTransferProgram({
+      programId: 'home_screen',
+      accountNumber: selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber,
+      amount: Number(amount) || 0,
+      recipientName: selectedRecipient?.name || 'الأخ المستلم',
+      reason: reason.trim() || 'تحويل مالي',
+      launchType: 'home'
+    });
+    setCopied(true);
+    setBankAppToast('🏠 تم نسخ رقم البطاقة والانتقال لشاشة هاتفك الرئيسية!');
+    setTimeout(() => {
+      setCopied(false);
+      setBankAppToast('');
+    }, 4000);
+  };
+
   const handleOpenPhoneAppsSheet = () => {
     openPhoneAppsChooser({
       accountNumber: selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber,
@@ -103,7 +122,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
   const handleOpenQiDirectly = () => {
     launchQiDirect(selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber);
     setCopied(true);
-    setBankAppToast('📲 تم نسخ رقم البطاقة وجاري فتح تطبيق ماستر كي / Qi...');
+    setBankAppToast('🟡 تم نسخ رقم البطاقة وجاري تشغيل سوبر كي (Super Qi)...');
     setTimeout(() => {
       setCopied(false);
       setBankAppToast('');
@@ -441,34 +460,42 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                 {/* Direct Native Phone Apps Chooser Button & Desktop All-Programs Hub */}
                 <div className="space-y-2 pt-1">
                   
-                  {/* Big Desktop & Mobile All Programs Hub Button */}
+                  {/* Button 1: Go to Phone Home Screen (شاشة وتطبيقات الهاتف الرئيسية) */}
                   <button
                     type="button"
-                    onClick={() => setShowAllPrograms(true)}
-                    className="w-full py-3 px-3.5 bg-gradient-to-r from-teal-700 via-slate-800 to-indigo-800 hover:from-teal-600 hover:to-indigo-700 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg flex items-center justify-center gap-2 transition active:scale-98 border border-teal-400/40 cursor-pointer"
+                    onClick={handleGoHome}
+                    className="w-full py-3 px-3.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 text-slate-950 font-black text-xs sm:text-sm rounded-2xl shadow-lg flex items-center justify-center gap-2 transition active:scale-98 border border-amber-300/50 cursor-pointer"
                   >
-                    <Monitor className="w-4 h-4 text-teal-300 shrink-0" />
-                    <span>💻 فتح مركز كافة برامج وتطبيقات التحويل (سطح المكتب والهاتف) 🔍</span>
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <Home className="w-4 h-4 text-slate-950 shrink-0" />
+                    <span>🏠 الانتقال لشاشة الهاتف الرئيسية لاختيار تطبيق التحويل (سوبر كي وغيره)</span>
                   </button>
 
-                  <div className="grid grid-cols-2 gap-2 pt-0.5">
+                  <div className="grid grid-cols-3 gap-1.5 pt-0.5">
                     <button
                       type="button"
-                      onClick={handleOpenPhoneAppsSheet}
-                      className="py-2 px-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-[11px] rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 border border-slate-300 dark:border-slate-700 cursor-pointer"
+                      onClick={handleOpenQiDirectly}
+                      className="py-2 px-1.5 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 font-black text-[10px] sm:text-[11px] rounded-xl flex items-center justify-center gap-1 transition active:scale-95 border border-amber-300 dark:border-amber-700 cursor-pointer"
                     >
-                      <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>تطبيقات الهاتف 📲</span>
+                      <span className="text-xs">🟡</span>
+                      <span className="truncate">سوبر كي (Super Qi)</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={handleOpenQiDirectly}
-                      className="py-2 px-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 font-bold text-[11px] rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 border border-emerald-300 dark:border-emerald-800 cursor-pointer"
+                      onClick={() => setShowAllPrograms(true)}
+                      className="py-2 px-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-[10px] sm:text-[11px] rounded-xl flex items-center justify-center gap-1 transition active:scale-95 border border-slate-300 dark:border-slate-700 cursor-pointer"
                     >
-                      <ExternalLink className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>تطبيق ماستر كي / Qi 💳</span>
+                      <Monitor className="w-3.5 h-3.5 text-teal-600" />
+                      <span className="truncate">كافة البرامج 💻</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleOpenPhoneAppsSheet}
+                      className="py-2 px-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-200 font-bold text-[10px] sm:text-[11px] rounded-xl flex items-center justify-center gap-1 transition active:scale-95 border border-indigo-200 dark:border-indigo-800 cursor-pointer"
+                    >
+                      <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
+                      <span className="truncate">قائمة الهاتف 📲</span>
                     </button>
                   </div>
                 </div>
