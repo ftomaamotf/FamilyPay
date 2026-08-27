@@ -18,8 +18,11 @@ import {
   Eye,
   EyeOff,
   Smartphone,
-  ExternalLink
+  ExternalLink,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
+import { BANKING_APPS, launchBankApp } from '../utils/bankAppLauncher';
 
 export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null, initialFieldId = null }) => {
   const { brothers, sendingCard, executeTransfer, settings, isCardFrozen, canCurrentUserSend, currentUser } = useFinance();
@@ -34,6 +37,9 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [completedTransfer, setCompletedTransfer] = useState(null);
+  const [selectedBankApp, setSelectedBankApp] = useState('qi');
+  const [showAppPicker, setShowAppPicker] = useState(false);
+  const [bankAppToast, setBankAppToast] = useState('');
 
   const isSenderAuthorized = canCurrentUserSend ? canCurrentUserSend() : true;
   const selectedRecipient = brothers.find((b) => b.id === recipientId) || brothers[0];
@@ -70,37 +76,29 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handleOpenBankApp = (accNumber, appType = 'qi') => {
-    if (accNumber) {
-      navigator.clipboard.writeText(String(accNumber).trim());
+  const handleSelectBankApp = (appId) => {
+    setSelectedBankApp(appId);
+    setShowAppPicker(false);
+    const acc = selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber;
+    if (acc) {
+      navigator.clipboard.writeText(String(acc).trim());
       setCopied(true);
-      if (window.navigator?.vibrate) window.navigator.vibrate(60);
-      setTimeout(() => setCopied(false), 3000);
+      if (window.navigator?.vibrate) window.navigator.vibrate(50);
+      setTimeout(() => setCopied(false), 2500);
     }
-    const isAndroid = /android/i.test(navigator.userAgent);
-    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const app = BANKING_APPS.find((a) => a.id === appId);
+    setBankAppToast(`✅ تم نسخ رقم البطاقة وتحديد (${app?.shortName || appId})!`);
+    setTimeout(() => setBankAppToast(''), 3500);
+  };
 
-    if (appType === 'qi') {
-      if (isAndroid) {
-        window.location.href = 'intent://#Intent;package=com.isc.qi;scheme=qi;end';
-        setTimeout(() => {
-          window.open('https://play.google.com/store/apps/details?id=com.isc.qi', '_blank');
-        }, 1200);
-      } else if (isIOS) {
-        window.location.href = 'qi://';
-        setTimeout(() => {
-          window.open('https://apps.apple.com/app/qi-services/id1458925586', '_blank');
-        }, 1200);
-      } else {
-        window.open('https://qi.services', '_blank');
-      }
-    } else if (appType === 'zaincash') {
-      if (isAndroid) {
-        window.location.href = 'intent://#Intent;package=com.zaincash.wallet;scheme=zaincash;end';
-      } else {
-        window.open('https://zaincash.iq', '_blank');
-      }
-    }
+  const handleOpenBankAppNow = (appId = selectedBankApp) => {
+    launchBankApp({
+      appId,
+      accountNumber: selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber,
+      amount: Number(amount) || 0,
+      recipientName: selectedRecipient?.name || 'الأخ المستلم',
+      reason: reason.trim() || 'تحويل مالي'
+    });
   };
 
   const isReasonValid = reason.trim().length >= 2;
@@ -154,6 +152,15 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
         reason: reason.trim(),
         date: new Date().toISOString().split('T')[0],
         refNumber: 'SK-' + Date.now().toString().slice(-6)
+      });
+
+      // Automatically launch the selected banking application on the phone!
+      launchBankApp({
+        appId: selectedBankApp,
+        accountNumber: selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber,
+        amount: Number(amount),
+        recipientName: selectedRecipient?.name || 'الأخ المستلم',
+        reason: reason.trim()
       });
     } else {
       setErrorMsg(res.message || 'حدث خطأ أثناء التحويل');
@@ -338,15 +345,23 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               </div>
             </div>
 
-            {/* 2. Recipient Pre-Saved Bank Account */}
+            {/* 2. Recipient Pre-Saved Bank Account & Banking App Chooser */}
             {selectedRecipient && (
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-1.5">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-2.5">
+                
+                {/* Toast feedback upon choosing bank app or copy */}
+                {bankAppToast && (
+                  <div className="p-2 rounded-xl bg-emerald-600 text-white font-bold text-xs text-center animate-bounce shadow-md">
+                    {bankAppToast}
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
                   <span className="flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                     <span>رقم البطاقة المصرفية للأخ ({selectedRecipient.name}):</span>
                   </span>
-                  <span className="text-emerald-600 font-bold">ماستر كي / Qi Card</span>
+                  <span className="text-emerald-600 font-bold">بطاقة المستلم</span>
                 </div>
 
                 <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs">
@@ -363,16 +378,73 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                   </button>
                 </div>
 
-                {/* Direct Bank Launcher Button */}
-                <button
-                  type="button"
-                  onClick={() => handleOpenBankApp(selectedRecipient.bankAccountNumber, 'qi')}
-                  className="w-full py-2 px-3 bg-gradient-to-r from-teal-700 to-emerald-700 hover:from-teal-600 hover:to-emerald-600 text-white font-black text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 transition active:scale-98 border border-emerald-500/30"
-                >
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span>📲 فتح تطبيق ماستر كي / خدمات كي Qi للتحويل الفوري</span>
-                  <ExternalLink className="w-3 h-3 opacity-80" />
-                </button>
+                {/* Banking App Chooser & Auto-Launcher Selection */}
+                <div className="pt-1 space-y-2 border-t border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                      <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>تطبيق التحويل البنكي المستخدم:</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowAppPicker(!showAppPicker)}
+                      className="text-xs text-emerald-600 dark:text-emerald-400 font-black hover:underline flex items-center gap-1"
+                    >
+                      <span>{showAppPicker ? 'إغلاق القائمة' : 'تغيير تطبيق التحويل 📱'}</span>
+                      {showAppPicker ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+
+                  {/* Selected App Active Badge */}
+                  <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">
+                        {BANKING_APPS.find((a) => a.id === selectedBankApp)?.icon || '💳'}
+                      </span>
+                      <span className="text-xs font-black text-slate-900 dark:text-white">
+                        {BANKING_APPS.find((a) => a.id === selectedBankApp)?.name || 'ماستر كي / خدمات كي Qi'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenBankAppNow(selectedBankApp)}
+                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-black shadow-xs flex items-center gap-1 cursor-pointer active:scale-95"
+                      title="فتح التطبيق الآن"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>فتح الآن 📲</span>
+                    </button>
+                  </div>
+
+                  {/* Expandable Banking Apps Grid */}
+                  {showAppPicker && (
+                    <div className="p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 shadow-inner grid grid-cols-2 gap-1.5 animate-fadeIn">
+                      {BANKING_APPS.map((app) => {
+                        const isSelected = selectedBankApp === app.id;
+                        return (
+                          <button
+                            key={app.id}
+                            type="button"
+                            onClick={() => handleSelectBankApp(app.id)}
+                            className={`p-2 rounded-xl text-right flex items-center gap-2 transition border text-xs font-bold ${
+                              isSelected
+                                ? 'bg-emerald-50 dark:bg-emerald-950/80 border-emerald-500 text-emerald-800 dark:text-emerald-200 ring-2 ring-emerald-500 shadow-xs'
+                                : 'bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100'
+                            }`}
+                          >
+                            <span className="text-base shrink-0">{app.icon}</span>
+                            <span className="truncate text-[11px] font-black">{app.shortName}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <p className="text-[10px] text-slate-400 leading-tight">
+                    ⚡ عند الضغط على "تأكيد وتحويل الأموال" سيتم نسخ رقم البطاقة وتوثيق الصرف والانتقال مباشرة للتطبيق المختار لإتمام التحويل الحقيقي.
+                  </p>
+                </div>
+
               </div>
             )}
 
@@ -518,9 +590,9 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className={`w-full py-3.5 rounded-2xl font-black text-sm sm:text-base shadow-lg flex items-center justify-center gap-2 transition active:scale-95 ${
+                className={`w-full py-3.5 rounded-2xl font-black text-xs sm:text-sm shadow-lg flex items-center justify-center gap-2 transition active:scale-95 ${
                   canSubmit
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white shadow-emerald-600/30'
+                    ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 text-white shadow-emerald-600/30 cursor-pointer'
                     : 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
                 }`}
               >
@@ -528,8 +600,10 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                   <span>جاري تنفيذ التحويل وتحديث الحسابات...</span>
                 ) : (
                   <>
-                    <Send className="w-5 h-5 -rotate-45" />
-                    <span>تأكيد وتحويل الأموال فوراً 🚀</span>
+                    <Send className="w-4 h-4 -rotate-45" />
+                    <span>
+                      تأكيد وتحويل الأموال فوراً والانتقال إلى ({BANKING_APPS.find(a => a.id === selectedBankApp)?.shortName || 'تطبيق البنك'}) 🚀
+                    </span>
                   </>
                 )}
               </button>
