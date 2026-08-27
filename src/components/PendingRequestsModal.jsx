@@ -169,13 +169,23 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                   className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
                 >
                   <div className="space-y-1 text-right flex-1">
+                    {req.isGeneralExpense && (
+                      <div className="mb-2.5 p-3 bg-amber-50 dark:bg-amber-950/50 border-2 border-amber-400 dark:border-amber-600 rounded-xl text-amber-800 dark:text-amber-300 flex items-start gap-2.5 shadow-sm">
+                        <span className="text-xl leading-none">📦</span>
+                        <div>
+                          <p className="font-black text-[13px] leading-tight">هذا الطلب مخصص للمصاريف العامة للصندوق</p>
+                          <p className="text-[10px] font-bold opacity-90 mt-0.5">الأخ يطلب توجيه المبلغ للمصاريف العامة، وليس لحسابه الشخصي.</p>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="flex items-center gap-2">
                       <span className="font-extrabold text-sm text-slate-900 dark:text-white">
                         {req.brotherName}
                       </span>
                       {req.isGeneralExpense ? (
                         <span className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
-                          📦 مصاريف عامة للصندوق
+                          🌐 توجيه: مصاريف عامة
                         </span>
                       ) : (
                         <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-md font-bold">
@@ -222,7 +232,7 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                       className="flex-1 sm:flex-none px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-1 cursor-pointer active:scale-95"
                     >
                       <Check className="w-3.5 h-3.5" />
-                      <span>موافقة وصرف</span>
+                      <span>{req.isGeneralExpense ? 'صرف للمصاريف العامة 📦' : 'موافقة وصرف'}</span>
                     </button>
 
                     <button

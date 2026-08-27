@@ -138,9 +138,10 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
         </div>
 
         {/* Form Body */}
+        
         <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-4 text-xs">
           
-          {/* If multiple brothers, allow selecting brother strictly by bank card */}
+          {/* If multiple brothers (admin), allow selecting brother strictly by bank card */}
           {brothers.length > 1 && (
             <div>
               <label className="block font-black text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1">
@@ -165,10 +166,27 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             </div>
           )}
 
-          {/* Destination Selector: Personal vs General Expenses */}
-          <div className="space-y-1.5">
+          {/* 1. Amount Input (المبلغ أولاً) */}
+          <div className="p-3.5 bg-teal-50/50 dark:bg-teal-950/20 rounded-2xl border border-teal-200 dark:border-teal-800">
+            <label className="block font-black text-slate-800 dark:text-slate-200 text-xs mb-1.5 flex items-center gap-1">
+              <DollarSign className="w-4 h-4 text-teal-600" />
+              <span>1. المبلغ المطلوب تحويله ({currency}) *:</span>
+            </label>
+            <input
+              type="number"
+              required
+              min="1"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="اكتب المبلغ هنا (مثال: 70000)"
+              className="w-full bg-white dark:bg-slate-900 border-2 border-teal-400 dark:border-teal-600 rounded-xl px-4 py-2.5 text-base font-black text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 font-mono text-center shadow-xs"
+            />
+          </div>
+
+          {/* 2. Destination Selector (Personal vs General Expenses) مباشرة تحت المبلغ */}
+          <div className="space-y-1.5 p-3.5 bg-slate-50 dark:bg-slate-750 rounded-2xl border border-slate-200 dark:border-slate-700">
             <label className="block font-black text-slate-800 dark:text-slate-200 text-xs">
-              جهة صرف الطلب:
+              2. جهة الصرف *:
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -196,59 +214,39 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
                 <span>📦 {generalExpensesName || 'مصاريف عامة'}</span>
               </button>
             </div>
-          </div>
-
-          {/* User Details / Destination Preview */}
-          <div className="p-3.5 bg-slate-50 dark:bg-slate-750 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold"
-                style={{ backgroundColor: isForGeneralExpenses ? '#f59e0b' : (currentBrother?.avatarColor || '#10b981') }}
-              >
-                {isForGeneralExpenses ? '📦' : (currentBrother?.name?.[0] || 'أ')}
-              </span>
-              <div>
-                <span className="font-black text-slate-900 dark:text-white block">
-                  {isForGeneralExpenses ? (generalExpensesName || 'مصاريف عامة مشتركة') : currentBrother?.name}
+            
+            {/* User Details / Destination Preview */}
+            <div className="mt-2 p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-600 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+                  style={{ backgroundColor: isForGeneralExpenses ? '#f59e0b' : (currentBrother?.avatarColor || '#10b981') }}
+                >
+                  {isForGeneralExpenses ? '📦' : (currentBrother?.name?.[0] || 'أ')}
                 </span>
-                <span className="text-[10px] text-slate-400 font-mono" dir="ltr">
-                  {isForGeneralExpenses ? 'بدون رقم حساب بنكي ⚡' : `بطاقة: ${currentBrother?.bankAccountNumber}`}
+                <div>
+                  <span className="font-black text-[10px] text-slate-900 dark:text-white block">
+                    {isForGeneralExpenses ? (generalExpensesName || 'مصاريف عامة مشتركة') : currentBrother?.name}
+                  </span>
+                </div>
+              </div>
+              <div className="text-left">
+                <span className="text-[9px] text-slate-400 block font-bold">
+                  {isForGeneralExpenses ? 'التوجيه:' : 'البطاقة:'}
+                </span>
+                <span className={`text-[10px] font-black font-mono ${isForGeneralExpenses ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-700 dark:text-emerald-300'}`} dir="ltr">
+                  {isForGeneralExpenses ? 'للصندوق العام 🌐' : currentBrother?.bankAccountNumber}
                 </span>
               </div>
             </div>
-            <div className="text-left">
-              <span className="text-[10px] text-slate-400 block font-bold">
-                {isForGeneralExpenses ? 'التوجيه:' : 'رقم البطاقة المصرفية:'}
-              </span>
-              <span className={`text-xs font-black font-mono ${isForGeneralExpenses ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-700 dark:text-emerald-300'}`} dir="ltr">
-                {isForGeneralExpenses ? 'مصاريف عامة 🌐' : currentBrother?.bankAccountNumber}
-              </span>
-            </div>
           </div>
 
-          {/* 1. Amount Input (المبلغ أولاً) */}
-          <div className="p-3.5 bg-teal-50/50 dark:bg-teal-950/20 rounded-2xl border border-teal-200 dark:border-teal-800">
-            <label className="block font-black text-slate-800 dark:text-slate-200 text-xs mb-1.5 flex items-center gap-1">
-              <DollarSign className="w-4 h-4 text-teal-600" />
-              <span>1. المبلغ المطلوب تحويله ({currency}) *:</span>
-            </label>
-            <input
-              type="number"
-              required
-              min="1"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="اكتب المبلغ هنا (مثال: 70000)"
-              className="w-full bg-white dark:bg-slate-900 border-2 border-teal-400 dark:border-teal-600 rounded-xl px-4 py-2.5 text-base font-black text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 font-mono text-center shadow-xs"
-            />
-          </div>
-
-          {/* 2. Commodity / Field Selection (كتابة اسم السلعة) */}
+          {/* 3. Commodity / Field Selection (كتابة اسم السلعة) */}
           <div className="space-y-1.5 p-3.5 bg-slate-50 dark:bg-slate-750 rounded-2xl border border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <label className="block font-black text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-teal-600" />
-                <span>2. اسم السلعة / الغرض *:</span>
+                <span>3. اسم السلعة / الغرض *:</span>
               </label>
               {commodityName && (
                 <span className="text-[10px] text-teal-600 font-bold">
@@ -268,16 +266,16 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             />
           </div>
 
-          {/* 3. Reason / Notes Input (إجباري لتفعيل الإرسال) */}
+          {/* 4. Reason / Notes Input (إجباري لتفعيل الإرسال) */}
           <div>
             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
               <span className="flex items-center gap-1">
                 <FileText className="w-3.5 h-3.5 text-teal-500" />
-                <span>3. ملاحظات وتفاصيل الصرف <span className="text-rose-500 font-black">* (إجباري لتفعيل الزر)</span>:</span>
+                <span>4. ملاحظات وتفاصيل الصرف <span className="text-rose-500 font-black">* (إجباري لتفعيل الزر)</span>:</span>
               </span>
               {!isReasonValid ? (
                 <span className="text-[10px] text-rose-500 font-bold animate-pulse">
-                  🔒 مطلوب لتفعيل زر الإرسال *
+                  🔒 مطلوب *
                 </span>
               ) : (
                 <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-0.5">
@@ -312,7 +310,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             </div>
           )}
 
-          {/* Submit Action (غير فعّال إلى أن يتم إدخال ملاحظات الصرف) */}
+          {/* Submit Action */}
           <div className="pt-2">
             <button
               type="submit"
@@ -328,18 +326,18 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
               ) : !isReasonValid ? (
                 <>
                   <Lock className="w-4 h-4 text-slate-400" />
-                  <span>اكتب ملاحظة الصرف أولاً لتفعيل زر الإرسال 🔒</span>
+                  <span>اكتب سبب الصرف لتفعيل الإرسال 🔒</span>
                 </>
               ) : (
                 <>
                   <Send className="w-4 h-4 -rotate-45" />
-                  <span>إرسال طلب الأموال للأدمن 📤</span>
+                  <span>{isForGeneralExpenses ? 'إرسال طلب مصاريف عامة 📦' : 'إرسال طلب الأموال للأدمن 📤'}</span>
                 </>
               )}
             </button>
             {!isReasonValid && (
               <p className="text-center text-[10px] text-rose-500 dark:text-rose-400 font-bold mt-1.5 animate-pulse">
-                ⚠️ زر الإرسال غير فعّال حالياً — يرجى كتابة تفاصيل وملاحظات الصرف في الحقل أعلاه لتفعيله.
+                ⚠️ يرجى كتابة سبب وتفاصيل الصرف في الحقل أعلاه لتفعيل الزر.
               </p>
             )}
           </div>
