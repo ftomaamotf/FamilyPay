@@ -8,6 +8,7 @@ export const ALL_TRANSFER_PROGRAMS = [
     category: 'رئيسي',
     description: 'تطبيق كي كارد، ماستر كارد وموقع خدمات كي المباشر',
     webUrl: 'https://qi.services',
+    androidPackage: 'com.isc.qi',
     androidIntent: 'intent://#Intent;package=com.isc.qi;scheme=qi;end',
     iosUrl: 'qi://',
     storeUrl: 'https://play.google.com/store/apps/details?id=com.isc.qi'
@@ -20,6 +21,7 @@ export const ALL_TRANSFER_PROGRAMS = [
     category: 'محافظ إلكترونية',
     description: 'تطبيق وبوابة الدفع الإلكتروني زين كاش',
     webUrl: 'https://zaincash.iq',
+    androidPackage: 'com.zaincash.wallet',
     androidIntent: 'intent://#Intent;package=com.zaincash.wallet;scheme=zaincash;end',
     iosUrl: 'zaincash://',
     storeUrl: 'https://play.google.com/store/apps/details?id=com.zaincash.wallet'
@@ -32,6 +34,7 @@ export const ALL_TRANSFER_PROGRAMS = [
     category: 'مصارف رقمية',
     description: 'First Iraqi Bank - التحويلات والحسابات البنكية الرقمية',
     webUrl: 'https://fib.iq',
+    androidPackage: 'com.firstiraqibank.mobile',
     androidIntent: 'intent://#Intent;package=com.firstiraqibank.mobile;scheme=fib;end',
     iosUrl: 'fib://',
     storeUrl: 'https://play.google.com/store/apps/details?id=com.firstiraqibank.mobile'
@@ -44,6 +47,7 @@ export const ALL_TRANSFER_PROGRAMS = [
     category: 'مصارف حكومية',
     description: 'بوابة وتطبيق مصرف الرافدين الإلكتروني',
     webUrl: 'https://rafidain-bank.gov.iq',
+    androidPackage: 'com.isc.qi.rafidain',
     androidIntent: 'intent://#Intent;package=com.isc.qi.rafidain;scheme=rafidain;end',
     iosUrl: 'rafidain://',
     storeUrl: 'https://play.google.com/store/apps/details?id=com.isc.qi.rafidain'
@@ -56,6 +60,7 @@ export const ALL_TRANSFER_PROGRAMS = [
     category: 'مصارف حكومية',
     description: 'تطبيق وبوابة مصرف الرشيد الإلكتروني',
     webUrl: 'https://rasheedbank.gov.iq',
+    androidPackage: 'iq.rasheedbank',
     androidIntent: 'intent://#Intent;package=iq.rasheedbank;scheme=rasheed;end',
     iosUrl: 'rasheed://',
     storeUrl: 'https://play.google.com/store/apps/details?id=iq.rasheedbank'
@@ -68,6 +73,7 @@ export const ALL_TRANSFER_PROGRAMS = [
     category: 'مصارف تجارية',
     description: 'البنك التجاري العراقي والخدمات المصرفية عبر الإنترنت',
     webUrl: 'https://tbi.com.iq',
+    androidPackage: 'com.tbi.mobile',
     androidIntent: 'intent://#Intent;package=com.tbi.mobile;scheme=tbi;end',
     iosUrl: 'tbi://',
     storeUrl: 'https://play.google.com/store/apps/details?id=com.tbi.mobile'
@@ -80,6 +86,7 @@ export const ALL_TRANSFER_PROGRAMS = [
     category: 'محافظ إلكترونية',
     description: 'محفظة الدفع الإلكتروني وتحويل الأموال آسيا حوالة',
     webUrl: 'https://asiahawala.net',
+    androidPackage: 'com.asiahawala.wallet',
     androidIntent: 'intent://#Intent;package=com.asiahawala.wallet;scheme=asiahawala;end',
     iosUrl: 'asiahawala://',
     storeUrl: 'https://play.google.com/store/apps/details?id=com.asiahawala.wallet'
@@ -92,6 +99,7 @@ export const ALL_TRANSFER_PROGRAMS = [
     category: 'محافظ إلكترونية',
     description: 'تطبيق وبوابة فاست باي للدفع الرقمي والتحويل',
     webUrl: 'https://fast-pay.cash',
+    androidPackage: 'iq.fastpay.consumer',
     androidIntent: 'intent://#Intent;package=iq.fastpay.consumer;scheme=fastpay;end',
     iosUrl: 'fastpay://',
     storeUrl: 'https://play.google.com/store/apps/details?id=iq.fastpay.consumer'
@@ -104,6 +112,7 @@ export const ALL_TRANSFER_PROGRAMS = [
     category: 'مصارف تجارية',
     description: 'National Bank of Iraq - الخدمات المصرفية المباشرة',
     webUrl: 'https://nbi.iq',
+    androidPackage: 'jo.com.capitalbank.nbi',
     androidIntent: 'intent://#Intent;package=jo.com.capitalbank.nbi;scheme=nbi;end',
     iosUrl: 'nbi://'
   },
@@ -145,22 +154,47 @@ export const ALL_TRANSFER_PROGRAMS = [
   }
 ];
 
-// Universal Launcher for both Desktop PC and Mobile Devices
-export const launchTransferProgram = async ({
-  programId = 'qi',
-  accountNumber = '',
-  amount = 0,
-  recipientName = '',
-  reason = '',
-  customUrl = ''
-}) => {
-  // 1. Copy recipient card/account number to clipboard
-  if (accountNumber) {
-    try {
-      await navigator.clipboard.writeText(String(accountNumber).trim());
-    } catch {
-      // silent
+// Helper to copy text to clipboard with fallback
+export const copyToClipboard = (text) => {
+  if (!text) return false;
+  const str = String(text).trim();
+  try {
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(str);
+      return true;
     }
+  } catch {}
+
+  try {
+    const input = document.createElement('textarea');
+    input.value = str;
+    input.style.position = 'fixed';
+    input.style.opacity = '0';
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// Universal Launcher for both Desktop PC and Mobile Devices
+export const launchTransferProgram = (options = {}) => {
+  const {
+    programId = 'qi',
+    accountNumber = '',
+    amount = 0,
+    recipientName = '',
+    reason = '',
+    customUrl = '',
+    launchType = 'auto' // 'auto' | 'app' | 'web' | 'store' | 'sheet'
+  } = options;
+
+  // 1. Copy recipient card/account number immediately (synchronous / fire-and-forget)
+  if (accountNumber) {
+    copyToClipboard(accountNumber);
   }
 
   if (window.navigator?.vibrate) {
@@ -171,18 +205,14 @@ export const launchTransferProgram = async ({
 
   const shareText = `تحويل مالي 💸\nالمستلم: ${recipientName}\nرقم البطاقة المصرفية: ${accountNumber}\nالمبلغ: ${amount} د.ع\nالسبب: ${reason}`;
 
-  // 2. If user chose Native Phone Apps Sheet
-  if (programId === 'native_phone_sheet') {
+  // 2. If user chose Native Phone Apps Sheet OR launchType === 'sheet'
+  if (programId === 'native_phone_sheet' || launchType === 'sheet') {
     if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'تحويل مالي عبر تطبيقات الهاتف',
-          text: shareText
-        });
-        return { success: true, message: 'تم فتح قائمة تطبيقات الهاتف' };
-      } catch (err) {
-        if (err.name === 'AbortError') return { success: true, message: 'تم الإلغاء' };
-      }
+      navigator.share({
+        title: 'تحويل مالي عبر تطبيقات الهاتف',
+        text: shareText
+      }).catch(() => {});
+      return { success: true, message: 'تم فتح قائمة تطبيقات الهاتف' };
     }
     const isAndroid = /android/i.test(navigator.userAgent);
     if (isAndroid) {
@@ -203,38 +233,73 @@ export const launchTransferProgram = async ({
   const isAndroid = /android/i.test(navigator.userAgent);
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
-  if (isAndroid && program.androidIntent) {
-    window.location.href = program.androidIntent;
-    setTimeout(() => {
-      if (program.storeUrl) window.open(program.storeUrl, '_blank');
-      else if (program.webUrl) window.open(program.webUrl, '_blank');
-    }, 1200);
-    return { success: true, message: `جاري تشغيل تطبيق (${program.name}) على الهاتف` };
+  // If explicitly requested 'web' or on desktop without app intent
+  if (launchType === 'web' || (!isAndroid && !isIOS)) {
+    if (program.webUrl) {
+      window.open(program.webUrl, '_blank');
+      return { success: true, message: `تم فتح بوابة (${program.name}) على سطح المكتب` };
+    }
   }
 
-  if (isIOS && program.iosUrl) {
-    window.location.href = program.iosUrl;
-    setTimeout(() => {
-      if (program.webUrl) window.open(program.webUrl, '_blank');
-    }, 1200);
-    return { success: true, message: `جاري تشغيل تطبيق (${program.name}) على الآيفون` };
+  // If explicitly requested 'store'
+  if (launchType === 'store') {
+    if (program.storeUrl) {
+      window.open(program.storeUrl, '_blank');
+      return { success: true, message: `تم فتح صفحة التطبيق في متجر البرامج` };
+    }
   }
 
-  // Desktop Windows / Web Fallback: Open Official Web Portal / Platform
+  // Android Mobile Launch
+  if (isAndroid) {
+    if (program.androidIntent) {
+      // Try Android Intent directly
+      window.location.href = program.androidIntent;
+
+      // Also set fallback timeout if not installed
+      setTimeout(() => {
+        if (program.storeUrl) {
+          window.open(program.storeUrl, '_blank');
+        } else if (program.webUrl) {
+          window.open(program.webUrl, '_blank');
+        }
+      }, 1500);
+      return { success: true, message: `جاري تشغيل تطبيق (${program.name}) على الهاتف` };
+    } else if (program.webUrl) {
+      window.open(program.webUrl, '_blank');
+      return { success: true, message: `تم فتح بوابة (${program.name})` };
+    }
+  }
+
+  // iOS Mobile Launch
+  if (isIOS) {
+    if (program.iosUrl) {
+      window.location.href = program.iosUrl;
+      setTimeout(() => {
+        if (program.webUrl) window.open(program.webUrl, '_blank');
+      }, 1500);
+      return { success: true, message: `جاري تشغيل تطبيق (${program.name}) على الآيفون` };
+    } else if (program.webUrl) {
+      window.open(program.webUrl, '_blank');
+      return { success: true, message: `تم فتح بوابة (${program.name})` };
+    }
+  }
+
+  // Default Web Open
   if (program.webUrl) {
     window.open(program.webUrl, '_blank');
-    return { success: true, message: `تم فتح بوابة (${program.name}) على سطح المكتب` };
+    return { success: true, message: `تم فتح بوابة (${program.name})` };
   }
 
   return { success: true, message: 'تم نسخ رقم البطاقة وتجهيز التحويل' };
 };
 
-export const openPhoneAppsChooser = async (params) => {
+export const openPhoneAppsChooser = (params) => {
   return launchTransferProgram({ ...params, programId: 'native_phone_sheet' });
 };
 
 export const launchQiDirect = (accountNumber = '') => {
   return launchTransferProgram({ programId: 'qi', accountNumber });
 };
+
 
 

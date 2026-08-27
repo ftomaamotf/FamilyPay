@@ -275,6 +275,58 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               </div>
             </div>
 
+            {/* Real Transfer Launch Action Box */}
+            <div className="p-4 rounded-3xl bg-gradient-to-r from-teal-900 via-slate-900 to-indigo-950 text-white space-y-3 text-right shadow-lg">
+              <div className="flex items-center justify-between">
+                <span className="font-black text-xs text-teal-300 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>إتمام التحويل المالي الفعلي 💳:</span>
+                </span>
+                <span className="text-[10px] text-teal-200">اختر وسيلة الفتح</span>
+              </div>
+
+              <div className="flex items-center justify-between bg-white/10 p-2.5 rounded-2xl border border-white/10 font-mono text-xs">
+                <span className="font-black text-amber-300 tracking-wider" dir="ltr">{completedTransfer.recipientAccountNumber}</span>
+                <button
+                  type="button"
+                  onClick={handleCopyAccount}
+                  className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-black flex items-center gap-1 transition active:scale-95 cursor-pointer"
+                >
+                  {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  <span>{copied ? 'تم النسخ ✅' : 'نسخ الرقم'}</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowAllPrograms(true)}
+                  className="py-2.5 bg-teal-500 hover:bg-teal-600 text-white font-black text-xs rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+                >
+                  <Monitor className="w-3.5 h-3.5" />
+                  <span>كافة البرامج 💻</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleOpenPhoneAppsSheet}
+                  className="py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span>قائمة الهاتف 📲</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleOpenQiDirectly}
+                  className="py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>ماستر كي / Qi 💳</span>
+                </button>
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
               <button
                 type="button"

@@ -11,9 +11,11 @@ import {
   Sparkles,
   ShieldCheck,
   Zap,
-  ArrowUpRight
+  ArrowUpRight,
+  ShoppingBag,
+  Share2
 } from 'lucide-react';
-import { ALL_TRANSFER_PROGRAMS, launchTransferProgram } from '../utils/bankAppLauncher';
+import { ALL_TRANSFER_PROGRAMS, launchTransferProgram, copyToClipboard } from '../utils/bankAppLauncher';
 
 export const AllProgramsModal = ({
   isOpen,
@@ -54,7 +56,7 @@ export const AllProgramsModal = ({
 
   const handleCopyAccount = () => {
     if (!accountNumber) return;
-    navigator.clipboard.writeText(String(accountNumber).trim());
+    copyToClipboard(accountNumber);
     setCopied(true);
     if (window.navigator?.vibrate) window.navigator.vibrate(50);
     setToastMsg(`✅ تم نسخ رقم البطاقة (${accountNumber}) بنجاح!`);
@@ -64,23 +66,38 @@ export const AllProgramsModal = ({
     }, 3000);
   };
 
-  const handleLaunch = (program) => {
+  const handleLaunch = (program, launchType = 'auto') => {
     handleCopyAccount();
-    launchTransferProgram({
+    const res = launchTransferProgram({
       programId: program.id,
       accountNumber,
       amount,
       recipientName,
       reason,
-      customUrl
+      customUrl,
+      launchType
     });
 
     if (onSelectProgram) {
       onSelectProgram(program);
     }
 
-    setToastMsg(`🚀 جاري تشغيل (${program.name}) وتجهيز رقم البطاقة!`);
+    setToastMsg(res.message || `🚀 جاري فتح (${program.name}) وتجهيز رقم البطاقة!`);
     setTimeout(() => setToastMsg(''), 4000);
+  };
+
+  const handleSystemShare = () => {
+    handleCopyAccount();
+    launchTransferProgram({
+      programId: 'native_phone_sheet',
+      accountNumber,
+      amount,
+      recipientName,
+      reason,
+      launchType: 'sheet'
+    });
+    setToastMsg('📲 جاري فتح قائمة كافة تطبيقات الهاتف...');
+    setTimeout(() => setToastMsg(''), 3500);
   };
 
   return (
@@ -122,14 +139,26 @@ export const AllProgramsModal = ({
                 {accountNumber}
               </span>
             </div>
-            <button
-              type="button"
-              onClick={handleCopyAccount}
-              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-xs flex items-center gap-1 transition active:scale-95 cursor-pointer"
-            >
-              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'تم النسخ ✅' : 'نسخ رقم البطاقة 📋'}</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleCopyAccount}
+                className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-xs flex items-center gap-1 transition active:scale-95 cursor-pointer"
+              >
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copied ? 'تم النسخ ✅' : 'نسخ رقم البطاقة 📋'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSystemShare}
+                className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-lg shadow-xs flex items-center gap-1 transition active:scale-95 cursor-pointer"
+                title="مشاركة نظامية مع كافة تطبيقات الهاتف"
+              >
+                <Share2 className="w-3.5 h-3.5 text-teal-300" />
+                <span>قائمة الهاتف 📲</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -209,22 +238,59 @@ export const AllProgramsModal = ({
                     />
                     <button
                       type="button"
-                      onClick={() => handleLaunch(prog)}
+                      onClick={() => handleLaunch(prog, 'web')}
                       className="w-full py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 text-white font-black text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
                     >
                       <Globe className="w-3.5 h-3.5" />
                       <span>فتح الرابط المخصص 🚀</span>
                     </button>
                   </div>
-                ) : (
+                ) : prog.isNativeSheet ? (
                   <button
                     type="button"
-                    onClick={() => handleLaunch(prog)}
-                    className="w-full py-2 bg-white dark:bg-slate-900 hover:bg-teal-600 hover:text-white dark:hover:bg-teal-600 text-slate-800 dark:text-white font-black text-xs rounded-xl border border-slate-200 dark:border-slate-700 hover:border-teal-600 shadow-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+                    onClick={() => handleLaunch(prog, 'sheet')}
+                    className="w-full py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 text-white font-black text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
                   >
-                    <span>فتح واستخدام البرنامج 🚀</span>
-                    <ExternalLink className="w-3 h-3 opacity-70" />
+                    <Smartphone className="w-3.5 h-3.5" />
+                    <span>فتح قائمة تطبيقات هاتفك 📲</span>
                   </button>
+                ) : (
+                  <div className="space-y-1 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleLaunch(prog, 'auto')}
+                      className="w-full py-2 bg-teal-600 hover:bg-teal-700 text-white font-black text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+                    >
+                      <span>تشغيل التطبيق / البرنامج فوراً 🚀</span>
+                      <ExternalLink className="w-3 h-3 opacity-80" />
+                    </button>
+
+                    <div className="flex items-center gap-1 pt-0.5">
+                      {prog.webUrl && (
+                        <button
+                          type="button"
+                          onClick={() => handleLaunch(prog, 'web')}
+                          className="flex-1 py-1 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[10px] rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1 cursor-pointer"
+                          title="فتح بوابة الويب على سطح المكتب"
+                        >
+                          <Globe className="w-3 h-3 text-teal-600" />
+                          <span>بوابة الويب</span>
+                        </button>
+                      )}
+
+                      {prog.storeUrl && (
+                        <button
+                          type="button"
+                          onClick={() => handleLaunch(prog, 'store')}
+                          className="flex-1 py-1 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[10px] rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1 cursor-pointer"
+                          title="فتح صفحة التطبيق في متجر التطبيقات"
+                        >
+                          <ShoppingBag className="w-3 h-3 text-amber-600" />
+                          <span>المتجر</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             ))}
