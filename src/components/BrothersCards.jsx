@@ -26,7 +26,8 @@ import {
   Volume2,
   VolumeX,
   MessageCircle,
-  X
+  X,
+  Search
 } from 'lucide-react';
 import { EditTransferModal } from './EditTransferModal';
 import { AdjustCommodityPriceModal } from './AdjustCommodityPriceModal';
@@ -219,8 +220,50 @@ export const BrothersCards = ({
   const [editingTransfer, setEditingTransfer] = useState(null);
   const [inspectedCommodity, setInspectedCommodity] = useState(null);
   const [adjustingCommodity, setAdjustingCommodity] = useState(null);
+  const [circleSearchNum, setCircleSearchNum] = useState('');
   const pressTimerRef = React.useRef(null);
   const currency = settings.currencySymbol;
+
+  const handleLaunchCircleSearch = (e) => {
+    if (e) e.preventDefault();
+    const query = String(circleSearchNum).trim();
+    if (!query) {
+      setCopiedToast('⚠️ اكتب رقم المستخدم أولاً داخل دائرة البحث');
+      setTimeout(() => setCopiedToast(null), 2500);
+      return;
+    }
+
+    const num = parseInt(query, 10);
+    // 1. If it's a 1-based sequence number
+    if (!isNaN(num) && num >= 1 && num <= sortedBrothers.length) {
+      const target = sortedBrothers[num - 1];
+      if (target) {
+        setSelectedBrotherId(target.id);
+        setCopiedToast(`🎯 تم الانتقال إلى المستخدم رقم [${num}]: (${target.name})`);
+        if (window.navigator?.vibrate) window.navigator.vibrate(50);
+        setTimeout(() => setCopiedToast(null), 3000);
+        return;
+      }
+    }
+
+    // 2. If it's by account number or name
+    const found = brothers.find(
+      (b) =>
+        b.accountNumber === query ||
+        b.bankAccountNumber === query ||
+        b.name?.toLowerCase().includes(query.toLowerCase())
+    );
+
+    if (found) {
+      setSelectedBrotherId(found.id);
+      setCopiedToast(`🎯 تم العثور على: (${found.name})`);
+      if (window.navigator?.vibrate) window.navigator.vibrate(50);
+      setTimeout(() => setCopiedToast(null), 3000);
+    } else {
+      setCopiedToast(`⚠️ لم يتم العثور على مستخدم برقم [${query}]`);
+      setTimeout(() => setCopiedToast(null), 3000);
+    }
+  };
 
   const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
   const canSend = canCurrentUserSend ? canCurrentUserSend() : isCurrentAdmin;
@@ -370,6 +413,60 @@ export const BrothersCards = ({
 
           {/* Vertical Stack of Interactive Circles */}
           <div className="flex flex-row lg:flex-col items-center justify-start gap-4 sm:gap-5 overflow-x-auto lg:overflow-y-auto max-h-[620px] p-2 scrollbar-thin scrollbar-thumb-slate-700">
+            
+            {/* 🔍 1. SEARCH CIRCLE AT THE VERY START (دائرة البحث عن أرقام ومستخدمين في بداية الدوائر) */}
+            <div className="flex flex-col items-center shrink-0 w-auto lg:w-full">
+              <div className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full">
+                
+                {/* Outer Circular Ring with Cyan Glowing Theme */}
+                <div className="relative p-1 rounded-full ring-2 ring-cyan-400 group-hover:ring-cyan-300 ring-offset-2 ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-cyan-500/25">
+                  {/* The Inner Search Avatar Circle */}
+                  <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex flex-col items-center justify-center bg-gradient-to-tr from-cyan-900 via-blue-900 to-indigo-950 text-white shadow-inner relative overflow-hidden border-2 border-cyan-400/40">
+                    <div className="relative w-full h-full flex flex-col items-center justify-center p-1">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={circleSearchNum}
+                        onChange={(e) => setCircleSearchNum(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleLaunchCircleSearch(e);
+                        }}
+                        placeholder="رقم #"
+                        title="اكتب رقم المستخدم هنا للبحث السريع"
+                        className="w-full bg-transparent text-center text-white font-mono font-black text-base sm:text-lg outline-none placeholder:text-cyan-200/50 cursor-text select-text"
+                      />
+                      <span className="text-[9px] text-cyan-300 font-bold opacity-90 pointer-events-none -mt-0.5">
+                        اكتب الرقم
+                      </span>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/20 pointer-events-none" />
+                  </div>
+
+                  {/* Search Icon Badge on top */}
+                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-cyan-400 flex items-center justify-center shadow-md border border-cyan-400 text-[10px]">
+                    <Search className="w-3 h-3 text-cyan-300" />
+                  </div>
+                </div>
+
+                {/* Circle Name Label */}
+                <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-cyan-300 group-hover:text-cyan-200">
+                  بحث بالرقم 🔍
+                </span>
+
+                {/* Launch Search Button (في نفس مكان السعر أسفل الدوائر) */}
+                <button
+                  type="button"
+                  onClick={handleLaunchCircleSearch}
+                  title="انطلاق البحث والانتقال للمستخدم المحدد"
+                  className="mt-1 px-3 py-1 rounded-full text-[11px] font-black font-mono shadow-md bg-gradient-to-r from-cyan-400 via-teal-400 to-cyan-300 hover:from-cyan-300 hover:to-teal-300 text-slate-950 flex items-center justify-center gap-1 transition active:scale-95 border border-cyan-200 cursor-pointer"
+                >
+                  <span>انطلاق 🚀</span>
+                </button>
+
+              </div>
+            </div>
+
+            {/* 👥 2. USER CIRCLES WITH NUMBER IN CENTER (دوائر المستخدمين مع الرقم في الوسط) */}
             {sortedBrothers.map((b, idx) => {
               const isSenderAdmin = b.id === activeAdminId;
               const isMe = b.id === currentUser?.id;
@@ -393,7 +490,7 @@ export const BrothersCards = ({
                     onMouseLeave={handleTouchEnd}
                     onTouchStart={() => handleTouchStart(b)}
                     onTouchEnd={handleTouchEnd}
-                    title={`اضغط لتحديد ${b.name} • اضغط مطولاً لنسخ رقم الحساب`}
+                    title={`اضغط لتحديد [${idx + 1}] ${b.name} • اضغط مطولاً لنسخ رقم الحساب`}
                     className={`flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full ${
                       isSelected ? 'scale-105' : 'opacity-85 hover:opacity-100 hover:scale-102'
                     }`}
@@ -408,26 +505,20 @@ export const BrothersCards = ({
                           : `ring-2 ring-slate-700/80 group-hover:${palette.ring}`
                       }`}
                     >
-                      {/* The Inner Avatar Circle with Unique Gradient */}
+                      {/* The Inner Avatar Circle with Number in Center */}
                       <div
-                        className={`w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-black shadow-inner relative overflow-hidden bg-gradient-to-tr ${palette.gradient}`}
+                        className={`w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center text-white font-black shadow-inner relative overflow-hidden bg-gradient-to-tr ${palette.gradient}`}
                       >
                         {isCopied ? (
                           <Check className="w-8 h-8 text-white animate-pulse" />
                         ) : (
-                          <span className="drop-shadow-md">{b.name[0]}</span>
+                          <span className="drop-shadow-md font-mono font-black text-2xl sm:text-3xl text-white">
+                            {idx + 1}
+                          </span>
                         )}
 
                         {/* Gradient Overlay for luxury effect */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/20 pointer-events-none" />
-                      </div>
-
-                      {/* Sequence Number Badge (رقم تسلسلي 1، 2، 3، 4 على كل دائرة) */}
-                      <div
-                        title={`المستخدم رقم ${idx + 1}`}
-                        className="absolute -top-1.5 -left-1.5 w-6 h-6 rounded-full bg-slate-900 text-amber-400 font-mono font-black text-xs flex items-center justify-center shadow-md border-2 border-amber-400/90 ring-2 ring-slate-950 z-10 select-none"
-                      >
-                        {idx + 1}
                       </div>
 
                       {/* Admin Crown Badge */}
