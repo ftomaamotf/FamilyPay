@@ -864,9 +864,9 @@ export const BrothersCards = ({
                             <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                               {t.reason || 'بدون تفاصيل'}
                             </p>
-                            {t.requestedBy && (
+                            {(t.requestedBy || t.senderName) && (
                               <p className="text-[11px] text-teal-600 dark:text-teal-400 font-bold">
-                                👤 بطلب من الأخ: {t.requestedBy}
+                                👤 {t.requestedBy ? `تم الصرف بطلب من المستخدم: ${t.requestedBy}` : `تم الصرف بواسطة: ${t.senderName}`}
                               </p>
                             )}
                           </div>
