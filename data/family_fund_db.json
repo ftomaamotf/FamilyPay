@@ -31,7 +31,7 @@
       "isSendingCard": true,
       "isFrozen": false,
       "color": "#059669",
-      "lastUpdated": "2026-08-26T19:59:32.480Z"
+      "lastUpdated": "2026-08-27T19:30:22.058Z"
     },
     {
       "id": "card-2",
@@ -135,6 +135,17 @@
     }
   ],
   "notifications": [
+    {
+      "id": "notif-1787859022058",
+      "title": "💰 تحويل مالي: 5000 د.ع",
+      "message": "تم تحويل 5000 د.ع إلى حساب الأخ (مصاريف عامة) رقم (GENERAL) لحاجة [شراء منظفات للصندوق]. المتبقي في بطاقة الصندوق: 811001 د.ع",
+      "transferId": "tx-1787859022058",
+      "recipientId": "b-general",
+      "amount": 5000,
+      "reason": "شراء منظفات للصندوق",
+      "timestamp": "2026-08-27T19:30:22.058Z",
+      "readBy": []
+    },
     {
       "id": "notif-1787774372480",
       "title": "✏️ تم تعديل سعر سلعة [بنزين]",
@@ -587,5 +598,6 @@
     }
   ],
   "guestRequests": [],
-  "guestJoinRequests": []
+  "guestJoinRequests": [],
+  "generalExpensesName": "مصاريف عامة"
 }

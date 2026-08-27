@@ -62,6 +62,11 @@ export const FinanceProvider = ({ children }) => {
     return [];
   });
 
+  // General Expenses Custom Name State (اسم بطاقة ودائرة المصاريف العامة)
+  const [generalExpensesName, setGeneralExpensesName] = useState(() =>
+    loadFromStorage('bait_finance_general_expenses_name', 'مصاريف عامة')
+  );
+
   // Guest Join Requests (طلبات انضمام الضيوف المعلقة)
   const [guestRequests, setGuestRequests] = useState([]);
 
@@ -90,6 +95,10 @@ export const FinanceProvider = ({ children }) => {
         if (data.state.brothers) setBrothers(data.state.brothers);
         if (data.state.bankCards) setBankCards(data.state.bankCards);
         if (data.state.transfers) setTransfers(data.state.transfers);
+        if (data.state.generalExpensesName) {
+          setGeneralExpensesName(data.state.generalExpensesName);
+          saveToStorage('bait_finance_general_expenses_name', data.state.generalExpensesName);
+        }
       }
     } catch {
       // offline silent
@@ -2406,6 +2415,30 @@ export const FinanceProvider = ({ children }) => {
     checkAndRestoreSubscription();
   }, [currentUser?.id]);
 
+  const updateGeneralExpensesName = async (newName) => {
+    if (!newName || !newName.trim()) return { success: false, message: 'يرجى إدخال اسم صحيح' };
+    const clean = newName.trim();
+    setGeneralExpensesName(clean);
+    saveToStorage('bait_finance_general_expenses_name', clean);
+    try {
+      const res = await fetch(`${API_BASE}/api/general-expenses/name`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: clean })
+      });
+      const data = await res.json();
+      return data;
+    } catch {
+      return { success: true, message: 'تم تحديث اسم بطاقة المصاريف العامة محلياً' };
+    }
+  };
+
+  const totalGeneralExpensesSpent = useMemo(() => {
+    return transfers
+      .filter((t) => t.recipientId === 'b-general' || t.isGeneralExpense || t.recipientName === generalExpensesName || t.recipientName === 'مصاريف عامة')
+      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+  }, [transfers, generalExpensesName]);
+
   const updateSettings = (newSettings) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
@@ -2432,6 +2465,9 @@ export const FinanceProvider = ({ children }) => {
         currentMonthTransfers,
         settings,
         updateSettings,
+        generalExpensesName,
+        updateGeneralExpensesName,
+        totalGeneralExpensesSpent,
         loginBrother,
         loginAsGuest,
         logout,

@@ -17,10 +17,16 @@ import {
 } from 'lucide-react';
 
 export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null, initialFieldId = null }) => {
-  const { brothers, sendingCard, executeTransfer, settings, isCardFrozen, canCurrentUserSend, currentUser } = useFinance();
+  const { brothers, sendingCard, executeTransfer, settings, isCardFrozen, canCurrentUserSend, currentUser, generalExpensesName } = useFinance();
   const currency = settings.currencySymbol;
 
-  const [recipientId, setRecipientId] = useState(initialRecipientId || '');
+  const getInitialId = (init) => {
+    if (!init) return '';
+    if (typeof init === 'object') return init.id || (init.isGeneralExpense ? 'b-general' : '');
+    return String(init);
+  };
+
+  const [recipientId, setRecipientId] = useState(getInitialId(initialRecipientId));
   const [fieldId, setFieldId] = useState(initialFieldId || '');
   const [commodityName, setCommodityName] = useState('');
   const [amount, setAmount] = useState('');
@@ -30,7 +36,11 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
   const [completedTransfer, setCompletedTransfer] = useState(null);
 
   const isSenderAuthorized = canCurrentUserSend ? canCurrentUserSend() : true;
-  const selectedRecipient = brothers.find((b) => b.id === recipientId) || null;
+  const isGeneralRecipient = recipientId === 'b-general' || (typeof initialRecipientId === 'object' && initialRecipientId?.isGeneralExpense);
+
+  const selectedRecipient = isGeneralRecipient
+    ? { id: 'b-general', name: generalExpensesName || 'مصاريف عامة', bankAccountNumber: '', isGeneralExpense: true }
+    : (brothers.find((b) => b.id === recipientId) || null);
 
   useEffect(() => {
     if (isOpen) {
@@ -38,7 +48,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
       setAmount('');
       setReason('');
       if (initialRecipientId) {
-        setRecipientId(initialRecipientId);
+        setRecipientId(getInitialId(initialRecipientId));
       } else {
         setRecipientId('');
       }
@@ -74,14 +84,14 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
 
   const isRecipientValid = Boolean(recipientId && selectedRecipient);
   const isReasonValid = reason.trim().length >= 2;
-  const isCommodityValid = (commodityName.trim().length >= 2) || Boolean(fieldId);
+  const isCommodityValid = (commodityName.trim().length >= 2) || Boolean(fieldId) || isGeneralRecipient;
   const isAmountValid = Number(amount) > 0;
   const canSubmit = isRecipientValid && isReasonValid && isCommodityValid && isAmountValid && !isCardFrozen && !loading && isSenderAuthorized;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isRecipientValid) {
-      setErrorMsg('⚠️ يرجى اختيار الأخ المستلم أولاً بالضغط على اسمه أو دائرته');
+      setErrorMsg('⚠️ يرجى اختيار المستلم أولاً بالضغط على اسمه أو دائرته');
       return;
     }
     if (isCardFrozen) {
@@ -92,7 +102,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
       setErrorMsg('⚠️ يرجى إدخال مبلغ صحيح أكبر من الصفر');
       return;
     }
-    if (!commodityName.trim() && !fieldId) {
+    if (!commodityName.trim() && !fieldId && !isGeneralRecipient) {
       setErrorMsg('⚠️ يرجى تحديد أو كتابة اسم السلعة المطلوبة');
       return;
     }
@@ -105,11 +115,11 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     setErrorMsg('');
 
     const targetRecipientId = recipientId;
-    const finalCommodity = commodityName.trim() || selectedRecipient?.approvedFields?.find(f => f.id === fieldId)?.name || 'مصروف عام';
-    const targetAccount = selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber;
+    const finalCommodity = commodityName.trim() || selectedRecipient?.approvedFields?.find(f => f.id === fieldId)?.name || (isGeneralRecipient ? (generalExpensesName || 'مصاريف عامة') : 'مصروف عام');
+    const targetAccount = selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber || '';
 
-    // Automatically copy recipient card number to clipboard on transfer button click!
-    if (targetAccount) {
+    // Automatically copy recipient card number to clipboard on transfer button click if available
+    if (targetAccount && !isGeneralRecipient) {
       copyAccountNumberSilently(targetAccount);
     }
 
@@ -118,6 +128,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
       recipientAccountNumber: targetAccount,
       brotherAccountNumber: selectedRecipient?.accountNumber,
       bankAccountNumber: selectedRecipient?.bankAccountNumber,
+      isGeneralExpense: Boolean(isGeneralRecipient),
       amount: Number(amount),
       fieldId: commodityName.trim() ? null : (fieldId || null),
       commodityName: finalCommodity,
@@ -127,14 +138,13 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     setLoading(false);
 
     if (res.success) {
-      // Re-copy to ensure clipboard has it firmly
-      if (targetAccount) {
+      if (targetAccount && !isGeneralRecipient) {
         copyAccountNumberSilently(targetAccount);
       }
 
       setCompletedTransfer(res.transfer || {
-        recipientName: selectedRecipient?.name || 'الأخ المستلم',
-        recipientAccountNumber: targetAccount,
+        recipientName: selectedRecipient?.name || 'المستلم',
+        recipientAccountNumber: targetAccount || 'مصاريف عامة مشتركة 🌐',
         amount: Number(amount),
         reason: reason.trim(),
         date: new Date().toISOString().split('T')[0],
@@ -271,12 +281,33 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               </div>
             </div>
 
-            {/* 1. Recipient Brother Selector */}
+            {/* 1. Recipient Selector */}
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                1. اختر الأخ المستلم (يتم جلب حسابه تلقائياً):
+                1. اختر المستلم أو المصاريف العامة:
               </label>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2">
+                {/* General Expenses Option */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRecipientId('b-general');
+                    setFieldId('');
+                    setCommodityName('');
+                  }}
+                  className={`p-2.5 rounded-2xl flex flex-col items-center gap-1 transition border text-xs font-bold ${
+                    recipientId === 'b-general'
+                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500'
+                      : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  <span className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-950 text-base font-black shadow-sm bg-gradient-to-tr from-amber-600 via-orange-500 to-amber-400">
+                    📦
+                  </span>
+                  <span className="truncate font-black">{generalExpensesName || 'مصاريف عامة'}</span>
+                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">مصاريف عامة</span>
+                </button>
+
                 {brothers.map((b) => {
                   const isSelected = recipientId === b.id;
                   return (
@@ -314,18 +345,28 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                 <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
                   <span className="flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>رقم البطاقة المصرفية للأخ ({selectedRecipient.name}):</span>
+                    <span>{selectedRecipient.isGeneralExpense ? 'جهة التحويل:' : `رقم البطاقة المصرفية للأخ (${selectedRecipient.name}):`}</span>
                   </span>
-                  <span className="text-emerald-600 font-bold">بطاقة المستلم</span>
+                  <span className={selectedRecipient.isGeneralExpense ? "text-amber-600 font-bold" : "text-emerald-600 font-bold"}>
+                    {selectedRecipient.isGeneralExpense ? "مصاريف عامة 🌐" : "بطاقة المستلم"}
+                  </span>
                 </div>
 
                 <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs">
-                  <strong className="text-emerald-700 dark:text-emerald-300 text-sm sm:text-base font-black tracking-wider" dir="ltr">
-                    {selectedRecipient.bankAccountNumber}
-                  </strong>
-                  <span className="text-[10px] text-slate-400 font-bold font-sans">
-                    ⚡ سيتم نسخ الرقم تلقائياً عند الضغط على زر التحويل
-                  </span>
+                  {selectedRecipient.isGeneralExpense ? (
+                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-sans font-bold">
+                      <span>📦 مصاريف عامة للصندوق (بدون رقم بطاقة ⚡)</span>
+                    </div>
+                  ) : (
+                    <>
+                      <strong className="text-emerald-700 dark:text-emerald-300 text-sm sm:text-base font-black tracking-wider" dir="ltr">
+                        {selectedRecipient.bankAccountNumber}
+                      </strong>
+                      <span className="text-[10px] text-slate-400 font-bold font-sans">
+                        ⚡ سيتم نسخ الرقم تلقائياً عند الضغط على زر التحويل
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             )}

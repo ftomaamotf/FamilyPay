@@ -173,9 +173,15 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                       <span className="font-extrabold text-sm text-slate-900 dark:text-white">
                         {req.brotherName}
                       </span>
-                      <span className="text-[10px] bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-md font-bold">
-                        {req.fieldName || 'طلب عام'}
-                      </span>
+                      {req.isGeneralExpense ? (
+                        <span className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
+                          📦 مصاريف عامة للصندوق
+                        </span>
+                      ) : (
+                        <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-md font-bold">
+                          {req.fieldName || 'طلب عام'}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
@@ -192,9 +198,15 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                     )}
 
                     <div className="text-[10px] text-slate-400 flex items-center gap-2">
-                      <span>رقم الحساب: <strong className="font-mono" dir="ltr">{req.bankAccountNumber || req.brotherAccountNumber}</strong></span>
+                      <span>
+                        {req.isGeneralExpense ? (
+                          <strong className="text-amber-600 dark:text-amber-400">توجيه: مصاريف عامة مشتركة (بدون رقم حساب) 🌐</strong>
+                        ) : (
+                          <>رقم الحساب: <strong className="font-mono" dir="ltr">{req.bankAccountNumber || req.brotherAccountNumber}</strong></>
+                        )}
+                      </span>
                       <span>•</span>
-                      <span>{req.date}</span>
+                      <span>{req.date || req.createdAt?.split('T')[0]}</span>
                     </div>
                   </div>
 
