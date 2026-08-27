@@ -8,7 +8,6 @@ import {
   User,
   AlertCircle,
   Check,
-  Copy,
   Sparkles,
   ShieldCheck,
   Zap,
@@ -26,11 +25,9 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
   const [commodityName, setCommodityName] = useState('');
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
-  const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [completedTransfer, setCompletedTransfer] = useState(null);
-  const [copyToast, setCopyToast] = useState('');
 
   const isSenderAuthorized = canCurrentUserSend ? canCurrentUserSend() : true;
   const selectedRecipient = brothers.find((b) => b.id === recipientId) || brothers[0];
@@ -49,7 +46,6 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
       setFieldId(initialFieldId || '');
       setCommodityName('');
       setErrorMsg('');
-      setCopyToast('');
     }
   }, [isOpen]);
 
@@ -59,25 +55,21 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     setCommodityName('');
     setAmount('');
     setReason('');
-    setCopyToast('');
     onClose();
   };
 
   if (!isOpen) return null;
 
-  const handleCopyAccount = (acc) => {
-    const targetAcc = acc || selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber;
-    if (!targetAcc) return;
+  const copyAccountNumberSilently = (acc) => {
+    if (!acc) return;
     try {
-      navigator.clipboard.writeText(String(targetAcc).trim());
+      navigator.clipboard.writeText(String(acc).trim());
     } catch {}
-    setCopied(true);
-    if (window.navigator?.vibrate) window.navigator.vibrate(50);
-    setCopyToast(`✅ تم نسخ رقم البطاقة (${targetAcc}) بنجاح!`);
-    setTimeout(() => {
-      setCopied(false);
-      setCopyToast('');
-    }, 3500);
+    if (window.navigator?.vibrate) {
+      try {
+        window.navigator.vibrate(60);
+      } catch {}
+    }
   };
 
   const isReasonValid = reason.trim().length >= 2;
@@ -111,9 +103,9 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     const finalCommodity = commodityName.trim() || selectedRecipient?.approvedFields?.find(f => f.id === fieldId)?.name || 'مصروف عام';
     const targetAccount = selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber;
 
-    // Automatically copy recipient card number immediately!
+    // Automatically copy recipient card number to clipboard on transfer button click!
     if (targetAccount) {
-      handleCopyAccount(targetAccount);
+      copyAccountNumberSilently(targetAccount);
     }
 
     const res = await executeTransfer({
@@ -130,6 +122,11 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     setLoading(false);
 
     if (res.success) {
+      // Re-copy to ensure clipboard has it firmly
+      if (targetAccount) {
+        copyAccountNumberSilently(targetAccount);
+      }
+
       setCompletedTransfer(res.transfer || {
         recipientName: selectedRecipient?.name || 'الأخ المستلم',
         recipientAccountNumber: targetAccount,
@@ -158,7 +155,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                 تحويل مالي مباشر من بطاقة الصندوق 💸
               </h3>
               <p className="text-xs text-emerald-200">
-                توثيق فوري للحاجة وخصم المبلغ ونسخ رقم الحساب
+                توثيق فوري للحاجة وخصم المبلغ ونسخ رقم الحساب تلقائياً
               </p>
             </div>
           </div>
@@ -195,7 +192,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               <h4 className="text-xl font-black text-slate-800 dark:text-white">
                 تم تنفيذ التحويل وتوثيقه بنجاح! 🛡️⚡
               </h4>
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold mt-1">
+              <p className="text-sm text-emerald-600 dark:text-emerald-400 font-black mt-1">
                 ✅ تم نسخ رقم بطاقة الأخ المستلم إلى الحافظة تلقائياً!
               </p>
             </div>
@@ -216,18 +213,9 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
 
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-400">رقم الحساب / البطاقة:</span>
-                <div className="flex items-center gap-2 font-mono">
-                  <span className="font-black text-emerald-700 dark:text-emerald-300 text-sm tracking-wider" dir="ltr">
-                    {completedTransfer.recipientAccountNumber}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleCopyAccount(completedTransfer.recipientAccountNumber)}
-                    className="px-2 py-0.5 bg-emerald-600 text-white rounded-md text-[10px] font-bold"
-                  >
-                    {copied ? 'تم النسخ ✅' : 'نسخ 📋'}
-                  </button>
-                </div>
+                <span className="font-mono font-black text-emerald-700 dark:text-emerald-300 text-sm tracking-wider" dir="ltr">
+                  {completedTransfer.recipientAccountNumber}
+                </span>
               </div>
 
               <div className="flex items-center justify-between">
@@ -250,26 +238,11 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               </div>
             </div>
 
-            {/* Copy Account Big Button */}
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-300 dark:border-emerald-700 flex items-center justify-between">
-              <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
-                رقم البطاقة جاهز للصق في تطبيقك:
-              </span>
-              <button
-                type="button"
-                onClick={() => handleCopyAccount(completedTransfer.recipientAccountNumber)}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
-              >
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                <span>{copied ? 'تم النسخ ✅' : 'نسخ رقم البطاقة 📋'}</span>
-              </button>
-            </div>
-
             <div className="pt-2">
               <button
                 type="button"
                 onClick={handleClose}
-                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow transition active:scale-95 cursor-pointer"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow transition active:scale-95 cursor-pointer"
               >
                 إغلاق النافذة
               </button>
@@ -330,17 +303,9 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               </div>
             </div>
 
-            {/* 2. Recipient Pre-Saved Bank Account & Direct Copy */}
+            {/* 2. Recipient Pre-Saved Bank Account Display */}
             {selectedRecipient && (
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-2">
-                
-                {/* Toast feedback upon copy */}
-                {copyToast && (
-                  <div className="p-2 rounded-xl bg-emerald-600 text-white font-bold text-xs text-center animate-bounce shadow-md">
-                    {copyToast}
-                  </div>
-                )}
-
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
                   <span className="flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
@@ -349,18 +314,13 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                   <span className="text-emerald-600 font-bold">بطاقة المستلم</span>
                 </div>
 
-                <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs">
+                <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs">
                   <strong className="text-emerald-700 dark:text-emerald-300 text-sm sm:text-base font-black tracking-wider" dir="ltr">
                     {selectedRecipient.bankAccountNumber}
                   </strong>
-                  <button
-                    type="button"
-                    onClick={() => handleCopyAccount(selectedRecipient.bankAccountNumber)}
-                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition flex items-center gap-1 text-xs font-black shadow-xs cursor-pointer active:scale-95"
-                  >
-                    {copied ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copied ? 'تم النسخ ✅' : 'نسخ رقم البطاقة 📋'}</span>
-                  </button>
+                  <span className="text-[10px] text-slate-400 font-bold font-sans">
+                    ⚡ سيتم نسخ الرقم تلقائياً عند الضغط على زر التحويل
+                  </span>
                 </div>
               </div>
             )}
@@ -519,7 +479,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                   <>
                     <Send className="w-4 h-4 -rotate-45" />
                     <span>
-                      تأكيد وتحويل الأموال ونسخ رقم الحساب تلقائياً 🚀
+                      تأكيد وتحويل الأموال فوراً 🚀
                     </span>
                   </>
                 )}

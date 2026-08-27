@@ -276,15 +276,9 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                 <span className="font-black font-mono text-sm sm:text-base text-slate-900 dark:text-white tracking-wider" dir="ltr">
                   {selectedReq.bankAccountNumber || selectedReq.brotherAccountNumber}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => copyBankNumber(selectedReq.bankAccountNumber || selectedReq.brotherAccountNumber)}
-                  className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1 active:scale-95 shrink-0 cursor-pointer"
-                  title="نسخ رقم البطاقة"
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>نسخ الرقم 📋</span>
-                </button>
+                <span className="text-[10px] text-slate-400 font-bold font-sans">
+                  ⚡ سيتم نسخ الرقم تلقائياً عند تأكيد الصرف
+                </span>
               </div>
             </div>
 
@@ -330,7 +324,7 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                   <span>
                     {loading
                       ? 'جاري التوثيق والصرف...'
-                      : '✅ تأكيد وصرف ونسخ رقم البطاقة 📋'}
+                      : '✅ تأكيد وصرف المبلغ 🚀'}
                   </span>
                 </button>
                 <button
