@@ -61,6 +61,16 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     }
   }, [isOpen]);
 
+  const handleClose = () => {
+    setErrorMsg('');
+    setCompletedTransfer(null);
+    setCommodityName('');
+    setAmount('');
+    setReason('');
+    setBankAppToast('');
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   const handleCopyAccount = () => {
