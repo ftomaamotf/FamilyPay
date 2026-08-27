@@ -20,13 +20,14 @@ window.fetch = async (url, options = {}) => {
   // If the server tells us the token is invalid or expired, force logout
   if (response.status === 401 || response.status === 403) {
     if (url.includes('/api/') && !url.includes('/api/auth/login')) {
-      console.error('JWT Token expired or invalid! Forcing logout...');
+      const wasLoggedIn = localStorage.getItem('bait_finance_current_user') || localStorage.getItem('family_pay_token');
       localStorage.removeItem('family_pay_token');
       localStorage.removeItem('bait_finance_current_user');
-      // window.location.reload(); 
-      // We don't force reload immediately to allow components to handle it, 
-      // or we can reload to clear state. Let's just reload.
-      window.location.href = '/';
+      
+      if (wasLoggedIn) {
+        console.error('JWT Token expired or invalid! Forcing logout...');
+        window.location.reload();
+      }
     }
   }
   return response;
