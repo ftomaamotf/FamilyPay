@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.onrender.familypay_aw26.twa",
+      "sha256_cert_fingerprints": [
+        "04:66:8E:42:97:F8:07:78:27:53:AB:12:3F:35:68:38:45:75:AB:50:EB:73:DF:7A:2C:E5:E7:1B:0D:2B:EB:96"
+      ]
+    }
+  }
+]

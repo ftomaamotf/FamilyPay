@@ -2492,6 +2492,23 @@ app.get('/api/download/FamilyPay.apk', (req, res) => {
   res.status(404).json({ success: false, message: 'ملف التطبيق غير موجود' });
 });
 
+// Digital Asset Links Verification for Android Fullscreen TWA (Removes top URL bar completely)
+app.get('/.well-known/assetlinks.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.json([
+    {
+      relation: ["delegate_permission/common.handle_all_urls"],
+      target: {
+        namespace: "android_app",
+        package_name: "com.onrender.familypay_aw26.twa",
+        sha256_cert_fingerprints: [
+          "04:66:8E:42:97:F8:07:78:27:53:AB:12:3F:35:68:38:45:75:AB:50:EB:73:DF:7A:2C:E5:E7:1B:0D:2B:EB:96"
+        ]
+      }
+    }
+  ]);
+});
+
 // Serve frontend build in production with no-cache headers
 const distPath = path.join(__dirname, 'dist');
 if (fs.existsSync(distPath)) {
