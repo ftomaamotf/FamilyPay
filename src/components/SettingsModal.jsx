@@ -999,24 +999,35 @@ export const SettingsModal = ({
                     </span>
                   </div>
 
-                  <div className="bg-slate-950/60 p-3 rounded-2xl border border-emerald-500/20 text-xs text-slate-300 space-y-1">
+                  <div className="bg-slate-950/60 p-3 rounded-2xl border border-emerald-500/20 text-xs text-slate-300 space-y-1.5">
                     <p className="font-bold text-emerald-300 flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>ميزة حصرية للمالك الأول فقط (9256869125):</span>
+                      <span>تطبيق أندرويد مستقل وشامل لجميع التحديثات الأخيرة (Full-Screen Native App):</span>
                     </p>
                     <p className="text-[11px] text-slate-300 leading-relaxed">
-                      أنت المالك الوحيد المخول بنشر التطبيق. عند إرسال الملف لأي شخص وتثبيته على هاتفه، يفتح له مباشرة على واجهة التسجيل العامة لإنشاء صندوق خاص به أو مسح باركودك للانضمام.
+                      ملف الـ APK مدمج معه آخر التحديثات والإصلاحات الأمنية وشبكة الربط الرقمي الموثقة، بحيث يفتح لدى أي مستخدم بشاشة كاملة وبدون أي شريط متصفح أو عناوين مواقع.
                     </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleShareApkClick}
-                    className="w-full py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/30 transition active:scale-95 flex items-center justify-center gap-2 border border-emerald-400/40"
-                  >
-                    <Share2 className="w-4 h-4" />
-                    <span>إرسال ومشاركة ملف الـ APK للأجهزة الأخرى 📲</span>
-                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleShareApkClick}
+                      className="py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/30 transition active:scale-95 flex items-center justify-center gap-2 border border-emerald-400/40 cursor-pointer"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      <span>مشاركة ملف الـ APK 📲</span>
+                    </button>
+
+                    <a
+                      href="/FamilyPay.apk"
+                      download="FamilyPay.apk"
+                      className="py-3 bg-slate-800 hover:bg-slate-700 text-white font-black text-xs sm:text-sm rounded-2xl border border-slate-700 transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-center"
+                    >
+                      <Download className="w-4 h-4 text-emerald-400" />
+                      <span>تنزيل APK المباشر ⬇️</span>
+                    </a>
+                  </div>
                 </div>
               )}
 
