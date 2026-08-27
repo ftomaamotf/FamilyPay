@@ -15,7 +15,11 @@ import {
   Sparkles,
   CreditCard,
   Eye,
-  EyeOff
+  EyeOff,
+  Copy,
+  ExternalLink,
+  Smartphone,
+  ArrowUpRight
 } from 'lucide-react';
 
 export const PendingRequestsModal = ({ isOpen, onClose }) => {
@@ -36,6 +40,46 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [copiedBankToast, setCopiedBankToast] = useState('');
+
+  const copyBankNumber = (accNumber) => {
+    if (!accNumber) return;
+    navigator.clipboard.writeText(String(accNumber).trim());
+    setCopiedBankToast(`✅ تم نسخ رقم البطاقة (${accNumber}) بنجاح!`);
+    if (window.navigator?.vibrate) {
+      window.navigator.vibrate(60);
+    }
+    setTimeout(() => setCopiedBankToast(''), 3500);
+  };
+
+  const handleOpenBankApp = (bankAccountNumber, appType = 'qi') => {
+    copyBankNumber(bankAccountNumber);
+
+    const isAndroid = /android/i.test(navigator.userAgent);
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+    if (appType === 'qi') {
+      if (isAndroid) {
+        window.location.href = 'intent://#Intent;package=com.isc.qi;scheme=qi;end';
+        setTimeout(() => {
+          window.open('https://play.google.com/store/apps/details?id=com.isc.qi', '_blank');
+        }, 1200);
+      } else if (isIOS) {
+        window.location.href = 'qi://';
+        setTimeout(() => {
+          window.open('https://apps.apple.com/app/qi-services/id1458925586', '_blank');
+        }, 1200);
+      } else {
+        window.open('https://qi.services', '_blank');
+      }
+    } else if (appType === 'zaincash') {
+      if (isAndroid) {
+        window.location.href = 'intent://#Intent;package=com.zaincash.wallet;scheme=zaincash;end';
+      } else {
+        window.open('https://zaincash.iq', '_blank');
+      }
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -226,25 +270,83 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
 
       </div>
 
-      {/* Approve Confirmation Modal */}
+      {/* Approve Confirmation Modal with Real Banking Integration */}
       {selectedReq && actionType === 'approve' && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 text-center">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn" dir="rtl">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 text-center text-slate-800 dark:text-slate-100">
             
-            <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-7 h-7" />
+            {/* Toast feedback upon copying */}
+            {copiedBankToast && (
+              <div className="p-2.5 rounded-xl bg-emerald-600 text-white font-black text-xs animate-bounce shadow-lg">
+                {copiedBankToast}
+              </div>
+            )}
+
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center mx-auto shadow-lg shadow-emerald-600/30">
+              <CreditCard className="w-6 h-6" />
             </div>
 
             <div>
-              <h4 className="font-black text-base text-slate-900 dark:text-white">
-                تأكيد الموافقة وتحويل المبلغ 💸
+              <h4 className="font-black text-base text-slate-900 dark:text-white flex items-center justify-center gap-2">
+                <span>الموافقة والتحويل البنكي للمال 💳</span>
               </h4>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                سيتم تحويل <strong>{Number(selectedReq.amount).toLocaleString()} {currency}</strong> إلى حساب (<strong>{selectedReq.brotherName}</strong>) - رقم البطاقة المصرفية: <strong className="font-mono text-emerald-600" dir="ltr">{selectedReq.bankAccountNumber}</strong> وخصمه من بطاقة الصندوق فوراً.
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                تحويل مبلغ <strong className="text-emerald-600 dark:text-emerald-400 font-mono text-sm">{Number(selectedReq.amount).toLocaleString()} {currency}</strong> إلى حساب الأخ (<strong>{selectedReq.brotherName}</strong>)
               </p>
             </div>
 
-            <form onSubmit={handleApprove} className="space-y-3 text-xs text-right">
+            {/* Recipient Bank Card Quick Copy Box */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-right space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                  رقم بطاقة المستلم (ماستر كي / Qi Card):
+                </span>
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
+                  {selectedReq.fieldName || 'مصروف عام'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <span className="font-black font-mono text-sm sm:text-base text-slate-900 dark:text-white tracking-wider" dir="ltr">
+                  {selectedReq.bankAccountNumber || selectedReq.brotherAccountNumber}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => copyBankNumber(selectedReq.bankAccountNumber || selectedReq.brotherAccountNumber)}
+                  className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1 active:scale-95 shrink-0"
+                  title="نسخ رقم البطاقة"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>نسخ الرقم 📋</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Real Banking Quick Launch: MasterKey / Qi Services App */}
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => handleOpenBankApp(selectedReq.bankAccountNumber || selectedReq.brotherAccountNumber, 'qi')}
+                className="w-full py-3 px-4 bg-gradient-to-r from-teal-700 via-emerald-700 to-teal-800 hover:from-teal-600 hover:to-emerald-600 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg flex items-center justify-center gap-2 transition active:scale-98 border border-emerald-400/30"
+              >
+                <Smartphone className="w-4 h-4 shrink-0" />
+                <span>📲 فتح تطبيق ماستر كي / خدمات كي Qi للتحويل الفوري</span>
+                <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+              </button>
+
+              <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400">
+                <span>أو يمكنك التحويل عبر:</span>
+                <button
+                  type="button"
+                  onClick={() => handleOpenBankApp(selectedReq.bankAccountNumber || selectedReq.brotherAccountNumber, 'zaincash')}
+                  className="text-amber-500 hover:underline font-bold"
+                >
+                  تطبيق زين كاش 📲
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleApprove} className="space-y-3 text-xs text-right pt-1">
               {/* Target Commodity Field */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -269,8 +371,8 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
               {msg && (
                 <div className={`p-2.5 rounded-xl border text-xs font-bold text-center ${
                   isSuccess
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    : 'bg-rose-50 text-rose-700 border-rose-200'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300'
+                    : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300'
                 }`}>
                   {msg}
                 </div>
@@ -280,14 +382,15 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow transition active:scale-95"
+                  className="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg transition active:scale-95 flex items-center justify-center gap-1.5"
                 >
-                  {loading ? 'جاري التحويل...' : 'تأكيد التحويل الآن 🚀'}
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{loading ? 'جاري التوثيق والصرف...' : '✅ تم التحويل - توثيق وصرف المبلغ في الصندوق'}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => { setSelectedReq(null); setActionType(null); }}
-                  className="px-5 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs"
+                  className="px-4 py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl text-xs"
                 >
                   إلغاء
                 </button>
