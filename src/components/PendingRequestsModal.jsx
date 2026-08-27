@@ -20,9 +20,11 @@ import {
   ExternalLink,
   Smartphone,
   ArrowUpRight,
-  Share2
+  Share2,
+  Monitor
 } from 'lucide-react';
 import { openPhoneAppsChooser, launchQiDirect } from '../utils/bankAppLauncher';
+import { AllProgramsModal } from './AllProgramsModal';
 
 export const PendingRequestsModal = ({ isOpen, onClose }) => {
   const {
@@ -43,6 +45,7 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
   const [msg, setMsg] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [copiedBankToast, setCopiedBankToast] = useState('');
+  const [showAllPrograms, setShowAllPrograms] = useState(false);
 
   const copyBankNumber = (accNumber) => {
     if (!accNumber) return;
@@ -322,27 +325,36 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
               </div>
             </div>
 
-            {/* Direct Native Phone Apps Chooser Button */}
+            {/* Direct Native Phone Apps Chooser Button & Desktop All-Programs Hub */}
             <div className="space-y-2 pt-1">
+              {/* Big Desktop & Mobile All Programs Hub Button */}
               <button
                 type="button"
-                onClick={handleOpenPhoneAppsSheet}
-                className="w-full py-3 px-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-700 hover:from-emerald-500 hover:to-indigo-600 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition active:scale-98 border border-emerald-400/40 cursor-pointer"
+                onClick={() => setShowAllPrograms(true)}
+                className="w-full py-3 px-3.5 bg-gradient-to-r from-teal-700 via-slate-800 to-indigo-800 hover:from-teal-600 hover:to-indigo-700 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg flex items-center justify-center gap-2 transition active:scale-98 border border-teal-400/40 cursor-pointer"
               >
-                <Smartphone className="w-4 h-4 shrink-0" />
-                <span>📲 فتح قائمة تطبيقات الهاتف لاختيار تطبيق التحويل (ماستر كي / أي تطبيق)</span>
-                <Share2 className="w-3.5 h-3.5 opacity-80" />
+                <Monitor className="w-4 h-4 text-teal-300 shrink-0" />
+                <span>💻 فتح مركز كافة برامج وتطبيقات التحويل (سطح المكتب والهاتف) 🔍</span>
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               </button>
 
-              <div className="flex items-center justify-between px-1 text-[11px]">
-                <span className="text-slate-400">أو فتح سريع ومباشر:</span>
+              <div className="grid grid-cols-2 gap-2 pt-0.5">
+                <button
+                  type="button"
+                  onClick={handleOpenPhoneAppsSheet}
+                  className="py-2 px-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-[11px] rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 border border-slate-300 dark:border-slate-700 cursor-pointer"
+                >
+                  <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>تطبيقات الهاتف 📲</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={handleOpenQiDirectly}
-                  className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                  className="py-2 px-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 font-bold text-[11px] rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 border border-emerald-300 dark:border-emerald-800 cursor-pointer"
                 >
-                  <span>فتح تطبيق ماستر كي / Qi مباشرة 💳</span>
-                  <ExternalLink className="w-3 h-3" />
+                  <ExternalLink className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>تطبيق ماستر كي / Qi 💳</span>
                 </button>
               </div>
             </div>
@@ -464,6 +476,16 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
           </div>
         </div>
       )}
+
+      {/* All Programs Modal */}
+      <AllProgramsModal
+        isOpen={showAllPrograms}
+        onClose={() => setShowAllPrograms(false)}
+        recipientName={selectedReq?.brotherName}
+        accountNumber={selectedReq?.bankAccountNumber || selectedReq?.brotherAccountNumber}
+        amount={Number(selectedReq?.amount) || 0}
+        reason={selectedReq?.reason || ''}
+      />
 
     </div>
   );
