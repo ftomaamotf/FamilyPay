@@ -393,7 +393,7 @@ export const GuestPortalView = () => {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="مثال: علي عبدالله عجمي"
+                    placeholder="اكتب الاسم الكامل..."
                     className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-emerald-500 font-bold"
                   />
                 </div>

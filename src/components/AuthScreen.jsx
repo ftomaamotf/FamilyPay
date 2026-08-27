@@ -252,10 +252,9 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                 <div>
                   <span className="block text-sm font-black text-white flex items-center gap-1.5">
                     <span>تسجيل الدخول لحسابك المسجل 🔑</span>
-                    <span className="text-[10px] bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full font-bold">صاحب الحساب</span>
                   </span>
                   <span className="text-[11px] text-emerald-100 font-medium">
-                    عبدالله عجمي وجميع الإخوة المسجلين
+                    الدخول برقم الحساب أو الهاتف وكلمة المرور
                   </span>
                 </div>
               </div>
@@ -348,7 +347,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                   required
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
-                  placeholder="مثال: عبدالله عجمي"
+                  placeholder="اكتب الاسم الكامل..."
                   className="w-full bg-slate-950 border border-slate-800 rounded-2xl pr-10 pl-4 py-3 text-xs text-white outline-none focus:ring-2 focus:ring-emerald-500 font-bold"
                 />
               </div>
