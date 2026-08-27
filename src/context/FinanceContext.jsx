@@ -2284,7 +2284,12 @@ export const FinanceProvider = ({ children }) => {
 
   // 12. Web Push Notification Support (Android & iPhone background calls)
   const [isPushSupported, setIsPushSupported] = useState(false);
-  const [isPushSubscribed, setIsPushSubscribed] = useState(false);
+  const [isPushSubscribed, setIsPushSubscribed] = useState(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      return Notification.permission === 'granted' || localStorage.getItem('familypay_push_subscribed') === 'true';
+    }
+    return false;
+  });
 
   const urlBase64ToUint8Array = (base64String) => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -2308,6 +2313,8 @@ export const FinanceProvider = ({ children }) => {
     try {
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
+        setIsPushSubscribed(false);
+        localStorage.removeItem('familypay_push_subscribed');
         return { success: false, message: 'تم رفض إذن الإشعارات من المتصفح، يرجى السماح بالإشعارات من إعدادات الهاتف' };
       }
 
@@ -2336,7 +2343,8 @@ export const FinanceProvider = ({ children }) => {
           })
         });
         setIsPushSubscribed(true);
-        return { success: true, message: '✅ تم تفعيل رنين وإشعارات الهاتف عند غلق البرنامج بنجاح!' };
+        localStorage.setItem('familypay_push_subscribed', 'true');
+        return { success: true, message: '✅ تم تفعيل رنين وإشعارات الهاتف عند غلق البرنامج بنجاح وبشكل دائم!' };
       }
     } catch (err) {
       console.log('Push subscription error:', err);
@@ -2363,14 +2371,39 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // Auto-subscribe when user logs in so background push alerts work even when app is closed
+  // Persistent background push checking on boot
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
-      setIsPushSupported(true);
-      if (currentUser?.id) {
-        subscribePushNotifications(currentUser.id);
+    const checkAndRestoreSubscription = async () => {
+      if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
+        setIsPushSupported(true);
+        try {
+          if ('Notification' in window && Notification.permission === 'granted') {
+            setIsPushSubscribed(true);
+            localStorage.setItem('familypay_push_subscribed', 'true');
+          }
+          const reg = await navigator.serviceWorker.ready;
+          const sub = await reg.pushManager.getSubscription();
+          if (sub) {
+            setIsPushSubscribed(true);
+            localStorage.setItem('familypay_push_subscribed', 'true');
+            if (currentUser?.id) {
+              fetch(`${API_BASE}/api/push/subscribe`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: currentUser.id,
+                  subscription: sub.toJSON(),
+                  userAgent: navigator.userAgent
+                })
+              }).catch(() => {});
+            }
+          }
+        } catch (e) {
+          console.log('Error verifying background push subscription:', e);
+        }
       }
-    }
+    };
+    checkAndRestoreSubscription();
   }, [currentUser?.id]);
 
   const updateSettings = (newSettings) => {
