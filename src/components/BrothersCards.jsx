@@ -457,10 +457,11 @@ export const BrothersCards = ({
                 <button
                   type="button"
                   onClick={handleLaunchCircleSearch}
-                  title="انطلاق البحث والانتقال للمستخدم المحدد"
+                  title="بحث عن المستخدم والانتقال إليه"
                   className="mt-1 px-3 py-1 rounded-full text-[11px] font-black font-mono shadow-md bg-gradient-to-r from-cyan-400 via-teal-400 to-cyan-300 hover:from-cyan-300 hover:to-teal-300 text-slate-950 flex items-center justify-center gap-1 transition active:scale-95 border border-cyan-200 cursor-pointer"
                 >
-                  <span>انطلاق 🚀</span>
+                  <Search className="w-3 h-3 text-slate-950" />
+                  <span>بحث</span>
                 </button>
 
               </div>
