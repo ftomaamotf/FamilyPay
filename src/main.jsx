@@ -20,7 +20,9 @@ window.fetch = async (url, options = {}) => {
   // If the server tells us the token is invalid or expired, force logout
   if (response.status === 401 || response.status === 403) {
     if (url.includes('/api/') && !url.includes('/api/auth/login')) {
-      const wasLoggedIn = localStorage.getItem('bait_finance_current_user') || localStorage.getItem('family_pay_token');
+      const userStr = localStorage.getItem('bait_finance_current_user');
+      const wasLoggedIn = (userStr && userStr !== 'null') || localStorage.getItem('family_pay_token');
+      
       localStorage.removeItem('family_pay_token');
       localStorage.removeItem('bait_finance_current_user');
       
