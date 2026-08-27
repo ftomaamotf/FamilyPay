@@ -347,12 +347,12 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               />
             </div>
 
-            {/* 4. Commodity / Item Entry (اسم السلعة) */}
-            <div className="space-y-2 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700">
+            {/* 3. Commodity / Item Entry (كتابة اسم السلعة) */}
+            <div className="space-y-1.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-black text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>اسم السلعة / الغرض (تُسجل وتُثبت في دائرة الأخ فوراً) *:</span>
+                  <span>اسم السلعة / الغرض *:</span>
                 </label>
                 {commodityName && (
                   <span className="text-[10px] text-emerald-600 font-bold">
@@ -373,68 +373,6 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                 placeholder="اكتب اسم السلعة هنا (مثال: بنزين، حليب للأطفال، صيانة، مسواك...)"
                 className="w-full bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
               />
-
-              {/* Or Select from existing approved items */}
-              {selectedRecipient?.approvedFields?.length > 0 && (
-                <div className="pt-1">
-                  <span className="text-[11px] text-slate-500 font-bold block mb-1">
-                    أو اختر من السلع المثبتة مسبقاً في دائرته:
-                  </span>
-                  <select
-                    value={fieldId}
-                    onChange={(e) => {
-                      setFieldId(e.target.value);
-                      const f = selectedRecipient.approvedFields.find((item) => item.id === e.target.value);
-                      if (f) {
-                        setCommodityName(f.name);
-                        if (!reason) setReason(f.name);
-                      }
-                    }}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <option value="">-- اختر من السلع المثبتة في دائرته --</option>
-                    {selectedRecipient.approvedFields.map((f) => (
-                      <option key={f.id} value={f.id} className="dark:bg-slate-800">
-                        {f.name} (المصروف الحالي: {(f.spent || 0).toLocaleString()} {currency})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {/* Quick Commodity Chips */}
-            <div>
-              <span className="block font-bold text-slate-700 dark:text-slate-300 mb-1 text-xs">
-                اختيار سريع لنوع السلعة:
-              </span>
-              <div className="flex flex-wrap gap-1">
-                {[
-                  { label: 'بنزين ومواصلات ⛽', commodity: 'بنزين ومواصلات ⛽', reason: 'بنزين ومواصلات' },
-                  { label: 'حليب للأطفال 🥛', commodity: 'حليب للأطفال 🥛', reason: 'حليب للأطفال' },
-                  { label: 'مواد غذائية ومسواك 🛒', commodity: 'مواد غذائية ومسواك 🛒', reason: 'تموين ومواد غذائية' },
-                  { label: 'صيدلية وأدوية 🩺', commodity: 'صيدلية وأدوية 🩺', reason: 'أدوية وصيدلية' },
-                  { label: 'فواتير وكهرباء ⚡', commodity: 'فواتير وكهرباء ⚡', reason: 'فاتورة كهرباء وانترنت' },
-                  { label: 'صيانة وتصليح 🔧', commodity: 'صيانة وتصليح 🔧', reason: 'صيانة وتصليح' },
-                  { label: 'أولاد وتعليم 📚', commodity: 'أولاد وتعليم 📚', reason: 'احتياجات دراسية وتعليم' }
-                ].map((chip, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      setCommodityName(chip.commodity);
-                      setReason(chip.reason);
-                      const match = selectedRecipient?.approvedFields?.find((f) =>
-                        f.name.toLowerCase().includes(chip.commodity.split(' ')[0].toLowerCase())
-                      );
-                      if (match) setFieldId(match.id);
-                    }}
-                    className="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 font-bold border border-emerald-200 dark:border-emerald-800 transition"
-                  >
-                    {chip.label}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* 5. Notes / Reason (ملاحظة الصرف) */}
