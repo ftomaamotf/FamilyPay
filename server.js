@@ -1,4 +1,5 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
@@ -44,7 +45,8 @@ const INITIAL_DB = {
     isCardFrozen: false, // Freeze/Lock toggle for main card
     isBalanceHiddenByAdmin: true, // Admin exclusive toggle to hide/show total balance
     maxSingleTransferLimit: 5000, // Maximum single transfer safety limit
-    requirePinOnEveryTransfer: true
+    requirePinOnEveryTransfer: true,
+    jwtSecret: 'SUPER_SECRET_FAMILY_FUND_JWT_KEY_2026'
   },
   bankCards: [
     {
@@ -146,7 +148,10 @@ const readDB = () => {
     const parsed = JSON.parse(content);
     if (!parsed.security) {
       parsed.security = INITIAL_DB.security;
+    } else if (!parsed.security.jwtSecret) {
+      parsed.security.jwtSecret = INITIAL_DB.security.jwtSecret;
     }
+    
     if (!parsed.generalExpensesName) {
       parsed.generalExpensesName = 'مصاريف عامة';
     }
@@ -175,6 +180,52 @@ const broadcastEvent = (eventType, data) => {
     client.res.write(`data: ${payload}\n\n`);
   });
 };
+
+// JWT Authentication Middleware
+const authenticateToken = (req, res, next) => {
+  // Public routes that don't need token verification
+  const publicRoutes = [
+    '/api/auth/login',
+    '/api/auth/reset-password',
+    '/api/brothers/register-guest',
+    '/api/download/FamilyPay.apk',
+    '/.well-known/assetlinks.json',
+    '/api/events'
+  ];
+
+  if (publicRoutes.some(route => req.path.startsWith(route)) || req.path === '/FamilyPay.apk') {
+    return next();
+  }
+
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'مفتاح جلسة مفقود! يرجى تسجيل الدخول مجدداً' });
+  }
+
+  const db = readDB();
+  jwt.verify(token, db.security.jwtSecret, (err, user) => {
+    if (err) {
+      return res.status(403).json({ success: false, message: 'انتهت صلاحية الجلسة أو المفتاح غير صالح. يرجى تسجيل الدخول.' });
+    }
+    
+    // Attach user payload to request
+    req.user = user;
+    
+    // Security check: if the request has a senderId in body, ensure it matches the token (except for Admin)
+    if (req.body && req.body.senderId) {
+      if (req.body.senderId !== req.user.id && !req.user.isAdmin) {
+         return res.status(403).json({ success: false, message: 'ليس لديك صلاحية لتنفيذ هذه العملية كشخص آخر' });
+      }
+    }
+
+    next();
+  });
+};
+
+// Apply JWT Middleware to all API routes
+app.use('/api', authenticateToken);
 
 app.get('/api/events', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
@@ -293,8 +344,17 @@ app.post('/api/auth/login', (req, res) => {
   }
 
   const isAdmin = brother.id === db.activeAdminId || brother.isAdmin;
+  
+  // Generate JWT Token
+  const tokenPayload = {
+    id: brother.id,
+    isAdmin: isAdmin
+  };
+  const token = jwt.sign(tokenPayload, db.security.jwtSecret, { expiresIn: '7d' });
+
   res.json({
     success: true,
+    token, // Return token to client
     user: {
       id: brother.id,
       name: brother.name,

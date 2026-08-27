@@ -785,6 +785,7 @@ export const FinanceProvider = ({ children }) => {
       });
       const data = await res.json();
       if (data.success) {
+        localStorage.setItem('family_pay_token', data.token);
         setCurrentUser(data.user);
         return { success: true, message: data.message };
       }
@@ -1037,6 +1038,7 @@ export const FinanceProvider = ({ children }) => {
     try {
       localStorage.removeItem('bait_finance_current_user');
       localStorage.removeItem('bait_finance_guest_account');
+      localStorage.removeItem('family_pay_token');
       sessionStorage.clear();
     } catch {}
     setCurrentUser(null);
