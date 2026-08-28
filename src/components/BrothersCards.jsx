@@ -850,7 +850,7 @@ export const BrothersCards = ({
                       {genTransfers.map((t, idx) => (
                         <div
                           key={t.id || idx}
-                          className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs hover:border-amber-500/40 transition"
+                          className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 flex flex-col gap-3 shadow-xs hover:border-amber-500/40 transition relative"
                         >
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
@@ -861,17 +861,17 @@ export const BrothersCards = ({
                                 {formatArabicDate(t.date || t.timestamp)}
                               </span>
                             </div>
-                            <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-100 dark:border-slate-700 mt-2">
                               {t.reason || 'بدون تفاصيل'}
                             </p>
                             {(t.requestedBy || t.senderName) && (
-                              <p className="text-[11px] text-teal-600 dark:text-teal-400 font-bold">
+                              <p className="text-[11px] text-teal-600 dark:text-teal-400 font-bold mt-1">
                                 👤 {t.requestedBy ? `تم الصرف بطلب من المستخدم: ${t.requestedBy}` : `تم الصرف بواسطة: ${t.senderName}`}
                               </p>
                             )}
                           </div>
 
-                          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200 dark:border-slate-800">
+                          <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
                             <span className="text-base font-black font-mono text-amber-600 dark:text-amber-400">
                               {formatMoney(t.amount, currency)}
                             </span>

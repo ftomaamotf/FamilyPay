@@ -193,7 +193,7 @@ const authenticateToken = (req, res, next) => {
     '/api/events'
   ];
 
-  if (publicRoutes.some(route => req.originalUrl.startsWith(route)) || req.originalUrl === '/FamilyPay.apk') {
+  if (publicRoutes.some(route => req.path.startsWith(route)) || req.path === '/FamilyPay.apk') {
     return next();
   }
 
