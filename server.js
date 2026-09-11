@@ -185,13 +185,13 @@ const broadcastEvent = (eventType, data) => {
 const authenticateToken = (req, res, next) => {
   // Public routes that don't need token verification
   const publicRoutes = [
-    '/api/auth/login',
-    '/api/auth/reset-password',
-    '/api/brothers/register-guest',
-    '/api/download/FamilyPay.apk',
-    '/.well-known/assetlinks.json',
-    '/api/events'
-  ];
+  '/auth/login',
+  '/auth/reset-password',
+  '/brothers/register-guest',
+  '/download/FamilyPay.apk',
+  '/.well-known/assetlinks.json',
+  '/events'
+];
 
   if (publicRoutes.some(route => req.path.startsWith(route)) || req.path === '/FamilyPay.apk') {
     return next();
