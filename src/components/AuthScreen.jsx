@@ -42,13 +42,22 @@ export const AuthScreen = ({ onLoginSuccess }) => {
 
   // Auto-detect ?action=register from URL when scanned via phone camera
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('action') === 'join') {
-  setShowGuestRegisterModal(true);
-} else if (urlParams.get('action') === 'register') {
-  setViewMode('register_owner');
-  setRegMsg('👋 أهلاً بك! تم فتح استمارة التسجيل. يرجى إدخال اسمك ورقم هاتفك وبطاقتك لإكمال التسجيل.');
+  if (typeof window !== 'undefined') {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+
+    if (action === 'join') {
+      setShowGuestRegisterModal(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (action === 'register') {
+      setViewMode('register_owner');
+      setRegMsg('👋 أهلاً بك! تم فتح استمارة التسجيل. يرجى إدخال اسمك ورقم هاتفك وبطاقتك لإكمال التسجيل.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }
+}, []);
 }
     }
   }, []);
