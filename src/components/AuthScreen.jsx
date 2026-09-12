@@ -44,10 +44,12 @@ export const AuthScreen = ({ onLoginSuccess }) => {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('action') === 'register' || urlParams.get('action') === 'join') {
-        setViewMode('register_owner');
-        setRegMsg('👋 أهلاً بك! تم فتح استمارة التسجيل. يرجى إدخال اسمك ورقم هاتفك وبطاقتك لإكمال التسجيل.');
-      }
+      if (urlParams.get('action') === 'join') {
+  setShowGuestRegisterModal(true);
+} else if (urlParams.get('action') === 'register') {
+  setViewMode('register_owner');
+  setRegMsg('👋 أهلاً بك! تم فتح استمارة التسجيل. يرجى إدخال اسمك ورقم هاتفك وبطاقتك لإكمال التسجيل.');
+}
     }
   }, []);
 
