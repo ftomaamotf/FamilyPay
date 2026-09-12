@@ -11,6 +11,21 @@ import {
 import { STORAGE_KEYS, loadFromStorage, saveToStorage, exportAllDataBackup, readBackupFile } from '../utils/storage';
 
 const FinanceContext = createContext(null);
+const AUTH_REQUEST_TIMEOUT_MS = 3000;
+
+const fetchWithTimeout = async (url, options = {}, timeoutMs = AUTH_REQUEST_TIMEOUT_MS) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+};
 
 const API_BASE = (() => {
   if (typeof window !== 'undefined') {
@@ -778,7 +793,7 @@ export const FinanceProvider = ({ children }) => {
     const cleanIden = normalizeDigits(identifier).toLowerCase();
     const cleanPass = normalizeDigits(password).trim();
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
+      const res = await fetchWithTimeout(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accountNumber: cleanIden, password: cleanPass })
