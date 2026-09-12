@@ -18,7 +18,7 @@ export const JoinBrotherQrModal = ({ isOpen, onClose }) => {
 
   const getJoinUrl = () => {
     if (typeof window === 'undefined') return 'https://familypay-aw26.onrender.com/?action=register';
-    return `${window.location.origin}/?action=register`;
+    return `${window.location.origin}/?action=join`;
   };
 
   const joinUrl = getJoinUrl();
