@@ -1038,8 +1038,8 @@ export const BrothersCards = ({
                   (r.brotherId === selectedBrother.id || r.brotherName === selectedBrother.name) &&
                   (r.fieldId === f.id || (r.fieldName && f.name && (r.fieldName.includes(f.name) || f.name.includes(r.fieldName))))
                 );
-                const priceAmount = Math.max(f.spent || 0, calculatedSpent, pending?.amount || f.limit || 0);
-                const isPending = calculatedSpent === 0 && (f.spent || 0) === 0 && Boolean(pending);
+                const priceAmount = Math.max(calculatedSpent, pending?.amount || 0);
+                const isPending = calculatedSpent === 0 && Boolean(pending);
 
                 // Calculate EXACT count: (Completed transfers) + (Active pending requests)
                 const normF = normalizeArabicText(f.name);
@@ -1058,11 +1058,11 @@ export const BrothersCards = ({
                   if (!isForThisBrother) return false;
                   if (r.fieldId && r.fieldId === f.id) return true;
                   const normR = normalizeArabicText(r.fieldName || r.commodityName || r.reason);
-                  return normR && normF && (normR === normF || normR.includes(normF) || normR.includes(normR));
+                  return normR && normF && (normR === normF || normR.includes(normF) || normF.includes(normR));
                 }).length;
 
                 const totalEvents = timesTransferred + timesPending;
-                const effectiveCount = totalEvents > 0 ? totalEvents : 1;
+                const effectiveCount = totalEvents;
 
                 return (
                   <div

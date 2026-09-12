@@ -27,7 +27,6 @@ import {
 
 export const AuthScreen = ({ onLoginSuccess }) => {
   const {
-    brothers,
     loginBrother,
     loginAsGuest,
     resetPasswordWithPhone,
@@ -42,23 +41,14 @@ export const AuthScreen = ({ onLoginSuccess }) => {
 
   // Auto-detect ?action=register from URL when scanned via phone camera
   useEffect(() => {
-  if (typeof window !== 'undefined') {
+    if (typeof window === 'undefined') return;
+
     const urlParams = new URLSearchParams(window.location.search);
     const action = urlParams.get('action');
 
-    if (action === 'join') {
+    if (action === 'join' || action === 'register') {
       setShowGuestRegisterModal(true);
       window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    if (action === 'register') {
-      setViewMode('register_owner');
-      setRegMsg('👋 أهلاً بك! تم فتح استمارة التسجيل. يرجى إدخال اسمك ورقم هاتفك وبطاقتك لإكمال التسجيل.');
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }
-}, []);
-}
     }
   }, []);
 
@@ -298,15 +288,15 @@ export const AuthScreen = ({ onLoginSuccess }) => {
               <ArrowRight className="w-5 h-5 rotate-180 group-hover:-translate-x-1 transition text-emerald-400" />
             </button>
 
-            {/* Option 3: Register as New Fund Owner / دعوة واتساب */}
+            {/* Option 3: Register as New User / دعوة واتساب */}
             <div className="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2">
               <button
                 type="button"
-                onClick={() => { setViewMode('register_owner'); setRegMsg(''); }}
-                className="text-xs font-bold text-amber-400 hover:text-amber-300 transition flex items-center gap-1.5"
+                onClick={() => setShowGuestRegisterModal(true)}
+                className="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1.5"
               >
-                <Crown className="w-4 h-4 fill-amber-400" />
-                <span>إنشاء حساب جديد كـ (صاحب صندوق) 👑</span>
+                <UserPlus className="w-4 h-4" />
+                <span>تسجيل مستخدم جديد</span>
               </button>
 
               <button
