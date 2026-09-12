@@ -15,7 +15,14 @@ import {
 } from 'lucide-react';
 
 export const AddEditBrotherModal = ({ isOpen, onClose, brotherToEdit = null }) => {
-  const { addBrother, updateBrother, deleteBrother, brothers, activeAdminId } = useFinance();
+  const {
+  addBrother,
+  updateBrother,
+  deleteBrother,
+  brothers,
+  activeAdminId,
+  currentUser
+} = useFinance();
 
   const [name, setName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
