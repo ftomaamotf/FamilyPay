@@ -12,6 +12,11 @@ import { STORAGE_KEYS, loadFromStorage, saveToStorage, exportAllDataBackup, read
 
 const FinanceContext = createContext(null);
 const AUTH_REQUEST_TIMEOUT_MS = 3000;
+const LEGACY_MOHAMMED_ID = 'b-1787243535948';
+const LEGACY_MOHAMMED_BANK_ACCOUNT = '7145810946';
+const LEGACY_MOHAMMED_FIELD_IDS = new Set(['f-1787761604619-123']);
+const LEGACY_MOHAMMED_TRANSFER_IDS = new Set(['tx-1787761604619']);
+const LEGACY_MOHAMMED_CLEANUP_CUTOFF = new Date('2026-09-12T00:00:00.000Z').getTime();
 
 const fetchWithTimeout = async (url, options = {}, timeoutMs = AUTH_REQUEST_TIMEOUT_MS) => {
   const controller = new AbortController();
@@ -26,6 +31,47 @@ const fetchWithTimeout = async (url, options = {}, timeoutMs = AUTH_REQUEST_TIME
     clearTimeout(timeoutId);
   }
 };
+
+const isBeforeLegacyCleanup = (value) => {
+  if (!value) return true;
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) || time < LEGACY_MOHAMMED_CLEANUP_CUTOFF;
+};
+
+const isLegacyMohammedTransfer = (item = {}) => {
+  if (LEGACY_MOHAMMED_TRANSFER_IDS.has(item.id) || LEGACY_MOHAMMED_TRANSFER_IDS.has(item.transferId)) {
+    return true;
+  }
+
+  const isMohammed =
+    String(item.recipientId || item.memberId || '') === LEGACY_MOHAMMED_ID ||
+    String(item.recipientAccountNumber || item.bankAccountNumber || '').trim() === LEGACY_MOHAMMED_BANK_ACCOUNT;
+
+  return (
+    isMohammed &&
+    Number(item.amount) === 10000 &&
+    isBeforeLegacyCleanup(item.timestamp || item.createdAt || item.date)
+  );
+};
+
+const sanitizeLegacyMohammedFields = (brother) => {
+  if (String(brother?.id || '') !== LEGACY_MOHAMMED_ID || !Array.isArray(brother.approvedFields)) {
+    return brother;
+  }
+
+  const approvedFields = brother.approvedFields.map((field) => {
+    const isLegacyField =
+      LEGACY_MOHAMMED_FIELD_IDS.has(field.id) ||
+      (Number(field.spent || 0) === 10000 && isBeforeLegacyCleanup(field.createdAt));
+
+    return isLegacyField ? { ...field, spent: 0 } : field;
+  });
+
+  return { ...brother, approvedFields };
+};
+
+const sanitizeTransfers = (items = []) =>
+  (Array.isArray(items) ? items : []).filter((item) => item && !isLegacyMohammedTransfer(item));
 
 const API_BASE = (() => {
   if (typeof window !== 'undefined') {
@@ -215,13 +261,15 @@ export const FinanceProvider = ({ children }) => {
       }
     ]);
     // Filter out any legacy dummy sample names or deleted accounts
-    return (raw || []).filter((b) => b && !['b-3', 'b-4', 'b-5', 'b-6', 'b-1787553982824'].includes(b.id) && !['يوسف', 'خالد', 'أحمد', 'علي فاضل'].includes(b.name));
+    return (raw || [])
+      .filter((b) => b && !['b-3', 'b-4', 'b-5', 'b-6', 'b-1787553982824'].includes(b.id) && !['يوسف', 'خالد', 'أحمد', 'علي فاضل'].includes(b.name))
+      .map(sanitizeLegacyMohammedFields);
   });
 
   // Transfers Log (Real transfers only, no dummy items)
   const [transfers, setTransfers] = useState(() => {
     const raw = loadFromStorage('bait_finance_transfers', []);
-    return (raw || []).filter((t) => t && !['tx-1', 'tx-2', 'tx-3', 'tx-4', 'tx-5'].includes(t.id));
+    return (raw || []).filter((t) => t && !['tx-1', 'tx-2', 'tx-3', 'tx-4', 'tx-5'].includes(t.id) && !isLegacyMohammedTransfer(t));
   });
 
   // Monthly and Yearly Archives
@@ -403,7 +451,10 @@ export const FinanceProvider = ({ children }) => {
     setBrothers((prevLocal) => {
       const mergedMap = new Map();
       // 1. Add all server brothers
-      serverBrothers.forEach((b) => mergedMap.set(b.id || b.accountNumber, b));
+      serverBrothers.forEach((b) => {
+        const cleanBrother = sanitizeLegacyMohammedFields(b);
+        mergedMap.set(cleanBrother.id || cleanBrother.accountNumber, cleanBrother);
+      });
       // 2. Check if local storage has brothers not present on server
       let hasMissing = false;
       const missingToSync = [];
@@ -411,8 +462,9 @@ export const FinanceProvider = ({ children }) => {
         const key = lb.id || lb.accountNumber;
         const isDummy = ['b-3', 'b-4', 'b-5', 'b-6'].includes(lb.id) || ['يوسف', 'خالد', 'أحمد'].includes(lb.name);
         if (!isDummy && !mergedMap.has(key) && lb.name) {
-          mergedMap.set(key, lb);
-          missingToSync.push(lb);
+          const cleanLocalBrother = sanitizeLegacyMohammedFields(lb);
+          mergedMap.set(key, cleanLocalBrother);
+          missingToSync.push(cleanLocalBrother);
           hasMissing = true;
         }
       });

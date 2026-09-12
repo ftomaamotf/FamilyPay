@@ -34,6 +34,78 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
+const LEGACY_MOHAMMED_ID = 'b-1787243535948';
+const LEGACY_MOHAMMED_BANK_ACCOUNT = '7145810946';
+const LEGACY_MOHAMMED_CLEANUP_CUTOFF = new Date('2026-09-12T00:00:00.000Z').getTime();
+const LEGACY_MOHAMMED_TRANSFER_IDS = new Set(['tx-1787761604619']);
+
+const isBeforeLegacyCleanup = (value) => {
+  if (!value) return true;
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) || time < LEGACY_MOHAMMED_CLEANUP_CUTOFF;
+};
+
+const isLegacyMohammedTransfer = (item = {}) => {
+  if (LEGACY_MOHAMMED_TRANSFER_IDS.has(item.id) || LEGACY_MOHAMMED_TRANSFER_IDS.has(item.transferId)) {
+    return true;
+  }
+
+  const isMohammed =
+    String(item.recipientId || item.memberId || '') === LEGACY_MOHAMMED_ID ||
+    String(item.recipientAccountNumber || item.bankAccountNumber || '').trim() === LEGACY_MOHAMMED_BANK_ACCOUNT;
+
+  return (
+    isMohammed &&
+    Number(item.amount) === 10000 &&
+    isBeforeLegacyCleanup(item.timestamp || item.createdAt || item.date)
+  );
+};
+
+const sanitizeLegacyBalances = (db) => {
+  let changed = false;
+
+  if (Array.isArray(db.transfers)) {
+    const filteredTransfers = db.transfers.filter((transfer) => !isLegacyMohammedTransfer(transfer));
+    changed = changed || filteredTransfers.length !== db.transfers.length;
+    db.transfers = filteredTransfers;
+  }
+
+  if (Array.isArray(db.transactions)) {
+    const filteredTransactions = db.transactions.filter((transaction) => !isLegacyMohammedTransfer(transaction));
+    changed = changed || filteredTransactions.length !== db.transactions.length;
+    db.transactions = filteredTransactions;
+  }
+
+  if (Array.isArray(db.notifications)) {
+    const filteredNotifications = db.notifications.filter((notification) => !isLegacyMohammedTransfer(notification));
+    changed = changed || filteredNotifications.length !== db.notifications.length;
+    db.notifications = filteredNotifications;
+  }
+
+  if (Array.isArray(db.brothers)) {
+    db.brothers = db.brothers.map((brother) => {
+      if (!Array.isArray(brother.approvedFields)) return brother;
+
+      const approvedFields = brother.approvedFields.map((field) => {
+        const fieldSpent = (db.transfers || [])
+          .filter((transfer) =>
+            String(transfer.recipientId || '') === String(brother.id || '') &&
+            String(transfer.fieldId || '') === String(field.id || '')
+          )
+          .reduce((sum, transfer) => sum + (Number(transfer.amount) || 0), 0);
+
+        if (Number(field.spent || 0) === fieldSpent) return field;
+        changed = true;
+        return { ...field, spent: fieldSpent };
+      });
+
+      return { ...brother, approvedFields };
+    });
+  }
+
+  return changed;
+};
+
 // Initial Starter DB for the 6 Brothers with Full Fund Security
 const INITIAL_DB = {
   activeAdminId: 'b-2',
@@ -154,6 +226,9 @@ const readDB = () => {
     
     if (!parsed.generalExpensesName) {
       parsed.generalExpensesName = 'مصاريف عامة';
+    }
+    if (sanitizeLegacyBalances(parsed)) {
+      fs.writeFileSync(DB_FILE, JSON.stringify(parsed, null, 2), 'utf-8');
     }
     return parsed;
   } catch (err) {
