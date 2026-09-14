@@ -1030,7 +1030,8 @@ export const BrothersCards = ({
               </span>
             </div>
 
-            <div className="flex flex-col gap-2.5">
+            <div className="rounded-3xl bg-slate-100/80 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 p-3">
+              <div className="flex flex-row items-stretch justify-start gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
               {selectedBrother.approvedFields?.map((f, index) => {
                 const calculatedSpent = dynamicFieldSpent(f.id, f.name);
                 const pending = fundRequests?.find((r) =>
@@ -1067,8 +1068,21 @@ export const BrothersCards = ({
                 return (
                   <div
                     key={f.id}
-                    className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between relative group/field hover:border-emerald-400 transition shadow-xs"
+                    className="w-36 sm:w-40 min-h-40 shrink-0 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex flex-col items-stretch justify-between relative group/field hover:border-emerald-400 transition shadow-sm"
                   >
+                    <div className="absolute top-2 right-2 z-10">
+                      <div
+                        title={`عدد مرات طلب السلعة: ${effectiveCount}`}
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border-2 border-teal-400 dark:border-teal-600 flex items-center justify-center font-mono font-black text-xs sm:text-sm shadow-sm"
+                      >
+                        {effectiveCount}
+                      </div>
+                    </div>
+
+                    <span className="absolute top-2 left-2 w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 font-mono text-[11px] font-black flex items-center justify-center">
+                      {index + 1}
+                    </span>
+
                     {/* Commodity Name & Index (Clickable to view order history) */}
                     <div
                       onClick={() => setInspectedCommodity({
@@ -1077,41 +1091,30 @@ export const BrothersCards = ({
                         effectiveCount,
                         priceAmount
                       })}
-                      className="flex items-center gap-2.5 min-w-0 cursor-pointer flex-1 select-none"
+                      className="flex flex-col items-center justify-center gap-2 min-w-0 cursor-pointer flex-1 select-none text-center pt-7"
                       title="اضغط هنا لعرض تفاصيل وسجل مرات طلب هذه السلعة 📋"
                     >
-                      <span className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-black flex items-center justify-center shrink-0">
-                        {index + 1}
-                      </span>
-                      <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-500/20 group-hover/field:scale-110 transition">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xl shrink-0 border border-emerald-500/20 group-hover/field:scale-110 transition shadow-inner">
                         🛒
                       </div>
-                      <div className="min-w-0">
-                        <span className="font-black text-slate-800 dark:text-white text-xs sm:text-sm truncate block group-hover/field:text-emerald-500 transition underline-offset-4 group-hover/field:underline">
+                      <div className="min-w-0 w-full">
+                        <span className="font-black text-slate-800 dark:text-white text-xs sm:text-sm line-clamp-2 leading-snug group-hover/field:text-emerald-500 transition underline-offset-4 group-hover/field:underline">
                           {f.name}
                         </span>
                         {isPending ? (
-                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold block">
-                            ⏳ بانتظار موافقة الأدمن والتحويل
+                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold block mt-1 leading-tight">
+                            بانتظار الموافقة
                           </span>
                         ) : (
-                          <span className="text-[10px] text-slate-400 font-bold block group-hover/field:text-emerald-500/80 transition">
-                            اضغط لعرض سجل الطلبات 📋
+                          <span className="text-[10px] text-slate-400 font-bold block mt-1 group-hover/field:text-emerald-500/80 transition">
+                            سجل الطلبات
                           </span>
                         )}
                       </div>
                     </div>
 
                     {/* Price & Circular Quantity Counter in front of commodity */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      {/* Circular Count Badge (رقم العدد في دائرة أمام السعر) */}
-                      <div
-                        title={`عدد مرات طلب السلعة: ${effectiveCount}`}
-                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border-2 border-teal-400 dark:border-teal-600 flex items-center justify-center font-mono font-black text-xs sm:text-sm shadow-sm shrink-0"
-                      >
-                        {effectiveCount}
-                      </div>
-
+                    <div className="flex items-center justify-center gap-1.5 shrink-0 pt-2">
                       {/* Price Badge (Clickable for Admin to Adjust Price & Refund/Deduct) */}
                       <button
                         type="button"
@@ -1125,7 +1128,7 @@ export const BrothersCards = ({
                             });
                           }
                         }}
-                        className={`text-xs sm:text-sm font-black font-mono px-3 py-1.5 rounded-xl shadow-xs border transition flex items-center gap-1.5 select-none ${
+                        className={`w-full min-h-8 text-[11px] sm:text-xs font-black font-mono px-2 py-1.5 rounded-xl shadow-xs border transition flex items-center justify-center gap-1 select-none ${
                           isCurrentAdmin
                             ? 'cursor-pointer hover:scale-105 hover:ring-2 hover:ring-emerald-400 active:scale-95 group/price'
                             : 'cursor-default'
@@ -1153,7 +1156,7 @@ export const BrothersCards = ({
                             }
                           }}
                           title="حذف هذه السلعة"
-                          className="opacity-0 group-hover/field:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition rounded"
+                          className="absolute bottom-2 left-2 sm:opacity-0 group-hover/field:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition rounded"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1164,12 +1167,13 @@ export const BrothersCards = ({
               })}
 
               {(!selectedBrother.approvedFields || selectedBrother.approvedFields.length === 0) && (
-                <div className="text-center py-7 text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 space-y-1">
+                <div className="w-full text-center py-7 text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 space-y-1">
                   <span className="text-lg block">🛍️</span>
                   <span className="font-bold text-slate-300">لا توجد سلع مسجلة لهذا المستخدم حالياً.</span>
                   <span className="text-[11px] text-slate-500 block">عند قيامك بتحويل مبلغ وكتابة اسم السلعة (أو طلب المستخدم لمبلغ وسلعة)، ستظهر السلعة وسعرها هنا فوراً!</span>
                 </div>
               )}
+              </div>
             </div>
           </div>
 
