@@ -23,6 +23,8 @@ const API_BASE = (() => {
   return 'https://familypay-aw26.onrender.com';
 })();
 
+const VOICE_CALLS_ENABLED = false;
+
 export const FinanceProvider = ({ children }) => {
   // Current Logged-In Brother / User State (null by default to show Login Screen)
   const [currentUser, setCurrentUser] = useState(() =>
@@ -624,77 +626,6 @@ export const FinanceProvider = ({ children }) => {
             else if (messageId) setMessages((prev) => prev.filter((m) => m.id !== messageId));
           }
 
-          // ================= Intercom & Walkie-Talkie Events =================
-          if (payload.type === 'INTERCOM_RINGING') {
-            const { call } = payload.data;
-            if (call && currentUser && call.status === 'ringing') {
-              const isMeReceiver =
-                call.receiverId === currentUser.id ||
-                (currentUser.accountNumber && call.receiverId === currentUser.accountNumber) ||
-                (currentUser.bankAccountNumber && call.receiverId === currentUser.bankAccountNumber) ||
-                (currentUser.phone && String(call.receiverId).replace(/[\s\-\+]/g, '') === String(currentUser.phone).replace(/[\s\-\+]/g, ''));
-
-              if (isMeReceiver) {
-                setIncomingCall(call);
-                playIntercomRingtone();
-                if (Notification.permission === 'granted') {
-                  new Notification(`📞 مكالمة واردة من ${call.callerName}`, {
-                    body: 'يرن عليك الآن.. اضغط للموافقة والتحدث المباشر 📲',
-                    icon: '/favicon.svg'
-                  });
-                }
-              }
-            }
-          }
-
-          if (payload.type === 'INTERCOM_STATUS') {
-            const { call, action } = payload.data;
-            if (call) {
-              const isParty = currentUser && (
-                call.callerId === currentUser.id ||
-                call.receiverId === currentUser.id ||
-                (currentUser.accountNumber && (call.callerId === currentUser.accountNumber || call.receiverId === currentUser.accountNumber)) ||
-                (currentUser.bankAccountNumber && (call.callerId === currentUser.bankAccountNumber || call.receiverId === currentUser.bankAccountNumber))
-              );
-
-              if (isParty) {
-                setActiveCall((prev) => {
-                  if (call.status === 'connected') return call;
-                  if (call.status === 'ended' || call.status === 'rejected') return null;
-                  if (prev && prev.id === call.id) return call;
-                  return prev;
-                });
-
-                setIncomingCall((prev) => {
-                  if (prev && prev.id === call.id) {
-                    return call.status === 'ringing' ? call : null;
-                  }
-                  return prev;
-                });
-
-                if (call.status === 'connected') {
-                  playWalkieTalkieChirp();
-                } else if (call.status === 'rejected' || call.status === 'ended') {
-                  playWalkieTalkieChirp();
-                }
-              }
-            }
-          }
-
-          if (payload.type === 'INTERCOM_VOICE_BURST') {
-            const { callId, senderId, audioData } = payload.data;
-            if (currentUser && senderId !== currentUser.id && audioData) {
-              setIncomingVoiceBurst(payload.data);
-              try {
-                audioQueueRef.current.push(audioData);
-                if (!isAudioPlayingRef.current) {
-                  playNextBurstInQueue();
-                }
-              } catch (e) {
-                console.log('Intercom audio burst queue error:', e);
-              }
-            }
-          }
         } catch (err) {
           console.error('Error parsing SSE event:', err);
         }
@@ -1911,6 +1842,9 @@ export const FinanceProvider = ({ children }) => {
   }, []);
 
   const startIntercomCall = async (targetBrotherId) => {
+    if (!VOICE_CALLS_ENABLED) {
+      return { success: false, message: 'ميزة الاتصال معطلة' };
+    }
     unlockAudioContext();
     if (navigator.mediaDevices?.getUserMedia) {
       try {
@@ -1966,6 +1900,10 @@ export const FinanceProvider = ({ children }) => {
   };
 
   const acceptIntercomCall = async (callId) => {
+    if (!VOICE_CALLS_ENABLED) {
+      setIncomingCall(null);
+      return { success: false, message: 'ميزة الاتصال معطلة' };
+    }
     unlockAudioContext();
     const targetCallId = callId || incomingCall?.id;
     try {
@@ -1996,6 +1934,10 @@ export const FinanceProvider = ({ children }) => {
   };
 
   const rejectIntercomCall = async (callId) => {
+    if (!VOICE_CALLS_ENABLED) {
+      setIncomingCall(null);
+      return { success: false, message: 'ميزة الاتصال معطلة' };
+    }
     const targetCallId = callId || incomingCall?.id;
     try {
       await fetch(`${API_BASE}/api/intercom/respond`, {
@@ -2012,6 +1954,11 @@ export const FinanceProvider = ({ children }) => {
   };
 
   const endIntercomCall = async (callId) => {
+    if (!VOICE_CALLS_ENABLED) {
+      setActiveCall(null);
+      setIncomingCall(null);
+      return { success: false, message: 'ميزة الاتصال معطلة' };
+    }
     const targetCallId = callId || activeCall?.id;
     try {
       await fetch(`${API_BASE}/api/intercom/respond`, {
@@ -2032,12 +1979,14 @@ export const FinanceProvider = ({ children }) => {
   // Loudspeaker & Call Duration Timer
   const [isLoudspeakerOn, setIsLoudspeakerOn] = useState(false);
   const toggleLoudspeaker = () => {
+    if (!VOICE_CALLS_ENABLED) return;
     unlockAudioContext();
     setIsLoudspeakerOn((prev) => !prev);
   };
 
   const [callDurationSeconds, setCallDurationSeconds] = useState(0);
   useEffect(() => {
+    if (!VOICE_CALLS_ENABLED) return undefined;
     let timer = null;
     if (activeCall && activeCall.status === 'connected') {
       timer = setInterval(() => {
@@ -2053,6 +2002,7 @@ export const FinanceProvider = ({ children }) => {
 
   // Fast Call Poller (1.0 second) to ensure instant ringing & call connection across devices
   useEffect(() => {
+    if (!VOICE_CALLS_ENABLED) return undefined;
     let isPolling = true;
 
     const checkActiveCalls = async () => {
@@ -2108,6 +2058,7 @@ export const FinanceProvider = ({ children }) => {
 
   // Continuous In-App Vibration & Telephone Ring Bell Loop on Incoming Call (لا ينقطع حتى يتم الرد)
   useEffect(() => {
+    if (!VOICE_CALLS_ENABLED) return undefined;
     if (!incomingCall || incomingCall.status !== 'ringing') {
       if (typeof window !== 'undefined' && window.navigator?.vibrate) {
         try { window.navigator.vibrate(0); } catch {}
@@ -2138,6 +2089,7 @@ export const FinanceProvider = ({ children }) => {
   }, [incomingCall?.id, incomingCall?.status, playIntercomRingtone]);
 
   const sendIntercomVoiceBurst = async ({ callId, audioData, duration }) => {
+    if (!VOICE_CALLS_ENABLED) return;
     const activeUser = currentUser || { id: 'guest', name: 'مستخدم' };
     try {
       await fetch(`${API_BASE}/api/intercom/voice-burst`, {
@@ -2161,6 +2113,7 @@ export const FinanceProvider = ({ children }) => {
   const liveCallRecorderRef = useRef(null);
 
   useEffect(() => {
+    if (!VOICE_CALLS_ENABLED) return undefined;
     if (activeCall && activeCall.status === 'connected') {
       let isStreaming = true;
 
@@ -2275,6 +2228,7 @@ export const FinanceProvider = ({ children }) => {
   }, [isLoudspeakerOn]);
 
   useEffect(() => {
+    if (!VOICE_CALLS_ENABLED) return;
     if (incomingVoiceBurst && incomingVoiceBurst.audioData && incomingVoiceBurst.senderId !== currentUser?.id) {
       audioQueueRef.current.push(incomingVoiceBurst.audioData);
       if (!isAudioPlayingRef.current) {
@@ -2355,7 +2309,7 @@ export const FinanceProvider = ({ children }) => {
         });
         setIsPushSubscribed(true);
         localStorage.setItem('familypay_push_subscribed', 'true');
-        return { success: true, message: '✅ تم تفعيل رنين وإشعارات الهاتف عند غلق البرنامج بنجاح وبشكل دائم!' };
+        return { success: true, message: '✅ تم تفعيل إشعارات الهاتف عند غلق البرنامج بنجاح وبشكل دائم!' };
       }
     } catch (err) {
       console.log('Push subscription error:', err);

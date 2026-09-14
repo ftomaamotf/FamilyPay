@@ -109,7 +109,7 @@ export const Navbar = ({
           {/* User Profile & Actions */}
           <div className="flex items-center gap-2">
             
-            {/* Background Call Notifications Activator */}
+            {/* Background Notifications Activator */}
             <button
               onClick={async () => {
                 const res = await subscribePushNotifications();
@@ -117,7 +117,7 @@ export const Navbar = ({
                   alert(res.message);
                 }
               }}
-              title="تفعيل رنين وإشعارات المكالمات عند غلق التطبيق في الأندرويد والآيفون"
+              title="تفعيل إشعارات التطبيق عند غلقه في الأندرويد والآيفون"
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-black shadow-xs transition active:scale-95 border ${
                 isPushSubscribed
                   ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
@@ -126,7 +126,7 @@ export const Navbar = ({
             >
               <Bell className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">
-                {isPushSubscribed ? 'رنين المكالمات مفعل 🔔' : 'تفعيل رنين المكالمات 📳'}
+                {isPushSubscribed ? 'الإشعارات مفعلة 🔔' : 'تفعيل الإشعارات 📳'}
               </span>
             </button>
 
