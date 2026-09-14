@@ -570,32 +570,7 @@ app.post('/api/invitations/accept', (req, res) => {
   });
 });
 
-const getExpectedJoinQr = (db) => {
-  const activeAdminId = db.activeAdminId || db.brothers.find((b) => b.isAdmin)?.id || '';
-  return {
-    adminId: activeAdminId,
-    fundToken: ['familypay', activeAdminId || 'admin', db.sendingCardId || 'fund'].join(':')
-  };
-};
-
-const isTrustedLegacyJoinUrl = (joinQr, req) => {
-  if (!joinQr?.raw && !joinQr?.origin) return false;
-
-  try {
-    const requestOrigin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
-    const scannedUrl = new URL(String(joinQr.raw || joinQr.origin), requestOrigin);
-    const originUrl = new URL(requestOrigin);
-    const action = scannedUrl.searchParams.get('action');
-    const sameHost = scannedUrl.host === originUrl.host;
-    const hostedFamilyPay = /familypay/i.test(scannedUrl.hostname);
-
-    return (sameHost || hostedFamilyPay) && (action === 'join' || action === 'register' || !action);
-  } catch {
-    return false;
-  }
-};
-
-// 2.4 QR Registration (New Brother registers via QR Code with mandatory Name, Phone, Qi Card, Password)
+// 2.4 Owner Registration (kept on the original endpoint for compatibility)
 app.post('/api/brothers/register-qr', (req, res) => {
   const { name, email, phone, bankAccountNumber, password } = req.body;
   const db = readDB();
@@ -677,65 +652,9 @@ app.post('/api/brothers/register-qr', (req, res) => {
     });
   }
 
-  // If this is a GUEST joining -> Create a Pending Approval Request for the Admin
-  const joinQr = req.body.joinQr || {};
-  const expectedJoinQr = getExpectedJoinQr(db);
-  if (
-    !joinQr ||
-    (
-      (
-        String(joinQr.adminId || '') !== expectedJoinQr.adminId ||
-        String(joinQr.fundToken || '') !== expectedJoinQr.fundToken
-      ) &&
-      !isTrustedLegacyJoinUrl(joinQr, req)
-    )
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: '⚠️ لم يتم التحقق من باركود صندوق الأدمن. يرجى مسح باركود الانضمام من داخل تطبيق الأدمن ثم إعادة المحاولة.'
-    });
-  }
-
-  if (!db.guestJoinRequests) db.guestJoinRequests = [];
-
-  const requestId = 'gjr-' + Date.now();
-  const guestRequest = {
-    id: requestId,
-    name: name.trim(),
-    email: cleanEmail,
-    phone: cleanPhone,
-    bankAccountNumber: cleanBankAcc,
-    password: String(password).trim(),
-    joinQr: {
-      adminId: String(joinQr.adminId || ''),
-      fundToken: String(joinQr.fundToken || ''),
-      v: String(joinQr.v || '1')
-    },
-    status: 'pending',
-    timestamp: new Date().toISOString()
-  };
-
-  db.guestJoinRequests.unshift(guestRequest);
-
-  // Add Notification to Admin
-  const notif = {
-    id: 'notif-' + Date.now(),
-    title: '🔔 طلب انضمام ضيف جديد للصندوق',
-    message: `طلب الضيف (${guestRequest.name}) الانضمام للصندوق (هاتف: ${guestRequest.phone}). موافقتك مشروطة بكلمة المرور.`,
-    timestamp: new Date().toISOString(),
-    readBy: []
-  };
-  db.notifications.unshift(notif);
-  saveDB(db);
-
-  broadcastEvent('GUEST_JOIN_REQUEST', { request: guestRequest, notif });
-  broadcastEvent('NEW_TRANSFER_ALERT', { notif });
-
-  res.json({
-    success: true,
-    status: 'pending',
-    requestId: guestRequest.id,
-    message: `⏳ تم إرسال طلب انضمامك إلى الأدمن (${guestRequest.name}). بانتظار موافقته بكلمة المرور لتفعيل حسابك فوراً.`
+  return res.status(410).json({
+    success: false,
+    message: 'تم إلغاء إضافة المستخدمين عبر الباركود. يرجى أن يقوم الأدمن بإضافة المستخدم يدوياً من لوحة المستخدمين.'
   });
 });
 

@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { CameraQrScannerModal } from './CameraQrScannerModal';
-import { GuestRegisterModal } from './GuestRegisterModal';
-import { parseJoinQrPayload } from '../utils/joinQrPayload';
 import {
   Lock,
   Mail,
@@ -22,7 +19,6 @@ import {
   CheckCircle2,
   KeyRound,
   Smartphone,
-  Camera,
   Crown
 } from 'lucide-react';
 
@@ -38,19 +34,14 @@ export const AuthScreen = ({ onLoginSuccess }) => {
   
   // View modes: 'welcome' | 'register_owner' | 'login' | 'invite'
   const [viewMode, setViewMode] = useState('welcome');
-  const [showCameraScanner, setShowCameraScanner] = useState(false);
-  const [showGuestRegisterModal, setShowGuestRegisterModal] = useState(false);
-  const [joinQrPayload, setJoinQrPayload] = useState(null);
 
-  // Auto-detect QR action from URL when opened by the phone camera.
+  // Auto-detect owner registration action from URL.
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const action = urlParams.get('action');
 
       if (action === 'join') {
-        setJoinQrPayload(parseJoinQrPayload(window.location.href));
-        setShowGuestRegisterModal(true);
         window.history.replaceState({}, document.title, window.location.pathname);
       }
 
@@ -192,18 +183,6 @@ export const AuthScreen = ({ onLoginSuccess }) => {
     }
   };
 
-  const handleScanSuccess = (decodedText) => {
-    const parsedPayload = parseJoinQrPayload(decodedText);
-    if (!parsedPayload) {
-      setErrorMsg('هذا الباركود لا يحتوي على بيانات صندوق FamilyPay الصحيحة. يرجى مسح باركود الأدمن من داخل التطبيق.');
-      return;
-    }
-
-    setJoinQrPayload(parsedPayload);
-    setShowCameraScanner(false);
-    setShowGuestRegisterModal(true);
-  };
-
   const handleGuestLogin = () => {
     loginAsGuest();
     if (onLoginSuccess) onLoginSuccess();
@@ -279,7 +258,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
               <ArrowRight className="w-5 h-5 rotate-180 group-hover:-translate-x-1 transition text-emerald-200" />
             </button>
 
-            {/* Option 2: Enter as Guest & Open Camera Scanner Directly (الخيار الثاني المدمج) */}
+            {/* Option 2: Enter as Guest Preview Only */}
             <button
               type="button"
               onClick={() => {
@@ -290,15 +269,14 @@ export const AuthScreen = ({ onLoginSuccess }) => {
             >
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-400/40 flex items-center justify-center shrink-0 shadow-md">
-                  <Camera className="w-6 h-6 animate-pulse" />
+                  <User className="w-6 h-6" />
                 </div>
                 <div>
                   <span className="block text-sm font-black text-white flex items-center gap-1.5">
-                    <span>الدخول كـ (ضيف) ومسح باركود الأدمن</span>
-                    <span className="text-[10px] bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded-full font-mono font-bold">📷 كاميرا</span>
+                    <span>الدخول كـ (ضيف) للمعاينة فقط</span>
                   </span>
                   <span className="text-[11px] text-emerald-200/90 font-medium">
-                    يفتح الكاميرا مباشرة لمسح باركود الأدمن والانضمام للصندوق
+                    إضافة المستخدمين تتم يدوياً من حساب الأدمن
                   </span>
                 </div>
               </div>
@@ -840,28 +818,6 @@ export const AuthScreen = ({ onLoginSuccess }) => {
           </div>
         </div>
       )}
-
-      {/* Camera QR Code Live Scanner Modal */}
-      <CameraQrScannerModal
-        isOpen={showCameraScanner}
-        onClose={() => setShowCameraScanner(false)}
-        onScanSuccess={handleScanSuccess}
-        onManualEntry={() => {
-          setJoinQrPayload(null);
-          setShowCameraScanner(false);
-          setShowGuestRegisterModal(true);
-        }}
-      />
-
-      {/* Guest Registration Form Popup */}
-      <GuestRegisterModal
-        isOpen={showGuestRegisterModal}
-        onClose={() => setShowGuestRegisterModal(false)}
-        joinQrPayload={joinQrPayload}
-        onRegisterSuccess={() => {
-          if (onLoginSuccess) onLoginSuccess();
-        }}
-      />
 
     </div>
   );

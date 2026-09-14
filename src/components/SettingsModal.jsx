@@ -24,7 +24,6 @@ import {
   CreditCard,
   Eye,
   EyeOff,
-  QrCode,
   Sparkles,
   Plus,
   Bell,
@@ -36,7 +35,7 @@ export const SettingsModal = ({
   isOpen,
   onClose,
   onOpenCardsManager,
-  onOpenJoinQr
+  onOpenAddBrother
 }) => {
   const {
     settings,
@@ -833,27 +832,27 @@ export const SettingsModal = ({
                 </form>
               </div>
 
-              {/* SECTION 2: JOIN QR CODE FOR NEW USERS */}
-              {onOpenJoinQr && (
+              {/* SECTION 2: MANUAL NEW USER ADD */}
+              {onOpenAddBrother && (
                 <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
                   <div className="space-y-0.5">
                     <span className="font-black text-slate-900 dark:text-white block">
-                      باركود انضمام وتسجيل مستخدم جديد 📷
+                      إضافة مستخدم جديد يدوياً
                     </span>
                     <span className="text-[11px] text-slate-400">
-                      عرض رمز QR للانضمام المباشر للصندوق عبر كاميرا الهاتف
+                      إنشاء حساب مستخدم من داخل لوحة الأدمن بدون باركود
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => {
                       onClose();
-                      onOpenJoinQr();
+                      onOpenAddBrother();
                     }}
-                    className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 font-black text-xs rounded-2xl shadow-sm transition active:scale-95 flex items-center gap-1.5 border border-amber-400"
+                    className="px-3.5 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 text-slate-950 font-black text-xs rounded-2xl shadow-sm transition active:scale-95 flex items-center gap-1.5 border border-emerald-400"
                   >
-                    <QrCode className="w-4 h-4" />
-                    <span>عرض الباركود</span>
+                    <UserPlus className="w-4 h-4" />
+                    <span>إضافة يدوية</span>
                   </button>
                 </div>
               )}

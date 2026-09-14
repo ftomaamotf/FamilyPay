@@ -19,16 +19,13 @@ import { AddEditBrotherModal } from './components/AddEditBrotherModal';
 import { FundSecurityModal } from './components/FundSecurityModal';
 import { SettingsModal } from './components/SettingsModal';
 import { QrShareModal } from './components/QrShareModal';
-import { JoinBrotherQrModal } from './components/JoinBrotherQrModal';
 import { WhatsAppInviteModal } from './components/WhatsAppInviteModal';
 import { RequestMoneyModal } from './components/RequestMoneyModal';
 import { PendingRequestsModal } from './components/PendingRequestsModal';
 import { NotificationToast } from './components/NotificationToast';
 import { PwaInstallBanner } from './components/PwaInstallBanner';
 import { BottomToolsBar } from './components/BottomToolsBar';
-import { GuestJoinBanner } from './components/GuestJoinBanner';
 import { GuestJoinApprovalsModal } from './components/GuestJoinApprovalsModal';
-import { GuestPortalView } from './components/GuestPortalView';
 import { CircleChatModal } from './components/CircleChatModal';
 import { UserCheck, Send, Bell, X } from 'lucide-react';
 
@@ -155,7 +152,6 @@ function MainApp() {
   const [editingBrotherFields, setEditingBrotherFields] = useState(null);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
-  const [joinQrOpen, setJoinQrOpen] = useState(false);
   const [requestMoneyBrotherId, setRequestMoneyBrotherId] = useState(null);
   const [requestMoneyFieldId, setRequestMoneyFieldId] = useState(null);
 
@@ -204,10 +200,28 @@ function MainApp() {
   // 2. If in Guest Mode, show Dedicated Isolated Guest Portal (No access to Admin/Dashboard)
   if (currentUser.isGuest) {
     return (
-      <>
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4" dir="rtl">
         <GlobalIncomingCallBanner />
-        <GuestPortalView />
-      </>
+        <div className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 text-center space-y-4">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
+            <UserCheck className="w-8 h-8" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-lg font-black">وضع الضيف للمعاينة فقط</h2>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              تم إلغاء إضافة المستخدمين عبر الباركود. لإضافة مستخدم جديد، يدخل الأدمن إلى لوحة المستخدمين ويضغط زر إضافة يدوية.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCurrentUser(null)}
+            className="w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-black text-sm transition flex items-center justify-center gap-2"
+          >
+            <X className="w-4 h-4" />
+            <span>العودة لتسجيل الدخول</span>
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -250,9 +264,6 @@ function MainApp() {
         
         {/* Push Notification Activator & Tester Banner */}
         <PushNotificationBanner />
-
-        {/* Guest Onboarding Camera QR Banner (للمستخدمين في وضع الضيف) */}
-        <GuestJoinBanner />
 
         {/* 🚨 Admin Pending Guest Join Requests Alert Banner 🚨 */}
         {/* 🚨 Admin Pending Guest Join Requests Alert Banner 🚨 */}
@@ -318,7 +329,6 @@ function MainApp() {
               onOpenFieldsModal={handleOpenFieldsEdit}
               onOpenAddBrother={handleOpenAddBrother}
               onOpenEditBrother={handleOpenEditBrother}
-              onOpenJoinQr={() => setJoinQrOpen(true)}
               onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
               onOpenRequestMoney={(brother, field) => handleOpenRequestMoney(brother, field)}
               onOpenChat={handleOpenChat}
@@ -338,7 +348,6 @@ function MainApp() {
             onOpenFieldsModal={handleOpenFieldsEdit}
             onOpenAddBrother={handleOpenAddBrother}
             onOpenEditBrother={handleOpenEditBrother}
-            onOpenJoinQr={() => setJoinQrOpen(true)}
             onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
             onOpenRequestMoney={(brother, field) => handleOpenRequestMoney(brother, field)}
             onOpenChat={handleOpenChat}
@@ -448,17 +457,12 @@ function MainApp() {
         isOpen={settingsModalOpen}
         onClose={() => setSettingsModalOpen(false)}
         onOpenCardsManager={() => setCardsManagerOpen(true)}
-        onOpenJoinQr={() => setJoinQrOpen(true)}
+        onOpenAddBrother={handleOpenAddBrother}
       />
 
       <QrShareModal
         isOpen={qrModalOpen}
         onClose={() => setQrModalOpen(false)}
-      />
-
-      <JoinBrotherQrModal
-        isOpen={joinQrOpen}
-        onClose={() => setJoinQrOpen(false)}
       />
 
       <GuestJoinApprovalsModal

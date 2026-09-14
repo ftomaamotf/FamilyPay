@@ -958,8 +958,8 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // 1.4 Register Brother Directly via QR Code (Mandatory: Name, Phone, Qi Card Account, Password, isOwner, email)
-  const registerBrotherViaQr = async ({ name, email = '', phone, bankAccountNumber, password, isOwner = false, joinQr = null }) => {
+  // 1.4 Register Fund Owner (legacy endpoint name kept for compatibility)
+  const registerBrotherViaQr = async ({ name, email = '', phone, bankAccountNumber, password, isOwner = false }) => {
     try {
       const res = await fetch(`${API_BASE}/api/brothers/register-qr`, {
         method: 'POST',
@@ -970,8 +970,7 @@ export const FinanceProvider = ({ children }) => {
           phone: String(phone).trim(),
           bankAccountNumber: String(bankAccountNumber).trim(),
           password: String(password).trim(),
-          isOwner: Boolean(isOwner),
-          joinQr
+          isOwner: Boolean(isOwner)
         })
       });
       const data = await res.json();
@@ -1017,7 +1016,7 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // 1.5 Login as Guest (الدخول كـ ضيف لتصفح الصندوق ومسح باركود الأدمن)
+  // 1.5 Login as Guest (preview only; adding users is manual from admin)
   const loginAsGuest = () => {
     const guestUser = {
       id: 'guest',

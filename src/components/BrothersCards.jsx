@@ -15,7 +15,6 @@ import {
   Edit2,
   Share2,
   Trash2,
-  QrCode,
   Inbox,
   Edit3,
   MessageSquare,
@@ -188,7 +187,6 @@ export const BrothersCards = ({
   onOpenAddBrother,
   onOpenEditBrother,
   onOpenWhatsAppInvite,
-  onOpenJoinQr,
   onOpenRequestMoney,
   onOpenChat
 }) => {
@@ -625,37 +623,37 @@ export const BrothersCards = ({
               );
             })}
 
-            {/* Join via Barcode / QR Code Circular Button (ظاهر على الكمبيوتر وجميع الهواتف) */}
-            {onOpenJoinQr && (
+            {/* Manual Add User Circular Button */}
+            {onOpenAddBrother && (
               <div className="flex flex-col items-center shrink-0 w-auto lg:w-full">
                 <button
                   type="button"
-                  onClick={onOpenJoinQr}
-                  title="عرض رمز QR لإضافة وانضمام مستخدم جديد عبر كاميرا الهاتف"
+                  onClick={onOpenAddBrother}
+                  title="إضافة مستخدم جديد يدوياً"
                   className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full opacity-90 hover:opacity-100 hover:scale-105 active:scale-95"
                 >
                   {/* Outer Circular Ring */}
-                  <div className="relative p-1 rounded-full ring-2 ring-amber-500/80 group-hover:ring-amber-400 group-hover:ring-offset-2 group-hover:ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-amber-500/20">
-                    {/* The Inner QR Avatar Circle */}
-                    <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 text-slate-950 shadow-inner relative overflow-hidden">
-                      <QrCode className="w-8 h-8 sm:w-9 sm:h-9 stroke-[2.2] drop-shadow" />
+                  <div className="relative p-1 rounded-full ring-2 ring-emerald-500/80 group-hover:ring-emerald-400 group-hover:ring-offset-2 group-hover:ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-emerald-500/20">
+                    {/* The Inner Add User Circle */}
+                    <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 text-slate-950 shadow-inner relative overflow-hidden">
+                      <UserPlus className="w-8 h-8 sm:w-9 sm:h-9 stroke-[2.2] drop-shadow" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/30 pointer-events-none" />
                     </div>
 
-                    {/* Camera Badge on top */}
-                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-amber-400 flex items-center justify-center shadow-md border border-amber-400 text-[10px]">
-                      📷
+                    {/* Plus Badge on top */}
+                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-emerald-400 flex items-center justify-center shadow-md border border-emerald-400 text-[13px] font-black">
+                      +
                     </div>
                   </div>
 
                   {/* Circle Name Label */}
-                  <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-amber-300 group-hover:text-amber-200">
-                    باركود إضافة
+                  <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-emerald-300 group-hover:text-emerald-200">
+                    إضافة يدوية
                   </span>
 
                   {/* Action Pill Badge */}
-                  <div className="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 group-hover:bg-amber-500 group-hover:text-slate-950 transition-all">
-                    <span>مسح QR ⚡</span>
+                  <div className="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all">
+                    <span>إضافة مستخدم</span>
                   </div>
                 </button>
               </div>
