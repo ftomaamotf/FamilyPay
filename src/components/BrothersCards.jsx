@@ -1030,8 +1030,9 @@ export const BrothersCards = ({
               </span>
             </div>
 
-            <div className="flex flex-col gap-2.5">
-              {selectedBrother.approvedFields?.map((f, index) => {
+            <div className="rounded-3xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-100/70 dark:bg-slate-950/50 p-3">
+              <div className="flex flex-row gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                {selectedBrother.approvedFields?.map((f, index) => {
                 const calculatedSpent = dynamicFieldSpent(f.id, f.name);
                 const pending = fundRequests?.find((r) =>
                   r.status === 'pending' &&
@@ -1067,7 +1068,7 @@ export const BrothersCards = ({
                 return (
                   <div
                     key={f.id}
-                    className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between relative group/field hover:border-emerald-400 transition shadow-xs"
+                    className="w-[280px] sm:w-[320px] lg:w-[340px] shrink-0 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between relative group/field hover:border-emerald-400 transition shadow-xs"
                   >
                     {/* Commodity Name & Index (Clickable to view order history) */}
                     <div
@@ -1163,13 +1164,14 @@ export const BrothersCards = ({
                 );
               })}
 
-              {(!selectedBrother.approvedFields || selectedBrother.approvedFields.length === 0) && (
-                <div className="text-center py-7 text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 space-y-1">
+                {(!selectedBrother.approvedFields || selectedBrother.approvedFields.length === 0) && (
+                <div className="w-full text-center py-7 text-xs text-slate-400 bg-white dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 space-y-1">
                   <span className="text-lg block">🛍️</span>
                   <span className="font-bold text-slate-300">لا توجد سلع مسجلة لهذا المستخدم حالياً.</span>
                   <span className="text-[11px] text-slate-500 block">عند قيامك بتحويل مبلغ وكتابة اسم السلعة (أو طلب المستخدم لمبلغ وسلعة)، ستظهر السلعة وسعرها هنا فوراً!</span>
                 </div>
               )}
+              </div>
             </div>
           </div>
 
