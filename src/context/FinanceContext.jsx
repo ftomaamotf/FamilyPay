@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import {
   CURRENCIES,
   DEFAULT_EXPENSE_CATEGORIES,
@@ -244,12 +244,6 @@ export const FinanceProvider = ({ children }) => {
   // Circle Chat & Voice Notes State
   const [messages, setMessages] = useState(() => loadFromStorage('bait_finance_messages', []));
 
-  // Live Intercom & Walkie-Talkie State
-  const [activeCall, setActiveCall] = useState(null);
-  const [incomingCall, setIncomingCall] = useState(null);
-  const [incomingVoiceBurst, setIncomingVoiceBurst] = useState(null);
-  const [isWalkieTalkieOpen, setIsWalkieTalkieOpen] = useState(false);
-
   // Sync to Storage
   useEffect(() => saveToStorage('bait_finance_current_user', currentUser), [currentUser]);
   useEffect(() => saveToStorage('bait_finance_bank_cards', bankCards), [bankCards]);
@@ -302,59 +296,6 @@ export const FinanceProvider = ({ children }) => {
       }
     } catch (e) {
       console.log('Message sound error:', e);
-    }
-  }, []);
-
-  // Intercom Walkie-Talkie Ringtone (Loud Radio Ring & Strong Vibration)
-  const playIntercomRingtone = useCallback(() => {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const now = ctx.currentTime;
-
-      [0, 0.22, 0.44, 0.66].forEach((t) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(784, now + t); // G5
-        osc.frequency.setValueAtTime(987.77, now + t + 0.09); // B5
-        gain.gain.setValueAtTime(0.4, now + t);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.18);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now + t);
-        osc.stop(now + t + 0.18);
-      });
-
-      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-        window.navigator.vibrate([1000, 400, 1000, 400, 1000]);
-      }
-    } catch (e) {
-      console.log('Intercom ringtone error:', e);
-    }
-  }, []);
-
-  // Walkie-Talkie Radio Chirp / Roger Beep
-  const playWalkieTalkieChirp = useCallback(() => {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(1100, now);
-      osc.frequency.setValueAtTime(1600, now + 0.04);
-      gain.gain.setValueAtTime(0.25, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.1);
-
-      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-        window.navigator.vibrate([150, 80, 150]);
-      }
-    } catch (e) {
-      console.log('Chirp sound error:', e);
     }
   }, []);
 
@@ -624,77 +565,6 @@ export const FinanceProvider = ({ children }) => {
             else if (messageId) setMessages((prev) => prev.filter((m) => m.id !== messageId));
           }
 
-          // ================= Intercom & Walkie-Talkie Events =================
-          if (payload.type === 'INTERCOM_RINGING') {
-            const { call } = payload.data;
-            if (call && currentUser && call.status === 'ringing') {
-              const isMeReceiver =
-                call.receiverId === currentUser.id ||
-                (currentUser.accountNumber && call.receiverId === currentUser.accountNumber) ||
-                (currentUser.bankAccountNumber && call.receiverId === currentUser.bankAccountNumber) ||
-                (currentUser.phone && String(call.receiverId).replace(/[\s\-\+]/g, '') === String(currentUser.phone).replace(/[\s\-\+]/g, ''));
-
-              if (isMeReceiver) {
-                setIncomingCall(call);
-                playIntercomRingtone();
-                if (Notification.permission === 'granted') {
-                  new Notification(`📞 مكالمة واردة من ${call.callerName}`, {
-                    body: 'يرن عليك الآن.. اضغط للموافقة والتحدث المباشر 📲',
-                    icon: '/favicon.svg'
-                  });
-                }
-              }
-            }
-          }
-
-          if (payload.type === 'INTERCOM_STATUS') {
-            const { call, action } = payload.data;
-            if (call) {
-              const isParty = currentUser && (
-                call.callerId === currentUser.id ||
-                call.receiverId === currentUser.id ||
-                (currentUser.accountNumber && (call.callerId === currentUser.accountNumber || call.receiverId === currentUser.accountNumber)) ||
-                (currentUser.bankAccountNumber && (call.callerId === currentUser.bankAccountNumber || call.receiverId === currentUser.bankAccountNumber))
-              );
-
-              if (isParty) {
-                setActiveCall((prev) => {
-                  if (call.status === 'connected') return call;
-                  if (call.status === 'ended' || call.status === 'rejected') return null;
-                  if (prev && prev.id === call.id) return call;
-                  return prev;
-                });
-
-                setIncomingCall((prev) => {
-                  if (prev && prev.id === call.id) {
-                    return call.status === 'ringing' ? call : null;
-                  }
-                  return prev;
-                });
-
-                if (call.status === 'connected') {
-                  playWalkieTalkieChirp();
-                } else if (call.status === 'rejected' || call.status === 'ended') {
-                  playWalkieTalkieChirp();
-                }
-              }
-            }
-          }
-
-          if (payload.type === 'INTERCOM_VOICE_BURST') {
-            const { callId, senderId, audioData } = payload.data;
-            if (currentUser && senderId !== currentUser.id && audioData) {
-              setIncomingVoiceBurst(payload.data);
-              try {
-                audioQueueRef.current.push(audioData);
-                if (!isAudioPlayingRef.current) {
-                  playNextBurstInQueue();
-                }
-              } catch (e) {
-                console.log('Intercom audio burst queue error:', e);
-              }
-            }
-          }
         } catch (err) {
           console.error('Error parsing SSE event:', err);
         }
@@ -1897,392 +1767,6 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // 11. Live Intercom & Voice Calling Engine (No Popup / Realtime Audio Stream)
-  const unlockAudioContext = useCallback(() => {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      if (ctx.state === 'suspended') ctx.resume();
-      const buf = ctx.createBuffer(1, 1, 22050);
-      const src = ctx.createBufferSource();
-      src.buffer = buf;
-      src.connect(ctx.destination);
-      src.start(0);
-    } catch {}
-  }, []);
-
-  const startIntercomCall = async (targetBrotherId) => {
-    unlockAudioContext();
-    if (navigator.mediaDevices?.getUserMedia) {
-      try {
-        const testStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        testStream.getTracks().forEach((t) => t.stop());
-      } catch (e) {
-        console.log('Mic pre-warm note:', e);
-      }
-    }
-    const activeUser = currentUser || { id: 'guest', name: 'مستخدم' };
-
-    // Auto-resolve valid target if calling self or empty
-    let realTargetId = targetBrotherId;
-    if (!realTargetId || realTargetId === activeUser.id) {
-      const otherBrother = (brothers || []).find((b) => b.id !== activeUser.id);
-      if (otherBrother) realTargetId = otherBrother.id;
-    }
-    if (!realTargetId) return { success: false, message: 'لا يوجد مستخدم آخر للاتصال به' };
-
-    const receiver = (brothers || []).find((b) => b.id === realTargetId) || { name: 'المستخدم' };
-    try {
-      const res = await fetch(`${API_BASE}/api/intercom/call`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          callerId: activeUser.id,
-          callerName: activeUser.name,
-          callerAvatar: activeUser.avatarColor || '#10b981',
-          receiverId: realTargetId,
-          receiverName: receiver.name
-        })
-      });
-      const data = await res.json();
-      if (data.success && data.call) {
-        setActiveCall(data.call);
-        playWalkieTalkieChirp();
-      }
-      return data;
-    } catch {
-      const localCall = {
-        id: 'call-' + Date.now(),
-        callerId: activeUser.id,
-        callerName: activeUser.name,
-        callerAvatar: activeUser.avatarColor || '#10b981',
-        receiverId: realTargetId,
-        receiverName: receiver.name,
-        status: 'ringing',
-        createdAt: new Date().toISOString()
-      };
-      setActiveCall(localCall);
-      return { success: true, call: localCall };
-    }
-  };
-
-  const acceptIntercomCall = async (callId) => {
-    unlockAudioContext();
-    const targetCallId = callId || incomingCall?.id;
-    try {
-      const res = await fetch(`${API_BASE}/api/intercom/respond`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          callId: targetCallId,
-          action: 'accept',
-          userId: currentUser?.id
-        })
-      });
-      const data = await res.json();
-      if (data.success && data.call) {
-        setActiveCall(data.call);
-        setIncomingCall(null);
-        playWalkieTalkieChirp();
-      }
-      return data;
-    } catch {
-      if (incomingCall) {
-        const connectedCall = { ...incomingCall, status: 'connected' };
-        setActiveCall(connectedCall);
-        setIncomingCall(null);
-      }
-      return { success: true };
-    }
-  };
-
-  const rejectIntercomCall = async (callId) => {
-    const targetCallId = callId || incomingCall?.id;
-    try {
-      await fetch(`${API_BASE}/api/intercom/respond`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          callId: targetCallId,
-          action: 'reject',
-          userId: currentUser?.id
-        })
-      });
-    } catch {}
-    setIncomingCall(null);
-  };
-
-  const endIntercomCall = async (callId) => {
-    const targetCallId = callId || activeCall?.id;
-    try {
-      await fetch(`${API_BASE}/api/intercom/respond`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          callId: targetCallId,
-          action: 'end',
-          userId: currentUser?.id
-        })
-      });
-    } catch {}
-    setActiveCall(null);
-    setIncomingCall(null);
-    playWalkieTalkieChirp();
-  };
-
-  // Loudspeaker & Call Duration Timer
-  const [isLoudspeakerOn, setIsLoudspeakerOn] = useState(false);
-  const toggleLoudspeaker = () => {
-    unlockAudioContext();
-    setIsLoudspeakerOn((prev) => !prev);
-  };
-
-  const [callDurationSeconds, setCallDurationSeconds] = useState(0);
-  useEffect(() => {
-    let timer = null;
-    if (activeCall && activeCall.status === 'connected') {
-      timer = setInterval(() => {
-        setCallDurationSeconds((prev) => prev + 1);
-      }, 1000);
-    } else {
-      setCallDurationSeconds(0);
-    }
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [activeCall?.status]);
-
-  // Fast Call Poller (1.0 second) to ensure instant ringing & call connection across devices
-  useEffect(() => {
-    let isPolling = true;
-
-    const checkActiveCalls = async () => {
-      const activeId = currentUser?.id || 'all';
-      try {
-        const res = await fetch(`${API_BASE}/api/intercom/active-for/${activeId}`);
-        const data = await res.json();
-        if (!isPolling || !data.success) return;
-
-        // 1. Check for incoming ringing call (as receiver)
-        if (data.ringingCall) {
-          setIncomingCall((prev) => {
-            if (!prev || prev.id !== data.ringingCall.id) {
-              playIntercomRingtone();
-              if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-                window.navigator.vibrate([400, 200, 400, 200, 600]);
-              }
-            }
-            return data.ringingCall;
-          });
-        } else {
-          setIncomingCall((prev) => (prev?.status === 'ringing' ? null : prev));
-        }
-
-        // 2. Check for connected call status update
-        if (data.connectedCall) {
-          setActiveCall((prev) => {
-            if (!prev || prev.status !== 'connected' || prev.id !== data.connectedCall.id) {
-              playWalkieTalkieChirp();
-            }
-            return data.connectedCall;
-          });
-          setIncomingCall(null);
-        } else if (activeCall?.status === 'ringing') {
-          // If caller was ringing, but server no longer has active caller ringing call, peer ended/rejected
-          if (!data.callerRingingCall && !data.connectedCall) {
-            setActiveCall(null);
-          }
-        } else if (activeCall && !data.connectedCall && !data.ringingCall) {
-          // Ended by peer
-          setActiveCall(null);
-        }
-      } catch {}
-    };
-
-    checkActiveCalls();
-    const interval = setInterval(checkActiveCalls, 1000);
-    return () => {
-      isPolling = false;
-      clearInterval(interval);
-    };
-  }, [currentUser?.id, activeCall?.id, activeCall?.status, playIntercomRingtone, playWalkieTalkieChirp]);
-
-  // Continuous In-App Vibration & Telephone Ring Bell Loop on Incoming Call (لا ينقطع حتى يتم الرد)
-  useEffect(() => {
-    if (!incomingCall || incomingCall.status !== 'ringing') {
-      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-        try { window.navigator.vibrate(0); } catch {}
-      }
-      return;
-    }
-
-    // Play ringing bell and vibrate immediately
-    playIntercomRingtone();
-    if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-      try { window.navigator.vibrate([1000, 400, 1000, 400, 1000, 400]); } catch {}
-    }
-
-    // Repeat telephone ring sound and heavy vibration every 2.4s non-stop until answered or rejected
-    const callRingInterval = setInterval(() => {
-      playIntercomRingtone();
-      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-        try { window.navigator.vibrate([1000, 400, 1000, 400, 1000, 400]); } catch {}
-      }
-    }, 2400);
-
-    return () => {
-      clearInterval(callRingInterval);
-      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-        try { window.navigator.vibrate(0); } catch {}
-      }
-    };
-  }, [incomingCall?.id, incomingCall?.status, playIntercomRingtone]);
-
-  const sendIntercomVoiceBurst = async ({ callId, audioData, duration }) => {
-    const activeUser = currentUser || { id: 'guest', name: 'مستخدم' };
-    try {
-      await fetch(`${API_BASE}/api/intercom/voice-burst`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          callId: callId || activeCall?.id,
-          senderId: activeUser.id,
-          senderName: activeUser.name,
-          audioData,
-          duration: duration || 0
-        })
-      });
-    } catch (e) {
-      console.log('Voice burst send error:', e);
-    }
-  };
-
-  // Realtime Ultra Low-Latency Voice Stream (480ms Rapid Packets / Zero lag)
-  const liveCallStreamRef = useRef(null);
-  const liveCallRecorderRef = useRef(null);
-
-  useEffect(() => {
-    if (activeCall && activeCall.status === 'connected') {
-      let isStreaming = true;
-
-      const startStreamingPipeline = async () => {
-        try {
-          if (!navigator.mediaDevices?.getUserMedia) return;
-          const stream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true
-            }
-          });
-
-          if (!isStreaming) {
-            stream.getTracks().forEach((t) => t.stop());
-            return;
-          }
-
-          liveCallStreamRef.current = stream;
-
-          const recordSlice = () => {
-            if (!isStreaming || !liveCallStreamRef.current) return;
-
-            let chunks = [];
-            let mimeType = 'audio/webm';
-            if (typeof MediaRecorder !== 'undefined') {
-              if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) mimeType = 'audio/webm;codecs=opus';
-              else if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
-              else if (MediaRecorder.isTypeSupported('audio/aac')) mimeType = 'audio/aac';
-            }
-
-            try {
-              const rec = new MediaRecorder(stream, mimeType ? { mimeType, audioBitsPerSecond: 28000 } : undefined);
-              liveCallRecorderRef.current = rec;
-
-              rec.ondataavailable = (e) => {
-                if (e.data && e.data.size > 0) chunks.push(e.data);
-              };
-
-              rec.onstop = () => {
-                if (chunks.length > 0 && activeCall?.id && isStreaming) {
-                  const blob = new Blob(chunks, { type: rec.mimeType || mimeType });
-                  const reader = new FileReader();
-                  reader.readAsDataURL(blob);
-                  reader.onloadend = () => {
-                    if (reader.result && isStreaming) {
-                      sendIntercomVoiceBurst({
-                        callId: activeCall.id,
-                        audioData: reader.result,
-                        duration: 0.5
-                      });
-                    }
-                  };
-                }
-                if (isStreaming) {
-                  setTimeout(recordSlice, 40);
-                }
-              };
-
-              rec.start();
-              setTimeout(() => {
-                if (rec.state === 'recording') rec.stop();
-              }, 480); // 480ms ultra-low latency voice packet
-            } catch (err) {
-              console.log('Recorder slice error:', err);
-              if (isStreaming) setTimeout(recordSlice, 500);
-            }
-          };
-
-          recordSlice();
-        } catch (err) {
-          console.log('Call mic permission/stream error:', err);
-        }
-      };
-
-      startStreamingPipeline();
-
-      return () => {
-        isStreaming = false;
-        if (liveCallRecorderRef.current && liveCallRecorderRef.current.state !== 'inactive') {
-          try { liveCallRecorderRef.current.stop(); } catch {}
-        }
-        if (liveCallStreamRef.current) {
-          liveCallStreamRef.current.getTracks().forEach((t) => t.stop());
-          liveCallStreamRef.current = null;
-        }
-      };
-    }
-  }, [activeCall?.id, activeCall?.status]);
-
-  // Audio Queue for smooth, jitter-free ultra-low latency playback
-  const audioQueueRef = useRef([]);
-  const isAudioPlayingRef = useRef(false);
-
-  const playNextBurstInQueue = useCallback(() => {
-    if (audioQueueRef.current.length === 0) {
-      isAudioPlayingRef.current = false;
-      return;
-    }
-    isAudioPlayingRef.current = true;
-    const nextItem = audioQueueRef.current.shift();
-    try {
-      const audio = new Audio(nextItem);
-      audio.volume = isLoudspeakerOn ? 1.0 : 0.85;
-      audio.onended = () => playNextBurstInQueue();
-      audio.onerror = () => playNextBurstInQueue();
-      audio.play().catch(() => playNextBurstInQueue());
-    } catch {
-      playNextBurstInQueue();
-    }
-  }, [isLoudspeakerOn]);
-
-  useEffect(() => {
-    if (incomingVoiceBurst && incomingVoiceBurst.audioData && incomingVoiceBurst.senderId !== currentUser?.id) {
-      audioQueueRef.current.push(incomingVoiceBurst.audioData);
-      if (!isAudioPlayingRef.current) {
-        playNextBurstInQueue();
-      }
-    }
-  }, [incomingVoiceBurst, currentUser?.id, playNextBurstInQueue]);
-
   const markAllNotifsAsRead = () => {
     if (!currentUser) return;
     setNotifications((prev) =>
@@ -2293,7 +1777,7 @@ export const FinanceProvider = ({ children }) => {
     );
   };
 
-  // 12. Web Push Notification Support (Android & iPhone background calls)
+  // 11. Web Push Notification Support (Android & iPhone background alerts)
   const [isPushSupported, setIsPushSupported] = useState(false);
   const [isPushSubscribed, setIsPushSubscribed] = useState(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -2355,7 +1839,7 @@ export const FinanceProvider = ({ children }) => {
         });
         setIsPushSubscribed(true);
         localStorage.setItem('familypay_push_subscribed', 'true');
-        return { success: true, message: '✅ تم تفعيل رنين وإشعارات الهاتف عند غلق البرنامج بنجاح وبشكل دائم!' };
+        return { success: true, message: '✅ تم تفعيل إشعارات الهاتف عند غلق البرنامج بنجاح وبشكل دائم!' };
       }
     } catch (err) {
       console.log('Push subscription error:', err);
@@ -2369,7 +1853,7 @@ export const FinanceProvider = ({ children }) => {
       if (typeof window !== 'undefined' && window.navigator?.vibrate) {
         window.navigator.vibrate([1000, 300, 1000, 300, 1000]);
       }
-      playIntercomRingtone();
+      playMessageNotificationSound();
       const res = await fetch(`${API_BASE}/api/push/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2515,25 +1999,6 @@ export const FinanceProvider = ({ children }) => {
         sendMessage,
         deleteMessage,
         playMessageNotificationSound,
-        activeCall,
-        setActiveCall,
-        incomingCall,
-        setIncomingCall,
-        incomingVoiceBurst,
-        startIntercomCall,
-        acceptIntercomCall,
-        rejectIntercomCall,
-        endIntercomCall,
-        sendIntercomVoiceBurst,
-        startVoiceCall: startIntercomCall,
-        acceptVoiceCall: acceptIntercomCall,
-        rejectVoiceCall: rejectIntercomCall,
-        endVoiceCall: endIntercomCall,
-        playIntercomRingtone,
-        playWalkieTalkieChirp,
-        isLoudspeakerOn,
-        toggleLoudspeaker,
-        callDurationSeconds,
         isPushSupported,
         isPushSubscribed,
         subscribePushNotifications,
