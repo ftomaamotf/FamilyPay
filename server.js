@@ -570,6 +570,14 @@ app.post('/api/invitations/accept', (req, res) => {
   });
 });
 
+const getExpectedJoinQr = (db) => {
+  const activeAdminId = db.activeAdminId || db.brothers.find((b) => b.isAdmin)?.id || '';
+  return {
+    adminId: activeAdminId,
+    fundToken: ['familypay', activeAdminId || 'admin', db.sendingCardId || 'fund'].join(':')
+  };
+};
+
 // 2.4 QR Registration (New Brother registers via QR Code with mandatory Name, Phone, Qi Card, Password)
 app.post('/api/brothers/register-qr', (req, res) => {
   const { name, email, phone, bankAccountNumber, password } = req.body;
@@ -653,6 +661,19 @@ app.post('/api/brothers/register-qr', (req, res) => {
   }
 
   // If this is a GUEST joining -> Create a Pending Approval Request for the Admin
+  const joinQr = req.body.joinQr || {};
+  const expectedJoinQr = getExpectedJoinQr(db);
+  if (
+    !joinQr ||
+    String(joinQr.adminId || '') !== expectedJoinQr.adminId ||
+    String(joinQr.fundToken || '') !== expectedJoinQr.fundToken
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: '⚠️ لم يتم التحقق من باركود صندوق الأدمن. يرجى مسح باركود الانضمام من داخل تطبيق الأدمن ثم إعادة المحاولة.'
+    });
+  }
+
   if (!db.guestJoinRequests) db.guestJoinRequests = [];
 
   const requestId = 'gjr-' + Date.now();
@@ -663,6 +684,11 @@ app.post('/api/brothers/register-qr', (req, res) => {
     phone: cleanPhone,
     bankAccountNumber: cleanBankAcc,
     password: String(password).trim(),
+    joinQr: {
+      adminId: String(joinQr.adminId || ''),
+      fundToken: String(joinQr.fundToken || ''),
+      v: String(joinQr.v || '1')
+    },
     status: 'pending',
     timestamp: new Date().toISOString()
   };

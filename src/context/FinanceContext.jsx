@@ -959,7 +959,7 @@ export const FinanceProvider = ({ children }) => {
   };
 
   // 1.4 Register Brother Directly via QR Code (Mandatory: Name, Phone, Qi Card Account, Password, isOwner, email)
-  const registerBrotherViaQr = async ({ name, email = '', phone, bankAccountNumber, password, isOwner = false }) => {
+  const registerBrotherViaQr = async ({ name, email = '', phone, bankAccountNumber, password, isOwner = false, joinQr = null }) => {
     try {
       const res = await fetch(`${API_BASE}/api/brothers/register-qr`, {
         method: 'POST',
@@ -970,7 +970,8 @@ export const FinanceProvider = ({ children }) => {
           phone: String(phone).trim(),
           bankAccountNumber: String(bankAccountNumber).trim(),
           password: String(password).trim(),
-          isOwner: Boolean(isOwner)
+          isOwner: Boolean(isOwner),
+          joinQr
         })
       });
       const data = await res.json();

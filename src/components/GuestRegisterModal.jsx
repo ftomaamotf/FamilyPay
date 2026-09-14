@@ -13,7 +13,7 @@ import {
   Check
 } from 'lucide-react';
 
-export const GuestRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
+export const GuestRegisterModal = ({ isOpen, onClose, onRegisterSuccess, joinQrPayload = null }) => {
   const { registerBrotherViaQr, setCurrentUser } = useFinance();
 
   const [name, setName] = useState('');
@@ -73,6 +73,10 @@ export const GuestRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
       setErrorMsg('⚠️ كلمة المرور إجبارية');
       return;
     }
+    if (!joinQrPayload?.adminId || !joinQrPayload?.fundToken) {
+      setErrorMsg('⚠️ يرجى فتح هذه الاستمارة من باركود الأدمن الصحيح للتحقق من الصندوق قبل إرسال الطلب');
+      return;
+    }
 
     setLoading(true);
     setErrorMsg('');
@@ -81,7 +85,8 @@ export const GuestRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
       phone: phone.trim(),
       bankAccountNumber: bankAccountNumber.trim(),
       password: password.trim(),
-      isOwner: false
+      isOwner: false,
+      joinQr: joinQrPayload
     });
     setLoading(false);
 

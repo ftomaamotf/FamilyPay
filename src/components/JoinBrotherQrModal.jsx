@@ -12,13 +12,16 @@ import {
   Smartphone,
   CreditCard
 } from 'lucide-react';
+import { buildJoinQrUrl } from '../utils/joinQrPayload';
+import { useFinance } from '../context/FinanceContext';
 
 export const JoinBrotherQrModal = ({ isOpen, onClose }) => {
   const [copied, setCopied] = useState(false);
+  const { activeAdminId, sendingCard } = useFinance();
 
   const getJoinUrl = () => {
-    if (typeof window === 'undefined') return 'https://familypay-aw26.onrender.com/?action=register';
-    return `${window.location.origin}/?action=join`;
+    const origin = typeof window === 'undefined' ? 'https://familypay-aw26.onrender.com' : window.location.origin;
+    return buildJoinQrUrl({ origin, activeAdminId, sendingCardId: sendingCard?.id });
   };
 
   const joinUrl = getJoinUrl();

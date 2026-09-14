@@ -21,6 +21,7 @@ import {
   Check,
   AlertCircle
 } from 'lucide-react';
+import { parseJoinQrPayload } from '../utils/joinQrPayload';
 
 export const GuestPortalView = () => {
   const { currentUser, setCurrentUser, registerBrotherViaQr } = useFinance();
@@ -46,6 +47,7 @@ export const GuestPortalView = () => {
   const [formError, setFormError] = useState('');
   const [pendingRequestId, setPendingRequestId] = useState(null);
   const [isApproved, setIsApproved] = useState(false);
+  const [joinQrPayload, setJoinQrPayload] = useState(null);
 
   const stopScannerCleanly = async () => {
     try {
@@ -113,6 +115,13 @@ export const GuestPortalView = () => {
   };
 
   const handleScanSuccess = async (decodedText) => {
+    const parsedPayload = parseJoinQrPayload(decodedText);
+    if (!parsedPayload?.adminId || !parsedPayload?.fundToken) {
+      setScannerError('هذا الباركود لا يحتوي على بيانات صندوق FamilyPay الصحيحة. يرجى مسح باركود الأدمن من داخل التطبيق.');
+      return;
+    }
+
+    setJoinQrPayload(parsedPayload);
     if (window.navigator?.vibrate) window.navigator.vibrate(100);
     await stopScannerCleanly();
     setStep('register');
@@ -203,7 +212,8 @@ export const GuestPortalView = () => {
       phone: phone.trim(),
       bankAccountNumber: bankAccountNumber.trim(),
       password: password.trim(),
-      isOwner: false
+      isOwner: false,
+      joinQr: joinQrPayload
     });
     setFormLoading(false);
 

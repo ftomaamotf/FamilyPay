@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFinance } from '../context/FinanceContext';
 import { CameraQrScannerModal } from './CameraQrScannerModal';
 import { GuestRegisterModal } from './GuestRegisterModal';
+import { parseJoinQrPayload } from '../utils/joinQrPayload';
 import {
   Lock,
   Mail,
@@ -39,26 +40,25 @@ export const AuthScreen = ({ onLoginSuccess }) => {
   const [viewMode, setViewMode] = useState('welcome');
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [showGuestRegisterModal, setShowGuestRegisterModal] = useState(false);
+  const [joinQrPayload, setJoinQrPayload] = useState(null);
 
-  // Auto-detect ?action=register from URL when scanned via phone camera
+  // Auto-detect QR action from URL when opened by the phone camera.
   useEffect(() => {
-  if (typeof window !== 'undefined') {
-    const urlParams = new URLSearchParams(window.location.search);
-    const action = urlParams.get('action');
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const action = urlParams.get('action');
 
-    if (action === 'join') {
-      setShowGuestRegisterModal(true);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
+      if (action === 'join') {
+        setJoinQrPayload(parseJoinQrPayload(window.location.href));
+        setShowGuestRegisterModal(true);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
 
-    if (action === 'register') {
-      setViewMode('register_owner');
-      setRegMsg('👋 أهلاً بك! تم فتح استمارة التسجيل. يرجى إدخال اسمك ورقم هاتفك وبطاقتك لإكمال التسجيل.');
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }
-}, []);
-}
+      if (action === 'register') {
+        setViewMode('register_owner');
+        setRegMsg('👋 أهلاً بك! تم فتح استمارة التسجيل. يرجى إدخال اسمك ورقم هاتفك وبطاقتك لإكمال التسجيل.');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
     }
   }, []);
 
@@ -193,6 +193,13 @@ export const AuthScreen = ({ onLoginSuccess }) => {
   };
 
   const handleScanSuccess = (decodedText) => {
+    const parsedPayload = parseJoinQrPayload(decodedText);
+    if (!parsedPayload?.adminId || !parsedPayload?.fundToken) {
+      setErrorMsg('هذا الباركود لا يحتوي على بيانات صندوق FamilyPay الصحيحة. يرجى مسح باركود الأدمن من داخل التطبيق.');
+      return;
+    }
+
+    setJoinQrPayload(parsedPayload);
     setShowCameraScanner(false);
     setShowGuestRegisterModal(true);
   };
@@ -840,6 +847,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
         onClose={() => setShowCameraScanner(false)}
         onScanSuccess={handleScanSuccess}
         onManualEntry={() => {
+          setJoinQrPayload(null);
           setShowCameraScanner(false);
           setShowGuestRegisterModal(true);
         }}
@@ -849,6 +857,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
       <GuestRegisterModal
         isOpen={showGuestRegisterModal}
         onClose={() => setShowGuestRegisterModal(false)}
+        joinQrPayload={joinQrPayload}
         onRegisterSuccess={() => {
           if (onLoginSuccess) onLoginSuccess();
         }}
