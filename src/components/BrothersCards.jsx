@@ -1508,15 +1508,75 @@ export const BrothersCards = ({
                 )}
               </div>
 
-              {/* Footer */}
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-700 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setInspectedCommodity(null)}
-                  className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition"
-                >
-                  إغلاق النافذة
-                </button>
+              {/* Footer Circle Strip */}
+              <div className="shrink-0 bg-gradient-to-b from-slate-900/95 to-slate-950/95 p-3 rounded-3xl border border-slate-800 shadow-xl">
+                <div className="flex flex-row items-start justify-center gap-4 overflow-x-auto p-2 scrollbar-thin scrollbar-thumb-slate-700">
+                  <div className="flex flex-col items-center shrink-0 w-24">
+                    <div className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full">
+                      <div className="relative p-1 rounded-full ring-2 ring-teal-500/80 ring-offset-2 ring-offset-slate-950 shadow-lg shadow-teal-500/20">
+                        <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center bg-gradient-to-tr from-teal-700 via-emerald-600 to-teal-400 text-white shadow-inner relative overflow-hidden">
+                          <span className="drop-shadow-md font-mono font-black text-2xl sm:text-3xl text-white">
+                            {allRecords.length || inspectedCommodity.effectiveCount}
+                          </span>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/20 pointer-events-none" />
+                        </div>
+                        <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-teal-300 flex items-center justify-center shadow-md border border-teal-400 text-[10px]">
+                          #
+                        </div>
+                      </div>
+                      <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[92px] text-center text-teal-300">
+                        الطلبات
+                      </span>
+                      <div className="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-500/20 text-teal-300 border border-teal-500/40 max-w-[92px] truncate">
+                        مرات الطلب
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center shrink-0 w-24">
+                    <div className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full">
+                      <div className="relative p-1 rounded-full ring-2 ring-emerald-500/80 ring-offset-2 ring-offset-slate-950 shadow-lg shadow-emerald-500/20">
+                        <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center bg-gradient-to-tr from-emerald-700 via-teal-600 to-cyan-500 text-white shadow-inner relative overflow-hidden">
+                          <span className="drop-shadow-md font-mono font-black text-[13px] sm:text-sm text-white text-center leading-tight px-1">
+                            {formatMoney(inspectedCommodity.priceAmount, currency)}
+                          </span>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/20 pointer-events-none" />
+                        </div>
+                        <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-emerald-300 flex items-center justify-center shadow-md border border-emerald-400 text-[10px]">
+                          💰
+                        </div>
+                      </div>
+                      <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[92px] text-center text-emerald-300">
+                        الإجمالي
+                      </span>
+                      <div className="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-800 text-emerald-300 border border-slate-700 max-w-[92px] truncate">
+                        المبلغ
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center shrink-0 w-24">
+                    <button
+                      type="button"
+                      onClick={() => setInspectedCommodity(null)}
+                      title="إغلاق نافذة سجل الطلبات"
+                      className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full cursor-pointer opacity-90 hover:opacity-100 hover:scale-105 active:scale-95"
+                    >
+                      <div className="relative p-1 rounded-full ring-2 ring-rose-500/80 group-hover:ring-rose-400 group-hover:ring-offset-2 group-hover:ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-rose-500/20">
+                        <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center bg-gradient-to-tr from-rose-700 via-red-600 to-orange-500 text-white shadow-inner relative overflow-hidden">
+                          <X className="w-8 h-8 sm:w-9 sm:h-9 stroke-[2.4] drop-shadow" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/20 pointer-events-none" />
+                        </div>
+                      </div>
+                      <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[92px] text-center text-rose-300 group-hover:text-rose-200">
+                        إغلاق
+                      </span>
+                      <div className="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/40 group-hover:bg-rose-500 group-hover:text-white transition-all max-w-[92px] truncate">
+                        النافذة
+                      </div>
+                    </button>
+                  </div>
+                </div>
               </div>
 
             </div>
