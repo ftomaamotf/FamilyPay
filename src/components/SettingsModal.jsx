@@ -911,17 +911,17 @@ export const SettingsModal = ({
           {activeTab === 'general' && (
             <div className="space-y-5">
               
-              {/* SECTION: Push Notifications & Background Ringtone */}
+              {/* SECTION: Push Notifications */}
               <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Bell className="w-4 h-4 text-emerald-500" />
                     <div>
                       <h4 className="font-black text-slate-900 dark:text-white">
-                        إشعارات ورنين الهاتف في الخلفية 📳
+                        إشعارات الهاتف في الخلفية 📳
                       </h4>
                       <p className="text-[11px] text-slate-400">
-                        استقبال رنات المكالمات والتحويلات والرسائل عند إغلاق التطبيق
+                        استقبال تنبيهات التحويلات والرسائل عند إغلاق التطبيق
                       </p>
                     </div>
                   </div>

@@ -19,12 +19,6 @@ import {
   Inbox,
   Edit3,
   MessageSquare,
-  Radio,
-  Phone,
-  PhoneOff,
-  Volume1,
-  Volume2,
-  VolumeX,
   MessageCircle,
   X,
   Search
@@ -202,15 +196,6 @@ export const BrothersCards = ({
     canCurrentUserSend,
     updateBrotherFields,
     deleteBrother,
-    startVoiceCall,
-    acceptVoiceCall,
-    rejectVoiceCall,
-    endVoiceCall,
-    activeCall,
-    incomingCall,
-    isLoudspeakerOn,
-    toggleLoudspeaker,
-    callDurationSeconds,
     generalExpensesName,
     updateGeneralExpensesName,
     totalGeneralExpensesSpent
@@ -993,7 +978,7 @@ export const BrothersCards = ({
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-2.5 py-0.5 rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-600/30 hover:bg-emerald-600 hover:text-white transition text-[11px] font-black flex items-center gap-1 active:scale-95"
-                            title="محادثة أو اتصال واتساب"
+                            title="محادثة واتساب"
                           >
                             <MessageCircle className="w-3 h-3" />
                             <span>واتساب 💬</span>
@@ -1173,13 +1158,11 @@ export const BrothersCards = ({
             </div>
           </div>
 
-          {/* Action Buttons: Unified Split (Half Chat / Half Live Voice Call with Loudspeaker) + Edit Commodities */}
+          {/* Action Buttons: Chat + Edit Commodities */}
           <div className="pt-2 flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
             
-            {/* Unified Split Control: Half Chat 💬 + Half Direct Call 📞 (بدون نافذة منبثقة) */}
+            {/* Chat Button */}
             <div className="flex-1 flex flex-col sm:flex-row items-stretch gap-2 min-w-0">
-              
-              {/* 1. HALF 1: Chat Button */}
               {onOpenChat && (
                 <button
                   type="button"
@@ -1191,152 +1174,6 @@ export const BrothersCards = ({
                   <span className="truncate">محادثة وتواصل 💬</span>
                 </button>
               )}
-
-              {/* 2. HALF 2: In-App Voice Call Button (بدون نافذة منبثقة + يصبح أحمر عند الرد + زر السماعة الخارجية) */}
-              {(() => {
-                const isMe = selectedBrother?.id === currentUser?.id;
-                const isThisIncoming = Boolean(incomingCall && incomingCall.callerId === selectedBrother.id);
-                const isConnected = activeCall && activeCall.status === 'connected';
-                const isRinging = activeCall && activeCall.status === 'ringing';
-
-                const formatCallTime = (totalSec) => {
-                  const mins = Math.floor(totalSec / 60);
-                  const secs = totalSec % 60;
-                  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-                };
-
-                // Case 1: Incoming Call (مكالمة واردة)
-                if (isThisIncoming || (incomingCall && incomingCall.receiverId === currentUser?.id)) {
-                  return (
-                    <div className="flex-1 py-1.5 px-2.5 bg-gradient-to-r from-amber-600 to-rose-600 rounded-2xl shadow-lg shadow-rose-600/30 flex items-center justify-between gap-2 border-2 border-rose-400 animate-pulse">
-                      <div className="flex items-center gap-1.5 min-w-0 text-white text-xs font-black truncate">
-                        <Phone className="w-4 h-4 animate-bounce shrink-0" />
-                        <span className="truncate">مكالمة واردة 📲</span>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => acceptVoiceCall(incomingCall.id)}
-                          className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 rounded-xl text-xs font-black shadow transition active:scale-95 flex items-center gap-1"
-                        >
-                          <Phone className="w-3.5 h-3.5" />
-                          <span>رد</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => rejectVoiceCall(incomingCall.id)}
-                          className="px-2.5 py-1.5 bg-rose-950 hover:bg-rose-900 text-white rounded-xl text-xs font-black shadow transition active:scale-95 flex items-center gap-1"
-                        >
-                          <PhoneOff className="w-3.5 h-3.5" />
-                          <span>رفض</span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                }
-
-                // Case 2: Call is CONNECTED -> Turns RED (يصبح الزر لونه أحمر + قطع الاتصال + زر السماعة الخارجية)
-                if (isConnected) {
-                  return (
-                    <div className="flex-1 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl shadow-xl shadow-rose-600/40 flex items-center justify-between gap-2 border-2 border-rose-300 animate-pulse transition">
-                      
-                      {/* Live Call Duration & Status */}
-                      <div className="flex items-center gap-1.5 min-w-0 font-mono font-black text-xs sm:text-sm">
-                        <div className="w-2.5 h-2.5 rounded-full bg-white animate-ping shrink-0" />
-                        <span className="truncate">متصل ({formatCallTime(callDurationSeconds)}) 🔴</span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {/* Loudspeaker Button (وضع زر لفتح السماعة الخارجية داخل الزر) */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleLoudspeaker();
-                          }}
-                          className={`p-1.5 rounded-xl border transition active:scale-90 flex items-center justify-center ${
-                            isLoudspeakerOn
-                              ? 'bg-white text-rose-700 border-white shadow-md'
-                              : 'bg-rose-800/90 hover:bg-rose-900 text-white border-rose-400'
-                          }`}
-                          title={isLoudspeakerOn ? 'السماعة الخارجية: مفعّلة 🔊 (اضغط لإيقافها)' : 'تشغيل السماعة الخارجية 🔈'}
-                        >
-                          {isLoudspeakerOn ? (
-                            <Volume2 className="w-4 h-4 fill-rose-600" />
-                          ) : (
-                            <Volume1 className="w-4 h-4" />
-                          )}
-                        </button>
-
-                        {/* Cut / Hangup Call Button (يقطع الاتصال ويرجع الزر للونه الأول) */}
-                        <button
-                          type="button"
-                          onClick={() => endVoiceCall()}
-                          className="px-3 py-1.5 bg-slate-950 hover:bg-rose-950 text-rose-200 border border-rose-400/60 rounded-xl text-xs font-black transition active:scale-95 flex items-center gap-1 shrink-0"
-                          title="قطع وإنهاء المكالمة"
-                        >
-                          <PhoneOff className="w-3.5 h-3.5 text-rose-400" />
-                          <span>قطع ❌</span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                }
-
-                // Case 3: Ringing / Dialing (جاري الاتصال والرنين)
-                if (isRinging) {
-                  return (
-                    <div className="flex-1 py-2 px-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-2xl shadow-lg shadow-amber-600/30 flex items-center justify-between gap-2 border border-amber-400 animate-pulse">
-                      <div className="flex items-center gap-1.5 min-w-0 text-xs font-black truncate">
-                        <Phone className="w-4 h-4 animate-bounce shrink-0" />
-                        <span className="truncate">جاري الاتصال... 🔔</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => endVoiceCall()}
-                        className="px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-black shadow transition active:scale-95 flex items-center gap-1 shrink-0"
-                      >
-                        <PhoneOff className="w-3.5 h-3.5" />
-                        <span>إلغاء</span>
-                      </button>
-                    </div>
-                  );
-                }
-
-                // Case 4: Idle (اللون الأخضر المبدئي للاتصال الصوتي المباشر)
-                if (isMe) {
-                  return (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const other = sortedBrothers.find((b) => b.id !== currentUser?.id);
-                        if (other) {
-                          setSelectedBrotherId(other.id);
-                          startVoiceCall(other.id);
-                        }
-                      }}
-                      className="flex-1 py-3 px-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition active:scale-98 border border-emerald-400/30"
-                      title="اختر مستخدماً للاتصال به"
-                    >
-                      <Phone className="w-4 h-4 shrink-0" />
-                      <span className="truncate">اتصال بمستخدم 📞</span>
-                    </button>
-                  );
-                }
-
-                return (
-                  <button
-                    type="button"
-                    onClick={() => startVoiceCall(selectedBrother.id)}
-                    className="flex-1 py-3 px-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition active:scale-95 border border-emerald-400/40"
-                    title={`اتصال صوتي مباشر مع ${selectedBrother.name}`}
-                  >
-                    <Phone className="w-4 h-4 shrink-0" />
-                    <span className="truncate">اتصال بـ ({selectedBrother.name}) 📞</span>
-                  </button>
-                );
-              })()}
-
             </div>
 
             {/* Admin Commodity Edit Button */}
