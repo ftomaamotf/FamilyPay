@@ -57,10 +57,10 @@ const PushNotificationBanner = () => {
         </div>
         <div>
           <span className="font-black text-xs sm:text-sm text-white block">
-            تفعيل تنبيهات ورنين الهاتف عند إغلاق التطبيق 📳
+            تفعيل تنبيهات الهاتف عند إغلاق التطبيق 📳
           </span>
           <span className="text-[11px] text-teal-200/80 block">
-            اضغط زر السماح لتصلك رنات المكالمات وصرف الأموال عند إغلاق التطبيق (يمكنك التحكم بها لاحقاً من الإعدادات ⚙️).
+            اضغط زر السماح لتصلك إشعارات صرف الأموال والرسائل عند إغلاق التطبيق (يمكنك التحكم بها لاحقاً من الإعدادات ⚙️).
           </span>
         </div>
       </div>
@@ -83,41 +83,6 @@ const PushNotificationBanner = () => {
           title="إخفاء"
         >
           <X className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const GlobalIncomingCallBanner = () => {
-  const { incomingCall, acceptVoiceCall, rejectVoiceCall } = useFinance();
-  if (!incomingCall || incomingCall.status !== 'ringing') return null;
-
-  return (
-    <div className="fixed top-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-[9999] bg-gradient-to-r from-rose-950 via-slate-900 to-amber-950 text-white p-4 rounded-3xl shadow-2xl border-2 border-rose-500 animate-bounce flex items-center justify-between gap-3 shadow-rose-950/80" dir="rtl">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-300 border border-rose-400/40 flex items-center justify-center text-xl shrink-0">
-          📞
-        </div>
-        <div className="min-w-0">
-          <span className="text-[11px] text-rose-300 font-bold block">مكالمة صوتية واردة 📲</span>
-          <span className="font-black text-sm text-white truncate block">{incomingCall.callerName}</span>
-        </div>
-      </div>
-      <div className="flex items-center gap-2 shrink-0">
-        <button
-          type="button"
-          onClick={() => acceptVoiceCall(incomingCall.id)}
-          className="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 rounded-xl text-xs font-black shadow-lg transition active:scale-95 flex items-center gap-1"
-        >
-          <span>رد 🟢</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => rejectVoiceCall(incomingCall.id)}
-          className="px-3 py-2 bg-rose-950 hover:bg-rose-900 text-white rounded-xl text-xs font-black shadow-lg transition active:scale-95 flex items-center gap-1"
-        >
-          <span>رفض 🔴</span>
         </button>
       </div>
     </div>
@@ -187,13 +152,10 @@ function MainApp() {
     setAddBrotherModalOpen(true);
   };
 
-  // 1. If not logged in, show AuthScreen with Incoming Call Banner
+  // 1. If not logged in, show AuthScreen
   if (!currentUser) {
     return (
-      <>
-        <GlobalIncomingCallBanner />
-        <AuthScreen onLoginSuccess={() => setActiveTab('dashboard')} />
-      </>
+      <AuthScreen onLoginSuccess={() => setActiveTab('dashboard')} />
     );
   }
 
@@ -201,7 +163,6 @@ function MainApp() {
   if (currentUser.isGuest) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4" dir="rtl">
-        <GlobalIncomingCallBanner />
         <div className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 text-center space-y-4">
           <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
             <UserCheck className="w-8 h-8" />
@@ -228,9 +189,6 @@ function MainApp() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col transition-colors duration-200">
       
-      {/* Global Floating Incoming Call Banner (Never miss an incoming call) */}
-      <GlobalIncomingCallBanner />
-
       {/* Realtime Toast Notifications with Audio Chime & Direct Action Buttons */}
       <NotificationToast
         onOpenPendingRequests={() => setPendingRequestsModalOpen(true)}

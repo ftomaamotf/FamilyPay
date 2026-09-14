@@ -20,33 +20,22 @@ self.addEventListener('push', (event) => {
   }
 
   const title = data.title || '🔔 تنبيه من صندوق العائلة';
-  const isCall = data.type === 'INCOMING_CALL' || title.includes('مكالمة');
 
   const options = {
-    body: data.body || (isCall ? 'يرن عليك الآن.. اضغط للرد الفوري والتحدث 📲' : 'اضغط هنا لفتح البرنامج ومتابعة التفاصيل فوراً 📱'),
+    body: data.body || 'اضغط هنا لفتح البرنامج ومتابعة التفاصيل فوراً 📱',
     icon: '/favicon.svg',
     badge: '/favicon.svg',
-    // Rich repeating alert vibration pattern until opened
-    vibrate: isCall
-      ? [1000, 500, 1000, 500, 1000, 500, 1000, 500, 1000, 500, 1000]
-      : [600, 300, 600, 300, 600],
-    tag: data.tag || (isCall ? ('incoming-call-' + (data.callId || 'active')) : ('familypay-alert-' + (data.type || 'msg') + '-' + Date.now())),
+    vibrate: [600, 300, 600, 300, 600],
+    tag: data.tag || ('familypay-alert-' + (data.type || 'msg') + '-' + Date.now()),
     renotify: true,
-    // 🌟 KEEP PERSISTENT IN NOTIFICATION DRAWER UNTIL USER TAPS/APPROVES OPENING 🌟
     requireInteraction: true,
     silent: false,
     data: {
       url: data.url || '/',
-      callId: data.callId,
-      callerId: data.callerId,
-      callerName: data.callerName,
       type: data.type || 'GENERAL',
       timestamp: Date.now()
     },
-    actions: isCall ? [
-      { action: 'open', title: '🟢 فتح والرد على المكالمة 📞' },
-      { action: 'dismiss', title: '🔴 إغلاق' }
-    ] : [
+    actions: [
       { action: 'open', title: '📲 فتح البرنامج الآن' }
     ]
   };
@@ -64,7 +53,7 @@ self.addEventListener('notificationclick', (event) => {
     return;
   }
 
-  const targetUrl = self.location.origin + (data.url || '/') + (data.callId ? `?callId=${data.callId}&action=${action || 'open'}` : `?fromNotif=1&notifType=${data.type || 'general'}`);
+  const targetUrl = self.location.origin + (data.url || '/') + `?fromNotif=1&notifType=${data.type || 'general'}`;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
