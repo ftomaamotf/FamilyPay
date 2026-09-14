@@ -578,6 +578,23 @@ const getExpectedJoinQr = (db) => {
   };
 };
 
+const isTrustedLegacyJoinUrl = (joinQr, req) => {
+  if (!joinQr?.raw && !joinQr?.origin) return false;
+
+  try {
+    const requestOrigin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
+    const scannedUrl = new URL(String(joinQr.raw || joinQr.origin), requestOrigin);
+    const originUrl = new URL(requestOrigin);
+    const action = scannedUrl.searchParams.get('action');
+    const sameHost = scannedUrl.host === originUrl.host;
+    const hostedFamilyPay = /familypay/i.test(scannedUrl.hostname);
+
+    return (sameHost || hostedFamilyPay) && (action === 'join' || action === 'register' || !action);
+  } catch {
+    return false;
+  }
+};
+
 // 2.4 QR Registration (New Brother registers via QR Code with mandatory Name, Phone, Qi Card, Password)
 app.post('/api/brothers/register-qr', (req, res) => {
   const { name, email, phone, bankAccountNumber, password } = req.body;
@@ -665,8 +682,13 @@ app.post('/api/brothers/register-qr', (req, res) => {
   const expectedJoinQr = getExpectedJoinQr(db);
   if (
     !joinQr ||
-    String(joinQr.adminId || '') !== expectedJoinQr.adminId ||
-    String(joinQr.fundToken || '') !== expectedJoinQr.fundToken
+    (
+      (
+        String(joinQr.adminId || '') !== expectedJoinQr.adminId ||
+        String(joinQr.fundToken || '') !== expectedJoinQr.fundToken
+      ) &&
+      !isTrustedLegacyJoinUrl(joinQr, req)
+    )
   ) {
     return res.status(400).json({
       success: false,

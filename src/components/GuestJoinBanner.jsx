@@ -3,15 +3,18 @@ import { useFinance } from '../context/FinanceContext';
 import { CameraQrScannerModal } from './CameraQrScannerModal';
 import { GuestRegisterModal } from './GuestRegisterModal';
 import { Camera, Sparkles, UserCheck, ShieldAlert, ArrowLeft } from 'lucide-react';
+import { parseJoinQrPayload } from '../utils/joinQrPayload';
 
 export const GuestJoinBanner = () => {
   const { currentUser } = useFinance();
   const [scannerOpen, setScannerOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
+  const [joinQrPayload, setJoinQrPayload] = useState(null);
 
   if (!currentUser?.isGuest) return null;
 
   const handleScanSuccess = (decodedText) => {
+    setJoinQrPayload(parseJoinQrPayload(decodedText));
     setRegisterModalOpen(true);
   };
 
@@ -65,6 +68,7 @@ export const GuestJoinBanner = () => {
         onScanSuccess={handleScanSuccess}
         onManualEntry={() => {
           setScannerOpen(false);
+          setJoinQrPayload(null);
           setRegisterModalOpen(true);
         }}
       />
@@ -73,6 +77,7 @@ export const GuestJoinBanner = () => {
       <GuestRegisterModal
         isOpen={registerModalOpen}
         onClose={() => setRegisterModalOpen(false)}
+        joinQrPayload={joinQrPayload}
       />
     </>
   );

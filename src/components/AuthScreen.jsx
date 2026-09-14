@@ -194,7 +194,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
 
   const handleScanSuccess = (decodedText) => {
     const parsedPayload = parseJoinQrPayload(decodedText);
-    if (!parsedPayload?.adminId || !parsedPayload?.fundToken) {
+    if (!parsedPayload) {
       setErrorMsg('هذا الباركود لا يحتوي على بيانات صندوق FamilyPay الصحيحة. يرجى مسح باركود الأدمن من داخل التطبيق.');
       return;
     }

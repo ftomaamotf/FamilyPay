@@ -33,13 +33,20 @@ export const parseJoinQrPayload = (rawValue) => {
   try {
     const base = typeof window !== 'undefined' ? window.location.origin : 'https://familypay-aw26.onrender.com';
     const url = new URL(raw, base);
-    if (url.searchParams.get('action') !== 'join') return null;
+    const action = url.searchParams.get('action');
+    const isSameAppUrl =
+      typeof window !== 'undefined' &&
+      url.origin === window.location.origin &&
+      (action === 'join' || action === 'register' || !action);
+    const isHostedAppUrl = /familypay/i.test(url.hostname);
+    if (action !== 'join' && !isSameAppUrl && !isHostedAppUrl) return null;
 
     return {
       raw,
       v: String(url.searchParams.get('v') || JOIN_QR_VERSION),
       adminId: String(url.searchParams.get('adminId') || '').trim(),
-      fundToken: String(url.searchParams.get('fundToken') || '').trim()
+      fundToken: String(url.searchParams.get('fundToken') || '').trim(),
+      origin: url.origin
     };
   } catch {
     return null;

@@ -73,7 +73,7 @@ export const GuestRegisterModal = ({ isOpen, onClose, onRegisterSuccess, joinQrP
       setErrorMsg('⚠️ كلمة المرور إجبارية');
       return;
     }
-    if (!joinQrPayload?.adminId || !joinQrPayload?.fundToken) {
+    if (!joinQrPayload) {
       setErrorMsg('⚠️ يرجى فتح هذه الاستمارة من باركود الأدمن الصحيح للتحقق من الصندوق قبل إرسال الطلب');
       return;
     }

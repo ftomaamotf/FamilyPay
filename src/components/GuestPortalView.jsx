@@ -116,7 +116,7 @@ export const GuestPortalView = () => {
 
   const handleScanSuccess = async (decodedText) => {
     const parsedPayload = parseJoinQrPayload(decodedText);
-    if (!parsedPayload?.adminId || !parsedPayload?.fundToken) {
+    if (!parsedPayload) {
       setScannerError('هذا الباركود لا يحتوي على بيانات صندوق FamilyPay الصحيحة. يرجى مسح باركود الأدمن من داخل التطبيق.');
       return;
     }

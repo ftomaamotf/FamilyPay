@@ -11,9 +11,12 @@ import {
   Wifi,
   Sparkles
 } from 'lucide-react';
+import { useFinance } from '../context/FinanceContext';
+import { buildJoinQrUrl } from '../utils/joinQrPayload';
 
 export const QrShareModal = ({ isOpen, onClose }) => {
   const [copied, setCopied] = useState(false);
+  const { activeAdminId, sendingCard } = useFinance();
   
   // Use current network origin or default to Wi-Fi IP
   const getNetworkUrl = () => {
@@ -25,11 +28,16 @@ export const QrShareModal = ({ isOpen, onClose }) => {
   };
 
   const currentUrl = getNetworkUrl();
+  const adminJoinUrl = buildJoinQrUrl({
+    origin: currentUrl,
+    activeAdminId,
+    sendingCardId: sendingCard?.id
+  });
 
   if (!isOpen) return null;
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(currentUrl);
+    navigator.clipboard.writeText(adminJoinUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
@@ -64,7 +72,7 @@ export const QrShareModal = ({ isOpen, onClose }) => {
           <div className="bg-gradient-to-br from-slate-50 to-emerald-50/40 dark:from-slate-750 dark:to-slate-800 p-6 rounded-3xl border border-emerald-100 dark:border-slate-700 flex flex-col items-center justify-center space-y-3">
             <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-100">
               <QRCodeSVG
-                value={currentUrl}
+                value={adminJoinUrl}
                 size={180}
                 level="M"
                 includeMargin={false}
@@ -85,7 +93,7 @@ export const QrShareModal = ({ isOpen, onClose }) => {
               <input
                 type="text"
                 readOnly
-                value={currentUrl}
+                value={adminJoinUrl}
                 className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-slate-700 dark:text-slate-300 outline-none text-left"
               />
               <button
