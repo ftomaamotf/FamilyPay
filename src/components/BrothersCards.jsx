@@ -1030,7 +1030,7 @@ export const BrothersCards = ({
               </span>
             </div>
 
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-row items-stretch gap-3 overflow-x-auto pb-2 px-1 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
               {selectedBrother.approvedFields?.map((f, index) => {
                 const calculatedSpent = dynamicFieldSpent(f.id, f.name);
                 const pending = fundRequests?.find((r) =>
@@ -1067,7 +1067,7 @@ export const BrothersCards = ({
                 return (
                   <div
                     key={f.id}
-                    className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between relative group/field hover:border-emerald-400 transition shadow-xs"
+                    className="w-44 sm:w-52 min-h-[148px] shrink-0 p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex flex-col justify-between relative group/field hover:border-emerald-400 transition shadow-xs"
                   >
                     {/* Commodity Name & Index (Clickable to view order history) */}
                     <div
@@ -1077,17 +1077,19 @@ export const BrothersCards = ({
                         effectiveCount,
                         priceAmount
                       })}
-                      className="flex items-center gap-2.5 min-w-0 cursor-pointer flex-1 select-none"
+                      className="flex flex-col items-center gap-2.5 min-w-0 cursor-pointer select-none text-center"
                       title="اضغط هنا لعرض تفاصيل وسجل مرات طلب هذه السلعة 📋"
                     >
-                      <span className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-black flex items-center justify-center shrink-0">
-                        {index + 1}
-                      </span>
-                      <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-500/20 group-hover/field:scale-110 transition">
-                        🛒
+                      <div className="relative">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-lg shrink-0 border border-emerald-500/20 group-hover/field:scale-110 transition">
+                          🛒
+                        </div>
+                        <span className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-black flex items-center justify-center shrink-0 border border-white dark:border-slate-900">
+                          {index + 1}
+                        </span>
                       </div>
-                      <div className="min-w-0">
-                        <span className="font-black text-slate-800 dark:text-white text-xs sm:text-sm truncate block group-hover/field:text-emerald-500 transition underline-offset-4 group-hover/field:underline">
+                      <div className="min-w-0 w-full">
+                        <span className="font-black text-slate-800 dark:text-white text-xs sm:text-sm line-clamp-2 min-h-[2.25rem] group-hover/field:text-emerald-500 transition underline-offset-4 group-hover/field:underline">
                           {f.name}
                         </span>
                         {isPending ? (
@@ -1103,7 +1105,7 @@ export const BrothersCards = ({
                     </div>
 
                     {/* Price & Circular Quantity Counter in front of commodity */}
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="mt-3 flex items-center justify-center gap-2 shrink-0">
                       {/* Circular Count Badge (رقم العدد في دائرة أمام السعر) */}
                       <div
                         title={`عدد مرات طلب السلعة: ${effectiveCount}`}
@@ -1153,7 +1155,7 @@ export const BrothersCards = ({
                             }
                           }}
                           title="حذف هذه السلعة"
-                          className="opacity-0 group-hover/field:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition rounded"
+                          className="absolute top-2 left-2 opacity-0 group-hover/field:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition rounded"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
