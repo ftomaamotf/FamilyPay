@@ -1022,15 +1022,17 @@ export const BrothersCards = ({
               </div>
 
           {/* Approved Commodities & Exact Prices Display */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-emerald-500" />
-                <span>السلع والمصروفات الخاصة بـ ({selectedBrother.name}):</span>
-              </span>
-            </div>
+          <div className="min-h-[12.5rem]">
+            <div className="fixed left-0 right-0 bottom-16 md:bottom-0 z-30 px-3 sm:px-5 py-2 pointer-events-none" dir="rtl">
+              <div className="max-w-7xl mx-auto pointer-events-auto rounded-3xl bg-white/95 dark:bg-slate-950/95 border border-slate-200/90 dark:border-slate-700/90 shadow-2xl backdrop-blur-md p-2.5 sm:p-3">
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <span className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5 min-w-0">
+                    <Sparkles className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span className="truncate">السلع والمصروفات الخاصة بـ ({selectedBrother.name}):</span>
+                  </span>
+                </div>
 
-            <div className="flex flex-row items-stretch gap-3 overflow-x-auto p-3 rounded-3xl bg-slate-100/80 dark:bg-slate-950/50 border border-slate-200/80 dark:border-slate-700/80 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                <div className="flex flex-row items-stretch gap-3 overflow-x-auto p-1 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent">
               {selectedBrother.approvedFields?.map((f, index) => {
                 const calculatedSpent = dynamicFieldSpent(f.id, f.name);
                 const pending = fundRequests?.find((r) =>
@@ -1166,12 +1168,14 @@ export const BrothersCards = ({
               })}
 
               {(!selectedBrother.approvedFields || selectedBrother.approvedFields.length === 0) && (
-                <div className="text-center py-7 text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 space-y-1">
+                <div className="w-full text-center py-7 text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 space-y-1">
                   <span className="text-lg block">🛍️</span>
                   <span className="font-bold text-slate-300">لا توجد سلع مسجلة لهذا المستخدم حالياً.</span>
                   <span className="text-[11px] text-slate-500 block">عند قيامك بتحويل مبلغ وكتابة اسم السلعة (أو طلب المستخدم لمبلغ وسلعة)، ستظهر السلعة وسعرها هنا فوراً!</span>
                 </div>
               )}
+                </div>
+              </div>
             </div>
           </div>
 
