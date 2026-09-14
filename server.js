@@ -2311,9 +2311,27 @@ app.delete('/api/messages/:id', (req, res) => {
 // ================= 9. Realtime Walkie-Talkie & Live Intercom System =================
 const activeIntercomCalls = {}; // in-memory map of callId -> callData
 const callIntervalsMap = new Map(); // in-memory map of callId -> interval (keeps callData JSON serializable)
+const intercomDisabledResponse = {
+  success: false,
+  disabled: true,
+  message: 'تم إلغاء الاتصال بين المستخدمين والأدمن من البرنامج'
+};
+
+function clearAllIntercomCalls() {
+  for (const interval of callIntervalsMap.values()) {
+    clearInterval(interval);
+  }
+  callIntervalsMap.clear();
+  Object.keys(activeIntercomCalls).forEach((callId) => {
+    delete activeIntercomCalls[callId];
+  });
+}
 
 // 9.1 Start Intercom Call (طلب المناداة المباشرة)
 app.post('/api/intercom/call', (req, res) => {
+  clearAllIntercomCalls();
+  return res.status(410).json(intercomDisabledResponse);
+
   const { callerId, callerName, callerAvatar, receiverId, receiverName } = req.body;
   const db = readDB();
 
@@ -2340,15 +2358,15 @@ app.post('/api/intercom/call', (req, res) => {
 
   // 2. Trigger instant Background Push Notification to Receiver's Phone (Android & iPhone even if app closed!)
   sendPushToUser(receiverId, {
-    title: `📞 مكالمة صوتية واردة من ${caller.name}`,
-    body: `يرن عليك الآن.. اضغط للرد الفوري والتحدث 📲`,
+    title: '🔔 تنبيه من صندوق العائلة',
+    body: intercomDisabledResponse.message,
     callId: callData.id,
     callerId,
     callerName: caller.name,
     callerAvatar: caller.avatarColor,
     receiverId,
-    type: 'INCOMING_CALL',
-    tag: 'incoming-call-' + callData.id,
+    type: 'GENERAL',
+    tag: 'familypay-alert-' + callData.id,
     url: '/'
   });
 
@@ -2363,15 +2381,15 @@ app.post('/api/intercom/call', (req, res) => {
       return;
     }
     sendPushToUser(receiverId, {
-      title: `📞 مكالمة صوتية مستمرة من ${caller.name}`,
-      body: `يرن عليك الآن.. اضغط للرد الفوري والتحدث 📲`,
+      title: '🔔 تنبيه من صندوق العائلة',
+      body: intercomDisabledResponse.message,
       callId: callData.id,
       callerId,
       callerName: caller.name,
       callerAvatar: caller.avatarColor,
       receiverId,
-      type: 'INCOMING_CALL',
-      tag: 'incoming-call-' + callData.id,
+      type: 'GENERAL',
+      tag: 'familypay-alert-' + callData.id,
       url: '/'
     });
   }, 3500);
@@ -2380,13 +2398,16 @@ app.post('/api/intercom/call', (req, res) => {
 
   res.json({
     success: true,
-    message: `جاري الاتصال والمناداة على الأخ (${receiver.name})... 📻`,
+    message: intercomDisabledResponse.message,
     call: callData
   });
 });
 
 // 9.2 Respond to Intercom Call (موافقة / رفض / إنهاء)
 app.post('/api/intercom/respond', (req, res) => {
+  clearAllIntercomCalls();
+  return res.status(410).json(intercomDisabledResponse);
+
   const { callId, action, userId } = req.body; // action: 'accept' | 'reject' | 'end' | 'cancel'
   const callData = activeIntercomCalls[callId];
 
@@ -2428,6 +2449,9 @@ app.post('/api/intercom/respond', (req, res) => {
 
 // 9.3 Send Voice Stream / Burst over Intercom (البث الصوتي المباشر)
 app.post('/api/intercom/voice-burst', (req, res) => {
+  clearAllIntercomCalls();
+  return res.status(410).json(intercomDisabledResponse);
+
   const { callId, senderId, senderName, audioData, duration } = req.body;
   const callData = activeIntercomCalls[callId];
 
@@ -2452,6 +2476,9 @@ app.post('/api/intercom/voice-burst', (req, res) => {
 
 // 9.4 Get Active Call Status
 app.get('/api/intercom/status/:callId', (req, res) => {
+  clearAllIntercomCalls();
+  return res.json({ success: true, disabled: true, call: null });
+
   const { callId } = req.params;
   const callData = activeIntercomCalls[callId];
   res.json({ success: true, call: callData || null });
@@ -2459,6 +2486,15 @@ app.get('/api/intercom/status/:callId', (req, res) => {
 
 // 9.5 Get Active Calls for User (Direct Poll Failsafe with multi-attribute brother match)
 app.get('/api/intercom/active-for/:userId', (req, res) => {
+  clearAllIntercomCalls();
+  return res.json({
+    success: true,
+    disabled: true,
+    ringingCall: null,
+    callerRingingCall: null,
+    connectedCall: null
+  });
+
   const { userId } = req.params;
   const db = readDB();
 

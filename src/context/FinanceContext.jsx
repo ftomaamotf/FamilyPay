@@ -11,6 +11,7 @@ import {
 import { STORAGE_KEYS, loadFromStorage, saveToStorage, exportAllDataBackup, readBackupFile } from '../utils/storage';
 
 const FinanceContext = createContext(null);
+const INTERCOM_CALLS_ENABLED = false;
 
 const API_BASE = (() => {
   if (typeof window !== 'undefined') {
@@ -305,7 +306,7 @@ export const FinanceProvider = ({ children }) => {
     }
   }, []);
 
-  // Intercom Walkie-Talkie Ringtone (Loud Radio Ring & Strong Vibration)
+  // Disabled direct-call alert sound
   const playIntercomRingtone = useCallback(() => {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -333,7 +334,7 @@ export const FinanceProvider = ({ children }) => {
     }
   }, []);
 
-  // Walkie-Talkie Radio Chirp / Roger Beep
+  // Disabled direct-call status sound
   const playWalkieTalkieChirp = useCallback(() => {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -624,6 +625,10 @@ export const FinanceProvider = ({ children }) => {
             else if (messageId) setMessages((prev) => prev.filter((m) => m.id !== messageId));
           }
 
+          if (!INTERCOM_CALLS_ENABLED && payload.type?.startsWith('INTERCOM_')) {
+            return;
+          }
+
           // ================= Intercom & Walkie-Talkie Events =================
           if (payload.type === 'INTERCOM_RINGING') {
             const { call } = payload.data;
@@ -638,8 +643,8 @@ export const FinanceProvider = ({ children }) => {
                 setIncomingCall(call);
                 playIntercomRingtone();
                 if (Notification.permission === 'granted') {
-                  new Notification(`📞 مكالمة واردة من ${call.callerName}`, {
-                    body: 'يرن عليك الآن.. اضغط للموافقة والتحدث المباشر 📲',
+                  new Notification(`تنبيه من ${call.callerName}`, {
+                    body: 'تنبيه جديد داخل البرنامج',
                     icon: '/favicon.svg'
                   });
                 }
@@ -1897,7 +1902,7 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // 11. Live Intercom & Voice Calling Engine (No Popup / Realtime Audio Stream)
+  // 11. Live Intercom & Voice Calling Engine (Disabled in the app UI)
   const unlockAudioContext = useCallback(() => {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1911,6 +1916,12 @@ export const FinanceProvider = ({ children }) => {
   }, []);
 
   const startIntercomCall = async (targetBrotherId) => {
+    if (!INTERCOM_CALLS_ENABLED) {
+      setActiveCall(null);
+      setIncomingCall(null);
+      return { success: false, message: 'تم إلغاء الاتصال بين المستخدمين والأدمن من البرنامج' };
+    }
+
     unlockAudioContext();
     if (navigator.mediaDevices?.getUserMedia) {
       try {
@@ -1966,6 +1977,12 @@ export const FinanceProvider = ({ children }) => {
   };
 
   const acceptIntercomCall = async (callId) => {
+    if (!INTERCOM_CALLS_ENABLED) {
+      setIncomingCall(null);
+      setActiveCall(null);
+      return { success: false, message: 'تم إلغاء الاتصال بين المستخدمين والأدمن من البرنامج' };
+    }
+
     unlockAudioContext();
     const targetCallId = callId || incomingCall?.id;
     try {
@@ -1996,6 +2013,12 @@ export const FinanceProvider = ({ children }) => {
   };
 
   const rejectIntercomCall = async (callId) => {
+    if (!INTERCOM_CALLS_ENABLED) {
+      setIncomingCall(null);
+      setActiveCall(null);
+      return { success: false, message: 'تم إلغاء الاتصال بين المستخدمين والأدمن من البرنامج' };
+    }
+
     const targetCallId = callId || incomingCall?.id;
     try {
       await fetch(`${API_BASE}/api/intercom/respond`, {
@@ -2012,6 +2035,12 @@ export const FinanceProvider = ({ children }) => {
   };
 
   const endIntercomCall = async (callId) => {
+    if (!INTERCOM_CALLS_ENABLED) {
+      setActiveCall(null);
+      setIncomingCall(null);
+      return { success: false, message: 'تم إلغاء الاتصال بين المستخدمين والأدمن من البرنامج' };
+    }
+
     const targetCallId = callId || activeCall?.id;
     try {
       await fetch(`${API_BASE}/api/intercom/respond`, {
@@ -2053,6 +2082,12 @@ export const FinanceProvider = ({ children }) => {
 
   // Fast Call Poller (1.0 second) to ensure instant ringing & call connection across devices
   useEffect(() => {
+    if (!INTERCOM_CALLS_ENABLED) {
+      setActiveCall(null);
+      setIncomingCall(null);
+      return undefined;
+    }
+
     let isPolling = true;
 
     const checkActiveCalls = async () => {
@@ -2138,6 +2173,10 @@ export const FinanceProvider = ({ children }) => {
   }, [incomingCall?.id, incomingCall?.status, playIntercomRingtone]);
 
   const sendIntercomVoiceBurst = async ({ callId, audioData, duration }) => {
+    if (!INTERCOM_CALLS_ENABLED) {
+      return { success: false, message: 'تم إلغاء الاتصال بين المستخدمين والأدمن من البرنامج' };
+    }
+
     const activeUser = currentUser || { id: 'guest', name: 'مستخدم' };
     try {
       await fetch(`${API_BASE}/api/intercom/voice-burst`, {
@@ -2355,7 +2394,7 @@ export const FinanceProvider = ({ children }) => {
         });
         setIsPushSubscribed(true);
         localStorage.setItem('familypay_push_subscribed', 'true');
-        return { success: true, message: '✅ تم تفعيل رنين وإشعارات الهاتف عند غلق البرنامج بنجاح وبشكل دائم!' };
+        return { success: true, message: '✅ تم تفعيل إشعارات الهاتف عند غلق البرنامج بنجاح وبشكل دائم!' };
       }
     } catch (err) {
       console.log('Push subscription error:', err);

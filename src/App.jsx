@@ -60,7 +60,7 @@ const PushNotificationBanner = () => {
         </div>
         <div>
           <span className="font-black text-xs sm:text-sm text-white block">
-            تفعيل تنبيهات ورنين الهاتف عند إغلاق التطبيق 📳
+            تفعيل تنبيهات الهاتف عند إغلاق التطبيق 📳
           </span>
           <span className="text-[11px] text-teal-200/80 block">
             اضغط زر السماح لتصلك تنبيهات صرف الأموال عند إغلاق التطبيق (يمكنك التحكم بها لاحقاً من الإعدادات ⚙️).
