@@ -73,13 +73,14 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
   return (
     <div className="relative">
       
-      {/* 4 Realtime Ticker Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* 4 Realtime Ticker Cards as a horizontal strip */}
+      <div className="-mx-1 overflow-x-auto pb-2" dir="rtl">
+        <div className="flex gap-3 px-1 min-w-max">
         
         {/* Card 1: Sending Card Balance */}
         <div
           onClick={() => isCurrentAdmin && handleOpenEditBalance()}
-          className={`bg-white dark:bg-slate-800 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm relative overflow-hidden transition-all ${
+          className={`w-64 sm:w-72 shrink-0 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm relative overflow-hidden transition-all ${
             isCurrentAdmin ? 'cursor-pointer hover:border-emerald-500 hover:shadow-md active:scale-98 group' : ''
           }`}
           title={isCurrentAdmin ? 'اضغط هنا لتعديل رصيد بطاقة الإرسال مباشرة ✏️' : ''}
@@ -110,7 +111,7 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
         </div>
 
         {/* Card 2: Total Spent This Month */}
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm relative overflow-hidden">
+        <div className="w-64 sm:w-72 shrink-0 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">ما تم صرفه هذا الشهر</span>
             <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center">
@@ -126,7 +127,7 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
         </div>
 
         {/* Card 3: Remaining Monthly Budget */}
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm relative overflow-hidden">
+        <div className="w-64 sm:w-72 shrink-0 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">المتبقي من ميزانية الشهر</span>
             <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center">
@@ -144,7 +145,7 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
         {/* Card 4: Notification Alerts Counter */}
         <button
           onClick={handleToggleNotifs}
-          className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm relative text-right transition hover:border-emerald-400 active:scale-98"
+          className="w-64 sm:w-72 shrink-0 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm relative text-right transition hover:border-emerald-400 active:scale-98"
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">إشعارات وتنبيهات المستخدمين</span>
@@ -170,6 +171,7 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
           </div>
         </button>
 
+        </div>
       </div>
 
       {/* Notifications Drawer / Popover */}
