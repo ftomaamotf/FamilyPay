@@ -1013,7 +1013,13 @@ export const BrothersCards = ({
               </span>
             </div>
 
-            <div className="flex flex-col gap-2.5">
+            <div
+              className={
+                selectedBrother.approvedFields?.length
+                  ? 'flex items-stretch gap-3 overflow-x-auto overflow-y-hidden p-2 rounded-2xl bg-slate-100/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-700/80 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700'
+                  : 'flex flex-col gap-2.5'
+              }
+            >
               {selectedBrother.approvedFields?.map((f, index) => {
                 const calculatedSpent = dynamicFieldSpent(f.id, f.name);
                 const pending = fundRequests?.find((r) =>
@@ -1050,7 +1056,7 @@ export const BrothersCards = ({
                 return (
                   <div
                     key={f.id}
-                    className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between relative group/field hover:border-emerald-400 transition shadow-xs"
+                    className="w-[250px] sm:w-[290px] min-h-[132px] shrink-0 p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex flex-col justify-between gap-3 relative group/field hover:border-emerald-400 transition shadow-xs"
                   >
                     {/* Commodity Name & Index (Clickable to view order history) */}
                     <div
@@ -1060,7 +1066,7 @@ export const BrothersCards = ({
                         effectiveCount,
                         priceAmount
                       })}
-                      className="flex items-center gap-2.5 min-w-0 cursor-pointer flex-1 select-none"
+                      className="flex items-start gap-2.5 min-w-0 cursor-pointer flex-1 select-none"
                       title="اضغط هنا لعرض تفاصيل وسجل مرات طلب هذه السلعة 📋"
                     >
                       <span className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-black flex items-center justify-center shrink-0">
@@ -1086,7 +1092,7 @@ export const BrothersCards = ({
                     </div>
 
                     {/* Price & Circular Quantity Counter in front of commodity */}
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center justify-between gap-2 shrink-0 pt-2 border-t border-slate-200/70 dark:border-slate-700/70">
                       {/* Circular Count Badge (رقم العدد في دائرة أمام السعر) */}
                       <div
                         title={`عدد مرات طلب السلعة: ${effectiveCount}`}
@@ -1136,7 +1142,7 @@ export const BrothersCards = ({
                             }
                           }}
                           title="حذف هذه السلعة"
-                          className="opacity-0 group-hover/field:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition rounded"
+                          className="opacity-70 sm:opacity-0 group-hover/field:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition rounded"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
