@@ -1024,15 +1024,18 @@ export const BrothersCards = ({
           {/* Approved Commodities & Exact Prices Display */}
           <div className="min-h-[12.5rem]">
             <div className="fixed left-0 right-0 bottom-16 md:bottom-0 z-30 px-3 sm:px-5 py-2 pointer-events-none" dir="rtl">
-              <div className="max-w-7xl mx-auto pointer-events-auto rounded-3xl bg-white/95 dark:bg-slate-950/95 border border-slate-200/90 dark:border-slate-700/90 shadow-2xl backdrop-blur-md p-2.5 sm:p-3">
-                <div className="flex items-center justify-between mb-2 px-1">
-                  <span className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5 min-w-0">
+              <div className="max-w-7xl mx-auto pointer-events-auto rounded-3xl bg-gradient-to-b from-slate-900/95 to-slate-950/95 border border-slate-800 shadow-2xl backdrop-blur-md p-3 sm:p-4 space-y-3">
+                <div className="text-center pb-2 border-b border-slate-800/80">
+                  <span className="text-xs font-black text-emerald-400 flex items-center justify-center gap-1.5 min-w-0">
                     <Sparkles className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span className="truncate">السلع والمصروفات الخاصة بـ ({selectedBrother.name}):</span>
+                    <span className="truncate">السلع والمصروفات الخاصة بـ ({selectedBrother.name})</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">
+                    اسحب يميناً ويساراً للتنقل بين المربعات
                   </span>
                 </div>
 
-                <div className="flex flex-row items-stretch gap-3 overflow-x-auto p-1 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                <div className="flex flex-row items-stretch justify-start gap-4 sm:gap-5 overflow-x-auto p-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
               {selectedBrother.approvedFields?.map((f, index) => {
                 const calculatedSpent = dynamicFieldSpent(f.id, f.name);
                 const pending = fundRequests?.find((r) =>
@@ -1069,7 +1072,7 @@ export const BrothersCards = ({
                 return (
                   <div
                     key={f.id}
-                    className="w-40 sm:w-48 min-h-[9.5rem] shrink-0 p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex flex-col justify-between relative group/field hover:border-emerald-400 transition shadow-xs"
+                    className="w-40 sm:w-48 min-h-[9.5rem] shrink-0 p-3 sm:p-3.5 rounded-2xl bg-slate-900 border border-slate-700/90 flex flex-col justify-between relative group/field hover:border-emerald-400 transition shadow-lg shadow-black/20"
                   >
                     {/* Commodity Name & Index (Clickable to view order history) */}
                     <div
@@ -1083,23 +1086,23 @@ export const BrothersCards = ({
                       title="اضغط هنا لعرض تفاصيل وسجل مرات طلب هذه السلعة 📋"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-black flex items-center justify-center shrink-0">
+                        <span className="w-6 h-6 rounded-lg bg-slate-800 text-slate-300 font-mono text-[11px] font-black flex items-center justify-center shrink-0 border border-slate-700">
                           {index + 1}
                         </span>
-                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0 border border-emerald-500/20 group-hover/field:scale-110 transition">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0 border border-emerald-500/20 group-hover/field:scale-110 transition">
                           🛒
                         </div>
                       </div>
                       <div className="min-w-0">
-                        <span className="font-black text-slate-800 dark:text-white text-xs sm:text-sm line-clamp-2 min-h-[2.25rem] block group-hover/field:text-emerald-500 transition underline-offset-4 group-hover/field:underline">
+                        <span className="font-black text-white text-xs sm:text-sm line-clamp-2 min-h-[2.25rem] block group-hover/field:text-emerald-300 transition underline-offset-4 group-hover/field:underline">
                           {f.name}
                         </span>
                         {isPending ? (
-                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold block mt-1 leading-snug line-clamp-2">
+                          <span className="text-[10px] text-amber-300 font-bold block mt-1 leading-snug line-clamp-2">
                             ⏳ بانتظار موافقة الأدمن والتحويل
                           </span>
                         ) : (
-                          <span className="text-[10px] text-slate-400 font-bold block mt-1 group-hover/field:text-emerald-500/80 transition">
+                          <span className="text-[10px] text-slate-400 font-bold block mt-1 group-hover/field:text-emerald-300/80 transition">
                             اضغط لعرض سجل الطلبات 📋
                           </span>
                         )}
@@ -1111,7 +1114,7 @@ export const BrothersCards = ({
                       {/* Circular Count Badge (رقم العدد في دائرة أمام السعر) */}
                       <div
                         title={`عدد مرات طلب السلعة: ${effectiveCount}`}
-                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border-2 border-teal-400 dark:border-teal-600 flex items-center justify-center font-mono font-black text-xs sm:text-sm shadow-sm shrink-0"
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-teal-950/80 text-teal-300 border-2 border-teal-600 flex items-center justify-center font-mono font-black text-xs sm:text-sm shadow-sm shrink-0"
                       >
                         {effectiveCount}
                       </div>
@@ -1135,13 +1138,13 @@ export const BrothersCards = ({
                             : 'cursor-default'
                         } ${
                           isPending
-                            ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
-                            : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
+                            ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                            : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
                         }`}
                         title={isCurrentAdmin ? 'اضغط لتعديل السعر واسترجاع أو خصم الفارق من الصندوق ✏️ (صلاحية الأدمن 👑)' : undefined}
                       >
                         {isCurrentAdmin && (
-                          <Edit3 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 opacity-60 group-hover/price:opacity-100 group-hover/price:scale-110 transition shrink-0" />
+                          <Edit3 className="w-3.5 h-3.5 text-emerald-400 opacity-60 group-hover/price:opacity-100 group-hover/price:scale-110 transition shrink-0" />
                         )}
                         <span className="truncate">{formatMoney(priceAmount, currency)}</span>
                       </button>
@@ -1157,7 +1160,7 @@ export const BrothersCards = ({
                             }
                           }}
                           title="حذف هذه السلعة"
-                          className="sm:opacity-0 group-hover/field:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition rounded shrink-0"
+                          className="sm:opacity-0 group-hover/field:opacity-100 p-1 text-slate-400 hover:text-rose-400 transition rounded shrink-0"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1168,7 +1171,7 @@ export const BrothersCards = ({
               })}
 
               {(!selectedBrother.approvedFields || selectedBrother.approvedFields.length === 0) && (
-                <div className="w-full text-center py-7 text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 space-y-1">
+                <div className="w-full text-center py-7 text-xs text-slate-400 bg-slate-900/80 rounded-2xl border border-dashed border-slate-700 space-y-1">
                   <span className="text-lg block">🛍️</span>
                   <span className="font-bold text-slate-300">لا توجد سلع مسجلة لهذا المستخدم حالياً.</span>
                   <span className="text-[11px] text-slate-500 block">عند قيامك بتحويل مبلغ وكتابة اسم السلعة (أو طلب المستخدم لمبلغ وسلعة)، ستظهر السلعة وسعرها هنا فوراً!</span>
