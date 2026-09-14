@@ -12,8 +12,7 @@ import {
   Crown,
   Smile,
   CheckCheck,
-  Radio,
-  MessageCircle
+  Radio
 } from 'lucide-react';
 import { useFinance } from '../context/FinanceContext';
 
@@ -400,24 +399,6 @@ export const CircleChatModal = ({ isOpen, onClose, initialRecipientId = 'all' })
               }
             </span>
 
-            {/* WhatsApp Actions */}
-            {activeTab !== 'all' && (
-              <div className="flex items-center gap-1.5 mr-1">
-                {/* WhatsApp Chat & Call Button */}
-                {selectedBrother?.phone && (
-                  <a
-                    href={`https://wa.me/${String(selectedBrother.phone).replace(/[\s\-\+]/g, '').replace(/^0/, '964')}?text=${encodeURIComponent(`مرحباً ${selectedBrother.name}، بخصوص حساب ومصاريف الصندوق..`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[11px] rounded-xl shadow-sm transition flex items-center gap-1 active:scale-95 border border-emerald-400"
-                    title="مكالمة أو مراسلة عبر واتساب"
-                  >
-                    <MessageCircle className="w-3 h-3" />
-                    <span>واتساب 💬</span>
-                  </a>
-                )}
-              </div>
-            )}
           </div>
           <span className="text-[10px] text-slate-400">
             {channelMessages.length} رسالة

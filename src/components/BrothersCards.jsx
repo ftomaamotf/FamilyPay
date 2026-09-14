@@ -19,7 +19,6 @@ import {
   Inbox,
   Edit3,
   MessageSquare,
-  MessageCircle,
   X,
   Search
 } from 'lucide-react';
@@ -970,21 +969,7 @@ export const BrothersCards = ({
                         )}
                       </div>
                     <div className="flex flex-wrap items-center gap-2.5 mt-1.5 text-xs text-slate-400 font-bold">
-                      {selectedBrother.phone && (
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span>هاتف: {selectedBrother.phone}</span>
-                          <a
-                            href={`https://wa.me/${String(selectedBrother.phone).replace(/[\s\-\+]/g, '').replace(/^0/, '964')}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-2.5 py-0.5 rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-600/30 hover:bg-emerald-600 hover:text-white transition text-[11px] font-black flex items-center gap-1 active:scale-95"
-                            title="محادثة أو اتصال واتساب"
-                          >
-                            <MessageCircle className="w-3 h-3" />
-                            <span>واتساب 💬</span>
-                          </a>
-                        </div>
-                      )}
+                      {selectedBrother.phone && <span>هاتف: {selectedBrother.phone}</span>}
                       <span>• {selectedBrother.bankName || 'ماستر كي / Qi Card'}</span>
                       <span>• رقم البطاقة: <strong className="font-mono text-emerald-600 dark:text-emerald-400" dir="ltr">{selectedBrother.bankAccountNumber}</strong></span>
                     </div>
@@ -1158,10 +1143,10 @@ export const BrothersCards = ({
             </div>
           </div>
 
-          {/* Action Buttons: Unified Split (Half Chat / Half Live Voice Call with Loudspeaker) + Edit Commodities */}
+          {/* Action Buttons: Chat + Edit Commodities */}
           <div className="pt-2 flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
             
-            {/* Unified Split Control: Half Chat 💬 + Half Direct Call 📞 (بدون نافذة منبثقة) */}
+            {/* Chat Control */}
             <div className="flex-1 flex flex-col sm:flex-row items-stretch gap-2 min-w-0">
               
               {/* Chat Button */}
