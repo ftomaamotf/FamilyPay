@@ -312,94 +312,20 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                   السلعة / البند المعتمد لتسجيل المبلغ فيه 🎯:
                 </label>
-                <div className="bg-gradient-to-b from-slate-900/95 to-slate-950/95 p-3 rounded-3xl border border-slate-800 shadow-xl">
-                  <div className="flex flex-row items-start justify-start gap-4 overflow-x-auto p-2 scrollbar-thin scrollbar-thumb-slate-700">
-                    <div className="flex flex-col items-center shrink-0 w-24">
-                      <button
-                        type="button"
-                        onClick={() => setTargetFieldId(selectedReq.fieldId || '')}
-                        title={`التوجيه التلقائي: ${selectedReq.fieldName || 'مصروف عام'}`}
-                        className={`flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full cursor-pointer ${
-                          (targetFieldId || selectedReq.fieldId || '') === (selectedReq.fieldId || '') ? 'scale-105' : 'opacity-85 hover:opacity-100 hover:scale-102'
-                        }`}
-                      >
-                        <div
-                          className={`relative p-1 rounded-full ring-offset-2 ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-teal-500/20 ${
-                            (targetFieldId || selectedReq.fieldId || '') === (selectedReq.fieldId || '')
-                              ? 'ring-4 ring-teal-400 shadow-teal-500/40'
-                              : 'ring-2 ring-slate-700/80 group-hover:ring-teal-400'
-                          }`}
-                        >
-                          <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center bg-gradient-to-tr from-teal-700 via-emerald-600 to-teal-400 text-white shadow-inner relative overflow-hidden">
-                            <Sparkles className="w-8 h-8 sm:w-9 sm:h-9 stroke-[2.2] drop-shadow" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/25 pointer-events-none" />
-                          </div>
-                          <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-teal-300 flex items-center justify-center shadow-md border border-teal-400 text-[10px]">
-                            🎯
-                          </div>
-                        </div>
-                        <span className="mt-2 text-xs font-black truncate max-w-[92px] text-center text-teal-300 group-hover:text-teal-200">
-                          تلقائي
-                        </span>
-                        <div className="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-500/20 text-teal-300 border border-teal-500/40 group-hover:bg-teal-500 group-hover:text-slate-950 transition-all max-w-[92px] truncate">
-                          {selectedReq.fieldName || 'مصروف عام'}
-                        </div>
-                      </button>
-                    </div>
-
-                    {selectedBrother?.approvedFields
-                      ?.filter((f) => f.id !== selectedReq.fieldId)
-                      .map((f, index) => {
-                        const activeFieldId = targetFieldId || selectedReq.fieldId || '';
-                        const isSelected = activeFieldId === f.id;
-
-                        return (
-                          <div key={f.id} className="flex flex-col items-center shrink-0 w-24">
-                            <button
-                              type="button"
-                              onClick={() => setTargetFieldId(f.id)}
-                              title={`${f.name} • السقف: ${Number(f.limit || 0).toLocaleString()} ${currency}`}
-                              className={`flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full cursor-pointer ${
-                                isSelected ? 'scale-105' : 'opacity-85 hover:opacity-100 hover:scale-102'
-                              }`}
-                            >
-                              <div
-                                className={`relative p-1 rounded-full ring-offset-2 ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-emerald-500/20 ${
-                                  isSelected
-                                    ? 'ring-4 ring-emerald-400 shadow-emerald-500/40'
-                                    : 'ring-2 ring-slate-700/80 group-hover:ring-emerald-400'
-                                }`}
-                              >
-                                <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center bg-gradient-to-tr from-emerald-700 via-teal-600 to-cyan-500 text-white shadow-inner relative overflow-hidden">
-                                  {isSelected ? (
-                                    <Check className="w-8 h-8 text-white animate-pulse" />
-                                  ) : (
-                                    <span className="drop-shadow-md font-mono font-black text-2xl sm:text-3xl text-white">
-                                      {index + 1}
-                                    </span>
-                                  )}
-                                  <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/20 pointer-events-none" />
-                                </div>
-                                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-emerald-300 flex items-center justify-center shadow-md border border-emerald-400 text-[10px]">
-                                  🛒
-                                </div>
-                              </div>
-                              <span className={`mt-2 text-xs font-black truncate max-w-[92px] text-center ${isSelected ? 'text-emerald-300' : 'text-slate-200 group-hover:text-white'}`}>
-                                {f.name}
-                              </span>
-                              <div className={`mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black font-mono border transition-all max-w-[92px] truncate ${
-                                isSelected
-                                  ? 'bg-emerald-400 text-slate-950 border-emerald-300 scale-105 shadow-md shadow-emerald-500/30'
-                                  : 'bg-slate-800 text-emerald-300 border-slate-700 group-hover:bg-slate-700'
-                              }`}>
-                                {Number(f.limit || 0).toLocaleString()} {currency}
-                              </div>
-                            </button>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
+                <select
+                  value={targetFieldId || selectedReq.fieldId || ''}
+                  onChange={(e) => setTargetFieldId(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value={selectedReq.fieldId || ''}>
+                    التوجيه التلقائي: {selectedReq.fieldName}
+                  </option>
+                  {selectedBrother?.approvedFields?.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name} (السقف: {f.limit.toLocaleString()} {currency})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {msg && (
