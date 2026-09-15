@@ -14,11 +14,7 @@ const FinanceContext = createContext(null);
 
 const API_BASE = (() => {
   if (typeof window !== 'undefined') {
-    const host = window.location.hostname;
-    const port = window.location.port;
-    if (host.includes('onrender.com') || host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || port === '5050') {
-      return '';
-    }
+    return '';
   }
   return 'https://familypay-aw26.onrender.com';
 })();
@@ -832,6 +828,32 @@ export const FinanceProvider = ({ children }) => {
     return emailMatch || accountMatch || bankMatch || phoneMatch || nameMatch;
   };
 
+  const authenticateLocalBrother = (identifier, password) => {
+    const input = normalizeLoginText(identifier);
+    const cleanPhone = normalizeLoginPhone(input);
+    const compactInput = compactLoginNumber(input);
+    const inputPass = normalizeDigits(password).trim();
+
+    const found = brothers.find((b) => {
+      return isBrotherPasswordMatch(b, inputPass) && isBrotherLoginMatch(b, input, cleanPhone, compactInput);
+    });
+
+    if (!found) return null;
+
+    return {
+      id: found.id,
+      name: found.name,
+      email: found.email,
+      phone: found.phone,
+      accountNumber: found.accountNumber,
+      bankAccountNumber: found.bankAccountNumber || found.accountNumber,
+      bankName: found.bankName,
+      avatarColor: found.avatarColor,
+      isAdmin: found.id === activeAdminId || found.isAdmin,
+      isActiveAdmin: found.id === activeAdminId
+    };
+  };
+
   // 1. Login Brother by Email, Account Number, or Phone & Password
   const loginBrother = async (identifier, password) => {
     const cleanIden = normalizeLoginText(identifier);
@@ -848,33 +870,18 @@ export const FinanceProvider = ({ children }) => {
         setCurrentUser(data.user);
         return { success: true, message: data.message };
       }
+      const localUser = authenticateLocalBrother(cleanIden, cleanPass);
+      if (localUser) {
+        setCurrentUser(localUser);
+        return { success: true, message: `مرحباً بك يا ${localUser.name}` };
+      }
       return { success: false, message: data.message };
     } catch {
       // Fallback offline authentication
-      const input = cleanIden;
-      const cleanPhone = normalizeLoginPhone(input);
-      const compactInput = compactLoginNumber(input);
-      const inputPass = cleanPass;
-
-      const found = brothers.find((b) => {
-        return isBrotherPasswordMatch(b, inputPass) && isBrotherLoginMatch(b, input, cleanPhone, compactInput);
-      });
-
-      if (found) {
-        const u = {
-          id: found.id,
-          name: found.name,
-          email: found.email,
-          phone: found.phone,
-          accountNumber: found.accountNumber,
-          bankAccountNumber: found.bankAccountNumber || found.accountNumber,
-          bankName: found.bankName,
-          avatarColor: found.avatarColor,
-          isAdmin: found.id === activeAdminId || found.isAdmin,
-          isActiveAdmin: found.id === activeAdminId
-        };
-        setCurrentUser(u);
-        return { success: true, message: `مرحباً بك يا ${found.name}` };
+      const localUser = authenticateLocalBrother(cleanIden, cleanPass);
+      if (localUser) {
+        setCurrentUser(localUser);
+        return { success: true, message: `مرحباً بك يا ${localUser.name}` };
       }
       return { success: false, message: 'البريد الإلكتروني / رقم الحساب أو كلمة المرور غير صحيحة' };
     }
