@@ -773,9 +773,68 @@ export const FinanceProvider = ({ children }) => {
       .trim();
   };
 
+  const normalizeLoginText = (value) => normalizeDigits(value).toLowerCase().trim();
+  const compactLoginNumber = (value) => normalizeLoginText(value).replace(/[^\d]/g, '');
+  const isNumericLoginInput = (value) => Boolean(compactLoginNumber(value)) && !/[^\d\s+\-().]/.test(normalizeLoginText(value));
+  const normalizeLoginPhone = (value) => {
+    const digits = compactLoginNumber(value);
+    if (!digits) return '';
+    if (digits.startsWith('00964')) return `0${digits.slice(5)}`;
+    if (digits.startsWith('964')) return `0${digits.slice(3)}`;
+    if (digits.startsWith('7')) return `0${digits}`;
+    return digits;
+  };
+  const isOwnerLoginKeyword = (input) => (
+    input.includes('عبدالله') ||
+    input.includes('abdullah') ||
+    input.includes('abduallh') ||
+    input === 'admin' ||
+    input === 'owner' ||
+    input === 'صاحب الصندوق' ||
+    input === 'صاحب الحساب'
+  );
+  const isBrotherPasswordMatch = (brother, inputPass) => {
+    if (!inputPass) return false;
+    const isOwner = brother.id === activeAdminId || brother.isAdmin;
+    return (
+      String(brother.password || '').trim() === inputPass ||
+      normalizeDigits(brother.password) === inputPass ||
+      (isOwner && ['1988', '123', 'admin', 'admin123', '9988'].includes(inputPass)) ||
+      (!isOwner && ['123', '1988'].includes(inputPass))
+    );
+  };
+  const isBrotherLoginMatch = (brother, input, cleanPhone, compactInput) => {
+    const isOwner = brother.id === activeAdminId || brother.isAdmin;
+    if (isOwner && isOwnerLoginKeyword(input)) return true;
+
+    const email = String(brother.email || '').trim().toLowerCase();
+    const accountNumber = normalizeLoginText(brother.accountNumber);
+    const compactAccount = compactLoginNumber(brother.accountNumber);
+    const compactBankAccount = compactLoginNumber(brother.bankAccountNumber);
+    const brotherPhone = normalizeLoginPhone(brother.phone);
+    const name = String(brother.name || '').trim().toLowerCase();
+    const isNumericInput = isNumericLoginInput(input);
+
+    const emailMatch = email && email === input;
+    const accountMatch = accountNumber === input || (isNumericInput && compactAccount === compactInput);
+    const bankMatch = isNumericInput && compactBankAccount && (
+      compactBankAccount === compactInput ||
+      (compactInput.length >= 4 && compactBankAccount.includes(compactInput)) ||
+      (compactBankAccount.length >= 4 && compactInput.includes(compactBankAccount))
+    );
+    const phoneMatch = isNumericInput && cleanPhone && brotherPhone && (
+      brotherPhone === cleanPhone ||
+      brotherPhone.endsWith(cleanPhone) ||
+      cleanPhone.endsWith(brotherPhone)
+    );
+    const nameMatch = name && (name === input || name.includes(input) || input.includes(name));
+
+    return emailMatch || accountMatch || bankMatch || phoneMatch || nameMatch;
+  };
+
   // 1. Login Brother by Email, Account Number, or Phone & Password
   const loginBrother = async (identifier, password) => {
-    const cleanIden = normalizeDigits(identifier).toLowerCase();
+    const cleanIden = normalizeLoginText(identifier);
     const cleanPass = normalizeDigits(password).trim();
     try {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
@@ -793,52 +852,12 @@ export const FinanceProvider = ({ children }) => {
     } catch {
       // Fallback offline authentication
       const input = cleanIden;
-      const cleanPhone = input.replace(/[\s\-\+]/g, '').replace(/^964/, '0').replace(/^7/, '07');
+      const cleanPhone = normalizeLoginPhone(input);
+      const compactInput = compactLoginNumber(input);
       const inputPass = cleanPass;
 
-      const isOwnerKeyword =
-        input.includes('عبدالله') ||
-        input.includes('abdullah') ||
-        input.includes('abduallh') ||
-        input === 'admin' ||
-        input === 'owner' ||
-        input === 'صاحب الصندوق' ||
-        input === 'صاحب الحساب';
-
       const found = brothers.find((b) => {
-        const isOwner = b.id === activeAdminId || b.isAdmin;
-        const isPassMatch =
-          !inputPass ||
-          String(b.password).trim() === inputPass ||
-          normalizeDigits(b.password) === inputPass ||
-          (isOwner && (inputPass === '1988' || inputPass === '123' || inputPass === 'admin' || inputPass === 'admin123' || inputPass === '9988')) ||
-          (!isOwner && (inputPass === '123' || inputPass === '1988'));
-
-        if (!isPassMatch) return false;
-
-        if (isOwner && isOwnerKeyword) return true;
-
-        const bPhoneClean = normalizeDigits(b.phone || '').replace(/[\s\-\+]/g, '').replace(/^964/, '0').replace(/^7/, '07');
-
-        const emailMatch = b.email && (
-          String(b.email).trim().toLowerCase() === input ||
-          input.replace(/_/g, '').includes('abduallh') ||
-          input.replace(/_/g, '').includes('abdullah')
-        );
-        const accMatch = String(b.accountNumber).trim().toLowerCase() === input;
-        const bankMatch = b.bankAccountNumber && (
-          normalizeDigits(b.bankAccountNumber).toLowerCase() === input ||
-          input.includes(normalizeDigits(b.bankAccountNumber)) ||
-          normalizeDigits(b.bankAccountNumber).includes(input)
-        );
-        const phoneMatch = bPhoneClean && (bPhoneClean === cleanPhone || bPhoneClean.endsWith(cleanPhone) || cleanPhone.endsWith(bPhoneClean));
-        const nameMatch = b.name && (
-          b.name.trim().toLowerCase() === input ||
-          b.name.trim().toLowerCase().includes(input) ||
-          input.includes(b.name.trim().toLowerCase())
-        );
-
-        return emailMatch || accMatch || bankMatch || phoneMatch || nameMatch;
+        return isBrotherPasswordMatch(b, inputPass) && isBrotherLoginMatch(b, input, cleanPhone, compactInput);
       });
 
       if (found) {
