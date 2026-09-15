@@ -1757,7 +1757,19 @@ export const FinanceProvider = ({ children }) => {
       return { success: false, message: data.message };
     } catch {
       // Local fallback
-      const cleanAcc = String(brotherData.accountNumber).trim();
+      const requestedAcc = String(brotherData.accountNumber || '').trim();
+      const used = new Set(brothers.map((b) => String(b.accountNumber || '').trim()).filter(Boolean));
+      const nextAcc = () => {
+        let next = Math.max(
+          1000,
+          ...brothers
+            .map((b) => Number(String(b.accountNumber || '').replace(/\D/g, '')))
+            .filter((num) => Number.isFinite(num))
+        ) + 1;
+        while (used.has(String(next))) next += 1;
+        return String(next);
+      };
+      const cleanAcc = requestedAcc && !used.has(requestedAcc) ? requestedAcc : nextAcc();
       const newB = {
         id: 'b-' + Date.now(),
         name: brotherData.name.trim(),

@@ -1181,7 +1181,22 @@ app.post('/api/brothers', (req, res) => {
   }
 
   const db = readDB();
-  const cleanAcc = accountNumber ? String(accountNumber).trim() : String(1000 + db.brothers.length + 1);
+  const requestedAcc = accountNumber ? String(accountNumber).trim() : '';
+  const getNextBrotherAccountNumber = () => {
+    const used = new Set(db.brothers.map((b) => String(b.accountNumber || '').trim()).filter(Boolean));
+    let next = Math.max(
+      1000,
+      ...db.brothers
+        .map((b) => Number(String(b.accountNumber || '').replace(/\D/g, '')))
+        .filter((num) => Number.isFinite(num))
+    ) + 1;
+    while (used.has(String(next))) next += 1;
+    return String(next);
+  };
+  const cleanAcc =
+    requestedAcc && !db.brothers.some((b) => String(b.accountNumber || '').trim() === requestedAcc)
+      ? requestedAcc
+      : getNextBrotherAccountNumber();
   const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#ef4444', '#6366f1'];
 
   // Check if requester is Admin
@@ -1237,7 +1252,7 @@ app.post('/api/brothers', (req, res) => {
   }
 
   // Admin directly adds or updates
-  const existingIndex = db.brothers.findIndex((b) => (req.body.id && b.id === req.body.id) || (accountNumber && String(b.accountNumber) === cleanAcc));
+  const existingIndex = req.body.id ? db.brothers.findIndex((b) => b.id === req.body.id) : -1;
   if (existingIndex !== -1) {
     db.brothers[existingIndex] = {
       ...db.brothers[existingIndex],
@@ -1279,7 +1294,7 @@ app.post('/api/brothers', (req, res) => {
 
   res.json({
     success: true,
-    message: `تمت إضافة المستخدم (${newBrother.name}) بنجاح`,
+    message: `تمت إضافة المستخدم (${newBrother.name}) بنجاح. رقم الدخول: ${newBrother.accountNumber}`,
     brother: newBrother,
     brothers: db.brothers
   });

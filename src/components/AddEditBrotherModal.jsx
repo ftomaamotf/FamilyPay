@@ -47,8 +47,10 @@ export const AddEditBrotherModal = ({ isOpen, onClose, brotherToEdit = null }) =
       setAvatarColor(brotherToEdit.avatarColor || '#10b981');
     } else {
       setName('');
-      // Suggest next sequential account number e.g. 1007
-      const nextAcc = 1000 + brothers.length + 1;
+      const usedAccountNumbers = brothers
+        .map((b) => Number(String(b.accountNumber || '').replace(/\D/g, '')))
+        .filter((num) => Number.isFinite(num));
+      const nextAcc = Math.max(1000, ...usedAccountNumbers) + 1;
       setAccountNumber(String(nextAcc));
       setPhone('');
       setBankAccountNumber('');
