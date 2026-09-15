@@ -600,11 +600,10 @@ app.post('/api/brothers/register-qr', (req, res) => {
     return res.status(400).json({ success: false, message: `رقم الهاتف (${cleanPhone}) مسجل مسبقاً باسم (${existingPhone.name})` });
   }
 
-  const isOwner = Boolean(req.body.isOwner);
   const isFirstUser = db.brothers.length === 0;
 
-  // If this is the Owner registering the fund for the first time
-  if (isOwner || isFirstUser) {
+  // Only the first registered account can become the fund owner.
+  if (isFirstUser) {
     const nextAccNumber = String(1000 + db.brothers.length + 1);
     const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1'];
     const avatarColor = colors[db.brothers.length % colors.length];

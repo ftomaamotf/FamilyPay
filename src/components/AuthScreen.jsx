@@ -40,27 +40,27 @@ export const AuthScreen = ({ onLoginSuccess }) => {
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [showGuestRegisterModal, setShowGuestRegisterModal] = useState(false);
 
-  // Auto-detect ?action=register from URL when scanned via phone camera
+  const hasExistingFund = brothers.some((brother) => brother?.isAdmin) || brothers.length > 0;
+
+  // Auto-detect QR actions when scanned via phone camera
   useEffect(() => {
-  if (typeof window !== 'undefined') {
-    const urlParams = new URLSearchParams(window.location.search);
-    const action = urlParams.get('action');
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const action = urlParams.get('action');
 
-    if (action === 'join') {
-      setShowGuestRegisterModal(true);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
+      if (action === 'join' || (action === 'register' && hasExistingFund)) {
+        setShowGuestRegisterModal(true);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
+      }
 
-    if (action === 'register') {
-      setViewMode('register_owner');
-      setRegMsg('👋 أهلاً بك! تم فتح استمارة التسجيل. يرجى إدخال اسمك ورقم هاتفك وبطاقتك لإكمال التسجيل.');
-      window.history.replaceState({}, document.title, window.location.pathname);
+      if (action === 'register') {
+        setViewMode('register_owner');
+        setRegMsg('👋 أهلاً بك! تم فتح استمارة إنشاء الصندوق لأول مرة. يرجى إدخال بيانات صاحب الصندوق لإكمال التسجيل.');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
     }
-  }
-}, []);
-}
-    }
-  }, []);
+  }, [hasExistingFund]);
 
   // Login form state
   const [identifier, setIdentifier] = useState(''); // Email or Phone Number

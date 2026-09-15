@@ -980,6 +980,14 @@ export const FinanceProvider = ({ children }) => {
       return data;
     } catch {
       // Local fallback
+      const hasExistingFund = brothers.some((brother) => brother?.isAdmin) || brothers.length > 0;
+      if (isOwner && hasExistingFund) {
+        return {
+          success: false,
+          message: 'هذا الرابط مخصص لإنشاء الصندوق لأول مرة. إذا كان الصندوق موجوداً بالفعل، استخدم رابط الانضمام أو اطلب من الأدمن إضافتك.'
+        };
+      }
+
       const cleanPhone = String(phone).replace(/[\s\-\+]/g, '');
       const cleanEmail = String(email).trim().toLowerCase();
       const nextAcc = String(1000 + brothers.length + 1);
