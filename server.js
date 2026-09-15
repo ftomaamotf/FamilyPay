@@ -194,7 +194,11 @@ const authenticateToken = (req, res, next) => {
   '/events'
 ];
 
-  if (publicRoutes.some(route => req.path.startsWith(route)) || req.path === '/FamilyPay.apk') {
+  if (
+    publicRoutes.some(route => req.path.startsWith(route)) ||
+    req.path === '/FamilyPay.apk' ||
+    (req.method === 'POST' && req.path === '/brothers')
+  ) {
     return next();
   }
 
@@ -1182,7 +1186,10 @@ app.post('/api/brothers', (req, res) => {
 
   // Check if requester is Admin
   const requester = db.brothers.find((b) => b.id === requestingBrotherId);
-  const isAdmin = !requestingBrotherId || (requester && (requester.id === db.activeAdminId || requester.isAdmin));
+  if (!requester) {
+    return res.status(401).json({ success: false, message: 'يرجى تسجيل الدخول بحساب الأدمن لإضافة مستخدم جديد' });
+  }
+  const isAdmin = requester.id === db.activeAdminId || requester.isAdmin;
 
   // If NON-ADMIN requests adding a new user, route to Admin approval!
   if (!isAdmin) {

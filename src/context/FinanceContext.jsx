@@ -1731,11 +1731,22 @@ export const FinanceProvider = ({ children }) => {
   };
 
   // 7. Brother Management by Admin
+  const getJsonHeaders = () => {
+    const headers = { 'Content-Type': 'application/json' };
+    try {
+      const token = localStorage.getItem('family_pay_token');
+      if (token) headers.Authorization = `Bearer ${token}`;
+    } catch {
+      // localStorage can be unavailable in some embedded contexts.
+    }
+    return headers;
+  };
+
   const addBrother = async (brotherData) => {
     try {
       const res = await fetch(`${API_BASE}/api/brothers`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getJsonHeaders(),
         body: JSON.stringify(brotherData)
       });
       const data = await res.json();
@@ -1770,7 +1781,7 @@ export const FinanceProvider = ({ children }) => {
     try {
       const res = await fetch(`${API_BASE}/api/brothers/${brotherId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getJsonHeaders(),
         body: JSON.stringify(brotherData)
       });
       const data = await res.json();
@@ -1793,7 +1804,8 @@ export const FinanceProvider = ({ children }) => {
     }
     try {
       const res = await fetch(`${API_BASE}/api/brothers/${brotherId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: getJsonHeaders()
       });
       const data = await res.json();
       if (data.success) {
