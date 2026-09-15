@@ -187,6 +187,7 @@ const authenticateToken = (req, res, next) => {
   const publicRoutes = [
   '/auth/login',
   '/auth/reset-password',
+  '/fund-state',
   '/brothers/register-guest',
   '/download/FamilyPay.apk',
   '/.well-known/assetlinks.json',

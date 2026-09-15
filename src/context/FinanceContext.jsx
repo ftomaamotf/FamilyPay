@@ -793,9 +793,9 @@ export const FinanceProvider = ({ children }) => {
     input === 'صاحب الصندوق' ||
     input === 'صاحب الحساب'
   );
-  const isBrotherPasswordMatch = (brother, inputPass) => {
+  const isBrotherPasswordMatch = (brother, inputPass, adminId = activeAdminId) => {
     if (!inputPass) return false;
-    const isOwner = brother.id === activeAdminId || brother.isAdmin;
+    const isOwner = brother.id === adminId || brother.isAdmin;
     return (
       String(brother.password || '').trim() === inputPass ||
       normalizeDigits(brother.password) === inputPass ||
@@ -803,8 +803,8 @@ export const FinanceProvider = ({ children }) => {
       (!isOwner && ['123', '1988'].includes(inputPass))
     );
   };
-  const isBrotherLoginMatch = (brother, input, cleanPhone, compactInput) => {
-    const isOwner = brother.id === activeAdminId || brother.isAdmin;
+  const isBrotherLoginMatch = (brother, input, cleanPhone, compactInput, adminId = activeAdminId) => {
+    const isOwner = brother.id === adminId || brother.isAdmin;
     if (isOwner && isOwnerLoginKeyword(input)) return true;
 
     const email = String(brother.email || '').trim().toLowerCase();
@@ -832,14 +832,14 @@ export const FinanceProvider = ({ children }) => {
     return emailMatch || accountMatch || bankMatch || phoneMatch || nameMatch;
   };
 
-  const authenticateLocalBrother = (identifier, password) => {
+  const authenticateLocalBrother = (identifier, password, candidateBrothers = brothers, adminId = activeAdminId) => {
     const input = normalizeLoginText(identifier);
     const cleanPhone = normalizeLoginPhone(input);
     const compactInput = compactLoginNumber(input);
     const inputPass = normalizeDigits(password).trim();
 
-    const found = brothers.find((b) => {
-      return isBrotherPasswordMatch(b, inputPass) && isBrotherLoginMatch(b, input, cleanPhone, compactInput);
+    const found = (candidateBrothers || []).find((b) => {
+      return isBrotherPasswordMatch(b, inputPass, adminId) && isBrotherLoginMatch(b, input, cleanPhone, compactInput, adminId);
     });
 
     if (!found) return null;
@@ -853,9 +853,30 @@ export const FinanceProvider = ({ children }) => {
       bankAccountNumber: found.bankAccountNumber || found.accountNumber,
       bankName: found.bankName,
       avatarColor: found.avatarColor,
-      isAdmin: found.id === activeAdminId || found.isAdmin,
-      isActiveAdmin: found.id === activeAdminId
+      isAdmin: found.id === adminId || found.isAdmin,
+      isActiveAdmin: found.id === adminId
     };
+  };
+
+  const authenticateFromLatestFundState = async (identifier, password) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/fund-state`);
+      const data = await res.json();
+      if (!data.success || !data.state) return null;
+
+      const serverBrothers = Array.isArray(data.state.brothers) ? data.state.brothers : [];
+      const serverActiveAdminId = data.state.activeAdminId || activeAdminId;
+      const user = authenticateLocalBrother(identifier, password, serverBrothers, serverActiveAdminId);
+
+      if (serverBrothers.length) syncAndMergeBrothers(serverBrothers);
+      if (data.state.bankCards) setBankCards(data.state.bankCards);
+      if (data.state.transfers) setTransfers(data.state.transfers);
+      if (data.state.activeAdminId) setActiveAdminId(data.state.activeAdminId);
+
+      return user;
+    } catch {
+      return null;
+    }
   };
 
   // 1. Login Brother by Email, Account Number, or Phone & Password
@@ -879,6 +900,11 @@ export const FinanceProvider = ({ children }) => {
         setCurrentUser(localUser);
         return { success: true, message: `مرحباً بك يا ${localUser.name}` };
       }
+      const latestUser = await authenticateFromLatestFundState(cleanIden, cleanPass);
+      if (latestUser) {
+        setCurrentUser(latestUser);
+        return { success: true, message: `مرحباً بك يا ${latestUser.name}` };
+      }
       return { success: false, message: data.message };
     } catch {
       // Fallback offline authentication
@@ -886,6 +912,11 @@ export const FinanceProvider = ({ children }) => {
       if (localUser) {
         setCurrentUser(localUser);
         return { success: true, message: `مرحباً بك يا ${localUser.name}` };
+      }
+      const latestUser = await authenticateFromLatestFundState(cleanIden, cleanPass);
+      if (latestUser) {
+        setCurrentUser(latestUser);
+        return { success: true, message: `مرحباً بك يا ${latestUser.name}` };
       }
       return { success: false, message: 'البريد الإلكتروني / رقم الحساب أو كلمة المرور غير صحيحة' };
     }
