@@ -288,7 +288,9 @@ function compactLoginNumber(value) {
 }
 
 function isNumericLoginInput(value) {
-  return Boolean(compactLoginNumber(value)) && !/[^\d\s+\-().]/.test(normalizeLoginText(value));
+  const input = normalizeLoginText(value);
+  const digits = compactLoginNumber(input);
+  return digits.length >= 3 && !input.includes('@');
 }
 
 function normalizeLoginPhone(value) {

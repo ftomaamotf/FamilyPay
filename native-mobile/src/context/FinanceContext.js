@@ -67,7 +67,11 @@ const normalizeDigits = (str) => {
 
 const normalizeLoginText = (value) => normalizeDigits(value).toLowerCase().trim();
 const compactLoginNumber = (value) => normalizeLoginText(value).replace(/[^\d]/g, '');
-const isNumericLoginInput = (value) => Boolean(compactLoginNumber(value)) && !/[^\d\s+\-().]/.test(normalizeLoginText(value));
+const isNumericLoginInput = (value) => {
+  const input = normalizeLoginText(value);
+  const digits = compactLoginNumber(input);
+  return digits.length >= 3 && !input.includes('@');
+};
 const normalizeLoginPhone = (value) => {
   const digits = compactLoginNumber(value);
   if (!digits) return '';
