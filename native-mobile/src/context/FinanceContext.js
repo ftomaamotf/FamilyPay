@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as Haptics from 'expo-haptics';
@@ -12,7 +12,6 @@ export const FinanceProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fund Global State
   const [activeAdminId, setActiveAdminId] = useState('b-2');
   const [currency, setCurrency] = useState('د.ع');
   const [monthlyFundAmount, setMonthlyFundAmount] = useState(1000000);
@@ -29,12 +28,19 @@ export const FinanceProvider = ({ children }) => {
     transferPermissions: { mode: 'admin_only', allowedSenderIds: ['b-2'] }
   });
 
-  // 1. Load Stored User Session
+  // مفتاح الجلسة JWT
+  const getAuthHeaders = async () => {
+    const token = await AsyncStorage.getItem('@familypay_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   useEffect(() => {
     const loadSession = async () => {
       try {
         const saved = await AsyncStorage.getItem('@familypay_user');
-        if (saved) {
+        const token = await AsyncStorage.getItem('@familypay_token');
+
+        if (saved && token) {
           setCurrentUser(JSON.parse(saved));
         }
       } catch (e) {
@@ -43,24 +49,44 @@ export const FinanceProvider = ({ children }) => {
         fetchFundState();
       }
     };
+
     loadSession();
   }, []);
 
-  // 2. Fetch Live Fund State from Cloud API
+  // جلب بيانات الصندوق
   const fetchFundState = async () => {
     try {
-      const res = await fetch(${API_BASE}/api/fund-state);
+      const headers = await getAuthHeaders();
+
+      const res = await fetch(`${API_BASE}/api/fund-state`, {
+        headers
+      });
+
       const data = await res.json();
+
       if (data.success && data.state) {
         const s = data.state;
+
         setActiveAdminId(s.activeAdminId || 'b-2');
-        if (s.currency?.symbol) setCurrency(s.currency.symbol);
-        if (s.monthlyFundAmount) setMonthlyFundAmount(s.monthlyFundAmount);
+
+        if (s.currency?.symbol) {
+          setCurrency(s.currency.symbol);
+        }
+
+        if (s.monthlyFundAmount) {
+          setMonthlyFundAmount(s.monthlyFundAmount);
+        }
+
         if (s.bankCards) {
           setBankCards(s.bankCards);
-          const activeCard = s.bankCards.find((c) => c.id === s.sendingCardId) || s.bankCards[0];
+
+          const activeCard =
+            s.bankCards.find((c) => c.id === s.sendingCardId) ||
+            s.bankCards[0];
+
           setSendingCard(activeCard);
         }
+
         if (s.brothers) setBrothers(s.brothers);
         if (s.transfers) setTransfers(s.transfers);
         if (s.fundRequests) setFundRequests(s.fundRequests);
@@ -75,78 +101,154 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // 3. User Login
+  // تسجيل الدخول
   const login = async (identifier, password) => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      const res = await fetch(${API_BASE}/api/auth/login, {
+
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           accountNumber: identifier.trim(),
           password: password.trim()
         })
       });
+
       const data = await res.json();
+
       if (data.success && data.user) {
         setCurrentUser(data.user);
-        await AsyncStorage.setItem('@familypay_user', JSON.stringify(data.user));
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        return { success: true, user: data.user, message: data.message };
+
+        await AsyncStorage.setItem(
+          '@familypay_user',
+          JSON.stringify(data.user)
+        );
+
+        // حفظ مفتاح الجلسة
+        if (data.token) {
+          await AsyncStorage.setItem(
+            '@familypay_token',
+            data.token
+          );
+        }
+
+        Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success
+        );
+
+        return {
+          success: true,
+          user: data.user,
+          message: data.message
+        };
       }
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      return { success: false, message: data.message || 'بيانات الدخول غير صحيحة' };
+
+      Haptics.notificationAsync(
+        Haptics.NotificationFeedbackType.Error
+      );
+
+      return {
+        success: false,
+        message: data.message || 'بيانات الدخول غير صحيحة'
+      };
     } catch (e) {
-      return { success: false, message: 'تعذر الاتصال بالسيرفر السحابي. تحقق من الإنترنت' };
+      return {
+        success: false,
+        message: 'تعذر الاتصال بالسيرفر السحابي. تحقق من الإنترنت'
+      };
     }
   };
 
-  // 4. Biometrics Login (Fingerprint / Face ID)
+  // تسجيل الدخول بالبصمة
   const authenticateBiometrics = async () => {
     try {
-      const hasHardware = await LocalAuthentication.hasHardwareAsync();
-      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      const hasHardware =
+        await LocalAuthentication.hasHardwareAsync();
+
+      const isEnrolled =
+        await LocalAuthentication.isEnrolledAsync();
+
       if (!hasHardware || !isEnrolled) {
-        return { success: false, message: 'البصمة غير متوفرة أو غير مفعلة على جهازك' };
+        return {
+          success: false,
+          message: 'البصمة غير متوفرة أو غير مفعلة على جهازك'
+        };
       }
 
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'تسجيل الدخول إلى FamilyPay عبر البصمة',
-        fallbackLabel: 'استخدام كلمة المرور',
-        cancelLabel: 'إلغاء'
-      });
+      const result =
+        await LocalAuthentication.authenticateAsync({
+          promptMessage:
+            'تسجيل الدخول إلى FamilyPay عبر البصمة',
+          fallbackLabel: 'استخدام كلمة المرور',
+          cancelLabel: 'إلغاء'
+        });
 
       if (result.success) {
-        const saved = await AsyncStorage.getItem('@familypay_user');
-        if (saved) {
+        const saved =
+          await AsyncStorage.getItem('@familypay_user');
+
+        const token =
+          await AsyncStorage.getItem('@familypay_token');
+
+        if (saved && token) {
           setCurrentUser(JSON.parse(saved));
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+          Haptics.notificationAsync(
+            Haptics.NotificationFeedbackType.Success
+          );
+
           return { success: true };
         }
       }
-      return { success: false, message: 'فشل التحقق من البصمة' };
+
+      return {
+        success: false,
+        message: 'فشل التحقق من البصمة'
+      };
     } catch (e) {
-      return { success: false, message: e.message };
+      return {
+        success: false,
+        message: e.message
+      };
     }
   };
 
-  // 5. Logout
+  // تسجيل الخروج
   const logout = async () => {
     try {
-      await AsyncStorage.removeItem('@familypay_user');
+      await AsyncStorage.multiRemove([
+        '@familypay_user',
+        '@familypay_token'
+      ]);
+
       setCurrentUser(null);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      Haptics.impactAsync(
+        Haptics.ImpactFeedbackStyle.Medium
+      );
     } catch (e) {
       console.log('Error during logout', e);
     }
   };
 
-  // 6. Execute Transfer
-  const executeTransfer = async ({ recipientId, amount, fieldId, reason, securityPin }) => {
+  // تنفيذ تحويل
+  const executeTransfer = async ({
+    recipientId,
+    amount,
+    fieldId,
+    reason,
+    securityPin
+  }) => {
     try {
-      const res = await fetch(${API_BASE}/api/transfers, {
+      const res = await fetch(`${API_BASE}/api/transfers`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(await getAuthHeaders())
+        },
         body: JSON.stringify({
           senderId: currentUser?.id,
           recipientId,
@@ -156,151 +258,326 @@ export const FinanceProvider = ({ children }) => {
           securityPin
         })
       });
+
       const data = await res.json();
+
       if (data.success) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success
+        );
+
         fetchFundState();
-        return { success: true, message: data.message };
+
+        return {
+          success: true,
+          message: data.message
+        };
       }
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      return { success: false, message: data.message };
+
+      Haptics.notificationAsync(
+        Haptics.NotificationFeedbackType.Error
+      );
+
+      return {
+        success: false,
+        message: data.message
+      };
     } catch (e) {
-      return { success: false, message: 'حدث خطأ أثناء تنفيذ التحويل' };
+      return {
+        success: false,
+        message: 'حدث خطأ أثناء تنفيذ التحويل'
+      };
     }
   };
 
-  // 7. Edit Transfer (Admin)
-  const editTransfer = async (transferId, { amount, reason, date, fieldId }) => {
+  // تعديل تحويل
+  const editTransfer = async (
+    transferId,
+    { amount, reason, date, fieldId }
+  ) => {
     try {
-      const res = await fetch(${API_BASE}/api/transfers/, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, reason, date, fieldId })
-      });
+      const res = await fetch(
+        `${API_BASE}/api/transfers/${transferId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(await getAuthHeaders())
+          },
+          body: JSON.stringify({
+            amount,
+            reason,
+            date,
+            fieldId
+          })
+        }
+      );
+
       const data = await res.json();
+
       if (data.success) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success
+        );
+
         fetchFundState();
-        return { success: true, message: data.message };
+
+        return {
+          success: true,
+          message: data.message
+        };
       }
-      return { success: false, message: data.message };
+
+      return {
+        success: false,
+        message: data.message
+      };
     } catch (e) {
-      return { success: false, message: 'تعذر تعديل الطلب' };
+      return {
+        success: false,
+        message: 'تعذر تعديل الطلب'
+      };
     }
   };
 
-  // 8. Delete Transfer (Admin)
+  // حذف تحويل
   const deleteTransfer = async (transferId) => {
     try {
-      const res = await fetch(${API_BASE}/api/transfers/, {
-        method: 'DELETE'
-      });
+      const res = await fetch(
+        `${API_BASE}/api/transfers/${transferId}`,
+        {
+          method: 'DELETE',
+          headers: await getAuthHeaders()
+        }
+      );
+
       const data = await res.json();
+
       if (data.success) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success
+        );
+
         fetchFundState();
-        return { success: true, message: data.message };
+
+        return {
+          success: true,
+          message: data.message
+        };
       }
-      return { success: false, message: data.message };
+
+      return {
+        success: false,
+        message: data.message
+      };
     } catch (e) {
-      return { success: false, message: 'تعذر حذف الطلب' };
+      return {
+        success: false,
+        message: 'تعذر حذف الطلب'
+      };
     }
   };
 
-  // 9. Update Brother Commodities/Fields
-  const updateBrotherFields = async (brotherId, approvedFields) => {
+  // تحديث سلع الأخ
+  const updateBrotherFields = async (
+    brotherId,
+    approvedFields
+  ) => {
     try {
-      const res = await fetch(${API_BASE}/api/brothers//fields, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approvedFields })
-      });
+      const res = await fetch(
+        `${API_BASE}/api/brothers/${brotherId}/fields`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(await getAuthHeaders())
+          },
+          body: JSON.stringify({
+            approvedFields
+          })
+        }
+      );
+
       const data = await res.json();
+
       if (data.success) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success
+        );
+
         fetchFundState();
-        return { success: true, message: data.message };
+
+        return {
+          success: true,
+          message: data.message
+        };
       }
-      return { success: false, message: data.message };
+
+      return {
+        success: false,
+        message: data.message
+      };
     } catch (e) {
-      return { success: false, message: 'تعذر تحديث السلع' };
+      return {
+        success: false,
+        message: 'تعذر تحديث السلع'
+      };
     }
   };
 
-  // 10. Submit Money Request
-  const submitMoneyRequest = async ({ amount, reason, fieldId }) => {
+  // إرسال طلب أموال
+  const submitMoneyRequest = async ({
+    amount,
+    reason,
+    fieldId
+  }) => {
     try {
-      const res = await fetch(${API_BASE}/api/requests, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          brotherId: currentUser?.id,
-          brotherName: currentUser?.name,
-          amount: Number(amount),
-          fieldId,
-          reason
-        })
-      });
+      const res = await fetch(
+        `${API_BASE}/api/requests`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(await getAuthHeaders())
+          },
+          body: JSON.stringify({
+            brotherId: currentUser?.id,
+            brotherName: currentUser?.name,
+            amount: Number(amount),
+            fieldId,
+            reason
+          })
+        }
+      );
+
       const data = await res.json();
+
       if (data.success) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success
+        );
+
         fetchFundState();
-        return { success: true, message: data.message };
+
+        return {
+          success: true,
+          message: data.message
+        };
       }
-      return { success: false, message: data.message };
+
+      return {
+        success: false,
+        message: data.message
+      };
     } catch (e) {
-      return { success: false, message: 'تعذر إرسال الطلب' };
+      return {
+        success: false,
+        message: 'تعذر إرسال الطلب'
+      };
     }
   };
 
-  // 11. Approve Request
-  const approveMoneyRequest = async (requestId, targetFieldId, securityPin) => {
+  // قبول طلب
+  const approveMoneyRequest = async (
+    requestId,
+    targetFieldId,
+    securityPin
+  ) => {
     try {
-      const res = await fetch(${API_BASE}/api/requests//approve, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          adminId: currentUser?.id,
-          targetFieldId,
-          securityPin
-        })
-      });
+      const res = await fetch(
+        `${API_BASE}/api/requests/${requestId}/approve`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(await getAuthHeaders())
+          },
+          body: JSON.stringify({
+            adminId: currentUser?.id,
+            targetFieldId,
+            securityPin
+          })
+        }
+      );
+
       const data = await res.json();
+
       if (data.success) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success
+        );
+
         fetchFundState();
-        return { success: true, message: data.message };
+
+        return {
+          success: true,
+          message: data.message
+        };
       }
-      return { success: false, message: data.message };
+
+      return {
+        success: false,
+        message: data.message
+      };
     } catch (e) {
-      return { success: false, message: 'تعذر قبول الطلب' };
+      return {
+        success: false,
+        message: 'تعذر قبول الطلب'
+      };
     }
   };
 
-  // 12. Reject Request
-  const rejectMoneyRequest = async (requestId, reason) => {
+  // رفض طلب
+  const rejectMoneyRequest = async (
+    requestId,
+    reason
+  ) => {
     try {
-      const res = await fetch(${API_BASE}/api/requests//reject, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          adminId: currentUser?.id,
-          reason
-        })
-      });
+      const res = await fetch(
+        `${API_BASE}/api/requests/${requestId}/reject`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(await getAuthHeaders())
+          },
+          body: JSON.stringify({
+            adminId: currentUser?.id,
+            reason
+          })
+        }
+      );
+
       const data = await res.json();
+
       if (data.success) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success
+        );
+
         fetchFundState();
-        return { success: true, message: data.message };
+
+        return {
+          success: true,
+          message: data.message
+        };
       }
-      return { success: false, message: data.message };
+
+      return {
+        success: false,
+        message: data.message
+      };
     } catch (e) {
-      return { success: false, message: 'تعذر رفض الطلب' };
+      return {
+        success: false,
+        message: 'تعذر رفض الطلب'
+      };
     }
   };
 
-  const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
+  const isCurrentAdmin =
+    currentUser?.id === activeAdminId ||
+    currentUser?.isAdmin;
 
   return (
     <FinanceContext.Provider

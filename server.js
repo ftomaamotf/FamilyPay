@@ -185,18 +185,37 @@ const broadcastEvent = (eventType, data) => {
 const authenticateToken = (req, res, next) => {
   // Public routes that don't need token verification
   const publicRoutes = [
+    '/auth/login',
     '/api/auth/login',
+    '/auth/reset-password',
     '/api/auth/reset-password',
+    '/brothers/register-guest',
     '/api/brothers/register-guest',
+    '/brothers/register-qr',
+    '/api/brothers/register-qr',
+    '/brothers/guest-requests',
+    '/api/brothers/guest-requests',
+    '/brothers/guest-status',
+    '/api/brothers/guest-status',
+    '/download/FamilyPay.apk',
     '/api/download/FamilyPay.apk',
     '/.well-known/assetlinks.json',
+    '/events',
     '/api/events',
+    '/fund-state',
     '/api/fund-state',
-    '/api/push/vapid-public-key',
-    '/api/brothers/guest-requests'
+    '/push/vapid-public-key',
+    '/api/push/vapid-public-key'
   ];
 
-  if (publicRoutes.some(route => req.path.startsWith(route)) || req.path === '/FamilyPay.apk') {
+  const currentPath = req.path;
+  const originalPath = req.originalUrl ? req.originalUrl.split('?')[0] : '';
+
+  if (
+    publicRoutes.some(route => currentPath.startsWith(route) || originalPath.startsWith(route)) ||
+    currentPath === '/FamilyPay.apk' ||
+    originalPath === '/FamilyPay.apk'
+  ) {
     return next();
   }
 
@@ -1144,7 +1163,9 @@ app.post('/api/brothers', (req, res) => {
 
   // Check if requester is Admin
   const requester = db.brothers.find((b) => b.id === requestingBrotherId);
-  const isAdmin = !requestingBrotherId || (requester && (requester.id === db.activeAdminId || requester.isAdmin));
+  const isAdmin = (req.user && (req.user.isAdmin || req.user.id === db.activeAdminId)) ||
+                  !requestingBrotherId ||
+                  (requester && (requester.id === db.activeAdminId || requester.isAdmin));
 
   // If NON-ADMIN requests adding a new user, route to Admin approval!
   if (!isAdmin) {

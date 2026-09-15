@@ -197,6 +197,7 @@ export const BrothersCards = ({
     canCurrentUserSend,
     updateBrotherFields,
     deleteBrother,
+
     generalExpensesName,
     updateGeneralExpensesName,
     totalGeneralExpensesSpent
