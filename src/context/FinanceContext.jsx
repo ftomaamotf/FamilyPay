@@ -62,6 +62,11 @@ export const FinanceProvider = ({ children }) => {
     return [];
   });
 
+  // General Expenses Custom Name State (اسم بطاقة ودائرة المصاريف العامة)
+  const [generalExpensesName, setGeneralExpensesName] = useState(() =>
+    loadFromStorage('bait_finance_general_expenses_name', 'مصاريف عامة')
+  );
+
   // Guest Join Requests (طلبات انضمام الضيوف المعلقة)
   const [guestRequests, setGuestRequests] = useState([]);
 
@@ -90,6 +95,10 @@ export const FinanceProvider = ({ children }) => {
         if (data.state.brothers) setBrothers(data.state.brothers);
         if (data.state.bankCards) setBankCards(data.state.bankCards);
         if (data.state.transfers) setTransfers(data.state.transfers);
+        if (data.state.generalExpensesName) {
+          setGeneralExpensesName(data.state.generalExpensesName);
+          saveToStorage('bait_finance_general_expenses_name', data.state.generalExpensesName);
+        }
       }
     } catch {
       // offline silent
@@ -168,7 +177,7 @@ export const FinanceProvider = ({ children }) => {
         name: 'محمد عجمي',
         email: 'mohammed@familyfund.iq',
         accountNumber: '1003',
-        phone: '077027959161',
+        phone: '07727959161',
         bankAccountNumber: '7145810946',
         password: '123',
         bankName: 'ماستر كي / Qi Card',
@@ -776,6 +785,7 @@ export const FinanceProvider = ({ children }) => {
       });
       const data = await res.json();
       if (data.success) {
+        localStorage.setItem('family_pay_token', data.token);
         setCurrentUser(data.user);
         return { success: true, message: data.message };
       }
@@ -810,11 +820,10 @@ export const FinanceProvider = ({ children }) => {
 
         const bPhoneClean = normalizeDigits(b.phone || '').replace(/[\s\-\+]/g, '').replace(/^964/, '0').replace(/^7/, '07');
 
-        const emailMatch = b.email && (
-          String(b.email).trim().toLowerCase() === input ||
-          input.replace(/_/g, '').includes('abduallh') ||
-          input.replace(/_/g, '').includes('abdullah')
-        );
+        const bNameNorm = (b.name || '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').trim().toLowerCase();
+        const inputNorm = input.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').trim().toLowerCase();
+
+        const emailMatch = b.email && String(b.email).trim().toLowerCase() === input;
         const accMatch = String(b.accountNumber).trim().toLowerCase() === input;
         const bankMatch = b.bankAccountNumber && (
           normalizeDigits(b.bankAccountNumber).toLowerCase() === input ||
@@ -822,10 +831,10 @@ export const FinanceProvider = ({ children }) => {
           normalizeDigits(b.bankAccountNumber).includes(input)
         );
         const phoneMatch = bPhoneClean && (bPhoneClean === cleanPhone || bPhoneClean.endsWith(cleanPhone) || cleanPhone.endsWith(bPhoneClean));
-        const nameMatch = b.name && (
-          b.name.trim().toLowerCase() === input ||
-          b.name.trim().toLowerCase().includes(input) ||
-          input.includes(b.name.trim().toLowerCase())
+        const nameMatch = bNameNorm && (
+          bNameNorm === inputNorm ||
+          bNameNorm.includes(inputNorm) ||
+          inputNorm.includes(bNameNorm)
         );
 
         return emailMatch || accMatch || bankMatch || phoneMatch || nameMatch;
@@ -1028,6 +1037,7 @@ export const FinanceProvider = ({ children }) => {
     try {
       localStorage.removeItem('bait_finance_current_user');
       localStorage.removeItem('bait_finance_guest_account');
+      localStorage.removeItem('family_pay_token');
       sessionStorage.clear();
     } catch {}
     setCurrentUser(null);
@@ -1899,232 +1909,15 @@ export const FinanceProvider = ({ children }) => {
     } catch {}
   }, []);
 
-  const startIntercomCall = async (targetBrotherId) => {
-    unlockAudioContext();
-    if (navigator.mediaDevices?.getUserMedia) {
-      try {
-        const testStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        testStream.getTracks().forEach((t) => t.stop());
-      } catch (e) {
-        console.log('Mic pre-warm note:', e);
-      }
-    }
-    const activeUser = currentUser || { id: 'guest', name: 'مستخدم' };
-
-    // Auto-resolve valid target if calling self or empty
-    let realTargetId = targetBrotherId;
-    if (!realTargetId || realTargetId === activeUser.id) {
-      const otherBrother = (brothers || []).find((b) => b.id !== activeUser.id);
-      if (otherBrother) realTargetId = otherBrother.id;
-    }
-    if (!realTargetId) return { success: false, message: 'لا يوجد مستخدم آخر للاتصال به' };
-
-    const receiver = (brothers || []).find((b) => b.id === realTargetId) || { name: 'المستخدم' };
-    try {
-      const res = await fetch(`${API_BASE}/api/intercom/call`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          callerId: activeUser.id,
-          callerName: activeUser.name,
-          callerAvatar: activeUser.avatarColor || '#10b981',
-          receiverId: realTargetId,
-          receiverName: receiver.name
-        })
-      });
-      const data = await res.json();
-      if (data.success && data.call) {
-        setActiveCall(data.call);
-        playWalkieTalkieChirp();
-      }
-      return data;
-    } catch {
-      const localCall = {
-        id: 'call-' + Date.now(),
-        callerId: activeUser.id,
-        callerName: activeUser.name,
-        callerAvatar: activeUser.avatarColor || '#10b981',
-        receiverId: realTargetId,
-        receiverName: receiver.name,
-        status: 'ringing',
-        createdAt: new Date().toISOString()
-      };
-      setActiveCall(localCall);
-      return { success: true, call: localCall };
-    }
-  };
-
-  const acceptIntercomCall = async (callId) => {
-    unlockAudioContext();
-    const targetCallId = callId || incomingCall?.id;
-    try {
-      const res = await fetch(`${API_BASE}/api/intercom/respond`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          callId: targetCallId,
-          action: 'accept',
-          userId: currentUser?.id
-        })
-      });
-      const data = await res.json();
-      if (data.success && data.call) {
-        setActiveCall(data.call);
-        setIncomingCall(null);
-        playWalkieTalkieChirp();
-      }
-      return data;
-    } catch {
-      if (incomingCall) {
-        const connectedCall = { ...incomingCall, status: 'connected' };
-        setActiveCall(connectedCall);
-        setIncomingCall(null);
-      }
-      return { success: true };
-    }
-  };
-
-  const rejectIntercomCall = async (callId) => {
-    const targetCallId = callId || incomingCall?.id;
-    try {
-      await fetch(`${API_BASE}/api/intercom/respond`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          callId: targetCallId,
-          action: 'reject',
-          userId: currentUser?.id
-        })
-      });
-    } catch {}
-    setIncomingCall(null);
-  };
-
-  const endIntercomCall = async (callId) => {
-    const targetCallId = callId || activeCall?.id;
-    try {
-      await fetch(`${API_BASE}/api/intercom/respond`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          callId: targetCallId,
-          action: 'end',
-          userId: currentUser?.id
-        })
-      });
-    } catch {}
-    setActiveCall(null);
-    setIncomingCall(null);
-    playWalkieTalkieChirp();
-  };
-
-  // Loudspeaker & Call Duration Timer
-  const [isLoudspeakerOn, setIsLoudspeakerOn] = useState(false);
-  const toggleLoudspeaker = () => {
-    unlockAudioContext();
-    setIsLoudspeakerOn((prev) => !prev);
-  };
-
-  const [callDurationSeconds, setCallDurationSeconds] = useState(0);
-  useEffect(() => {
-    let timer = null;
-    if (activeCall && activeCall.status === 'connected') {
-      timer = setInterval(() => {
-        setCallDurationSeconds((prev) => prev + 1);
-      }, 1000);
-    } else {
-      setCallDurationSeconds(0);
-    }
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [activeCall?.status]);
-
-  // Fast Call Poller (1.0 second) to ensure instant ringing & call connection across devices
-  useEffect(() => {
-    let isPolling = true;
-
-    const checkActiveCalls = async () => {
-      const activeId = currentUser?.id || 'all';
-      try {
-        const res = await fetch(`${API_BASE}/api/intercom/active-for/${activeId}`);
-        const data = await res.json();
-        if (!isPolling || !data.success) return;
-
-        // 1. Check for incoming ringing call (as receiver)
-        if (data.ringingCall) {
-          setIncomingCall((prev) => {
-            if (!prev || prev.id !== data.ringingCall.id) {
-              playIntercomRingtone();
-              if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-                window.navigator.vibrate([400, 200, 400, 200, 600]);
-              }
-            }
-            return data.ringingCall;
-          });
-        } else {
-          setIncomingCall((prev) => (prev?.status === 'ringing' ? null : prev));
-        }
-
-        // 2. Check for connected call status update
-        if (data.connectedCall) {
-          setActiveCall((prev) => {
-            if (!prev || prev.status !== 'connected' || prev.id !== data.connectedCall.id) {
-              playWalkieTalkieChirp();
-            }
-            return data.connectedCall;
-          });
-          setIncomingCall(null);
-        } else if (activeCall?.status === 'ringing') {
-          // If caller was ringing, but server no longer has active caller ringing call, peer ended/rejected
-          if (!data.callerRingingCall && !data.connectedCall) {
-            setActiveCall(null);
-          }
-        } else if (activeCall && !data.connectedCall && !data.ringingCall) {
-          // Ended by peer
-          setActiveCall(null);
-        }
-      } catch {}
-    };
-
-    checkActiveCalls();
-    const interval = setInterval(checkActiveCalls, 1000);
-    return () => {
-      isPolling = false;
-      clearInterval(interval);
-    };
-  }, [currentUser?.id, activeCall?.id, activeCall?.status, playIntercomRingtone, playWalkieTalkieChirp]);
-
-  // Continuous In-App Vibration & Telephone Ring Bell Loop on Incoming Call (لا ينقطع حتى يتم الرد)
-  useEffect(() => {
-    if (!incomingCall || incomingCall.status !== 'ringing') {
-      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-        try { window.navigator.vibrate(0); } catch {}
-      }
-      return;
-    }
-
-    // Play ringing bell and vibrate immediately
-    playIntercomRingtone();
-    if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-      try { window.navigator.vibrate([1000, 400, 1000, 400, 1000, 400]); } catch {}
-    }
-
-    // Repeat telephone ring sound and heavy vibration every 2.4s non-stop until answered or rejected
-    const callRingInterval = setInterval(() => {
-      playIntercomRingtone();
-      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-        try { window.navigator.vibrate([1000, 400, 1000, 400, 1000, 400]); } catch {}
-      }
-    }, 2400);
-
-    return () => {
-      clearInterval(callRingInterval);
-      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-        try { window.navigator.vibrate(0); } catch {}
-      }
-    };
-  }, [incomingCall?.id, incomingCall?.status, playIntercomRingtone]);
+  // Direct calling has been disabled by user request (Chat and voice notes remain active)
+  const startIntercomCall = async () => ({ success: false, message: 'تم إيقاف ميزة الاتصال المباشر. يرجى استخدام المراسلة وبصمات الصوت 💬' });
+  const startVoiceCall = startIntercomCall;
+  const acceptIntercomCall = async () => ({ success: false });
+  const rejectIntercomCall = async () => ({ success: false });
+  const endIntercomCall = async () => ({ success: false });
+  const toggleLoudspeaker = () => {};
+  const isLoudspeakerOn = false;
+  const callDurationSeconds = 0;
 
   const sendIntercomVoiceBurst = async ({ callId, audioData, duration }) => {
     const activeUser = currentUser || { id: 'guest', name: 'مستخدم' };
@@ -2406,6 +2199,30 @@ export const FinanceProvider = ({ children }) => {
     checkAndRestoreSubscription();
   }, [currentUser?.id]);
 
+  const updateGeneralExpensesName = async (newName) => {
+    if (!newName || !newName.trim()) return { success: false, message: 'يرجى إدخال اسم صحيح' };
+    const clean = newName.trim();
+    setGeneralExpensesName(clean);
+    saveToStorage('bait_finance_general_expenses_name', clean);
+    try {
+      const res = await fetch(`${API_BASE}/api/general-expenses/name`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: clean })
+      });
+      const data = await res.json();
+      return data;
+    } catch {
+      return { success: true, message: 'تم تحديث اسم بطاقة المصاريف العامة محلياً' };
+    }
+  };
+
+  const totalGeneralExpensesSpent = useMemo(() => {
+    return transfers
+      .filter((t) => t.recipientId === 'b-general' || t.isGeneralExpense || t.recipientName === generalExpensesName || t.recipientName === 'مصاريف عامة')
+      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+  }, [transfers, generalExpensesName]);
+
   const updateSettings = (newSettings) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
@@ -2432,6 +2249,9 @@ export const FinanceProvider = ({ children }) => {
         currentMonthTransfers,
         settings,
         updateSettings,
+        generalExpensesName,
+        updateGeneralExpensesName,
+        totalGeneralExpensesSpent,
         loginBrother,
         loginAsGuest,
         logout,

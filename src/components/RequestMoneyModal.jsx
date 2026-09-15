@@ -17,12 +17,13 @@ import {
 } from 'lucide-react';
 
 export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, initialFieldId = null }) => {
-  const { currentUser, brothers, submitMoneyRequest, settings } = useFinance();
+  const { currentUser, brothers, submitMoneyRequest, settings, generalExpensesName } = useFinance();
   const currency = settings.currencySymbol;
 
   const [selectedRequesterId, setSelectedRequesterId] = useState(initialBrotherId || currentUser?.id || '');
   const currentBrother = brothers.find((b) => b.id === selectedRequesterId) || brothers.find((b) => b.id === (initialBrotherId || currentUser?.id)) || currentUser;
 
+  const [isForGeneralExpenses, setIsForGeneralExpenses] = useState(false);
   const [fieldId, setFieldId] = useState(initialFieldId || '');
   const [commodityName, setCommodityName] = useState('');
   const [amount, setAmount] = useState('');
@@ -38,6 +39,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       } else if (currentUser?.id) {
         setSelectedRequesterId(currentUser.id);
       }
+      setIsForGeneralExpenses(false);
       setFieldId(initialFieldId || '');
       setCommodityName('');
       setErrorMsg('');
@@ -54,7 +56,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
 
   const isReasonValid = reason.trim().length >= 2;
   const isAmountValid = Number(amount) > 0;
-  const isCommodityValid = Boolean(commodityName.trim()) || Boolean(fieldId);
+  const isCommodityValid = Boolean(commodityName.trim()) || Boolean(fieldId) || isForGeneralExpenses;
   const canSubmit = isReasonValid && isAmountValid && isCommodityValid && !loading;
 
   const handleSubmit = async (e) => {
@@ -64,7 +66,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       setErrorMsg('يرجى كتابة مبلغ صحيح أكبر من الصفر');
       return;
     }
-    if (!commodityName.trim() && !fieldId) {
+    if (!commodityName.trim() && !fieldId && !isForGeneralExpenses) {
       setErrorMsg('يرجى كتابة اسم السلعة المطلوبة');
       return;
     }
@@ -77,7 +79,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
     setErrorMsg('');
     setSuccessMsg('');
 
-    const finalCommodity = commodityName.trim() || selectedField?.name || reason.trim() || 'مصروف عام';
+    const finalCommodity = commodityName.trim() || selectedField?.name || (isForGeneralExpenses ? (generalExpensesName || 'مصاريف عامة') : 'مصروف عام');
 
     const res = await submitMoneyRequest({
       brotherId: currentBrother?.id || currentUser?.id,
@@ -85,7 +87,10 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       brotherAccountNumber: currentBrother?.accountNumber || currentUser?.accountNumber,
       accountNumber: currentBrother?.accountNumber || currentUser?.accountNumber,
       phone: currentBrother?.phone || currentUser?.phone,
-      bankAccountNumber: currentBrother?.bankAccountNumber || currentUser?.bankAccountNumber,
+      bankAccountNumber: isForGeneralExpenses ? '' : (currentBrother?.bankAccountNumber || currentUser?.bankAccountNumber || ''),
+      isGeneralExpense: Boolean(isForGeneralExpenses),
+      targetType: isForGeneralExpenses ? 'general_expenses' : 'personal',
+      targetName: isForGeneralExpenses ? (generalExpensesName || 'مصاريف عامة') : (currentBrother?.name || currentUser?.name),
       amount: numAmount,
       fieldId: commodityName.trim() ? null : (fieldId || null),
       commodityName: finalCommodity,
@@ -133,9 +138,10 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
         </div>
 
         {/* Form Body */}
+        
         <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-4 text-xs">
           
-          {/* If multiple brothers, allow selecting brother strictly by bank card */}
+          {/* If multiple brothers (admin), allow selecting brother strictly by bank card */}
           {brothers.length > 1 && (
             <div>
               <label className="block font-black text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1">
@@ -160,32 +166,6 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             </div>
           )}
 
-          {/* User Details Preview */}
-          <div className="p-3.5 bg-slate-50 dark:bg-slate-750 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold"
-                style={{ backgroundColor: currentBrother?.avatarColor || '#10b981' }}
-              >
-                {currentBrother?.name?.[0] || 'أ'}
-              </span>
-              <div>
-                <span className="font-black text-slate-900 dark:text-white block">
-                  {currentBrother?.name}
-                </span>
-                <span className="text-[10px] text-slate-400 font-mono" dir="ltr">
-                  بطاقة: {currentBrother?.bankAccountNumber}
-                </span>
-              </div>
-            </div>
-            <div className="text-left">
-              <span className="text-[10px] text-slate-400 block font-bold">رقم البطاقة المصرفية:</span>
-              <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 font-mono" dir="ltr">
-                {currentBrother?.bankAccountNumber}
-              </span>
-            </div>
-          </div>
-
           {/* 1. Amount Input (المبلغ أولاً) */}
           <div className="p-3.5 bg-teal-50/50 dark:bg-teal-950/20 rounded-2xl border border-teal-200 dark:border-teal-800">
             <label className="block font-black text-slate-800 dark:text-slate-200 text-xs mb-1.5 flex items-center gap-1">
@@ -203,12 +183,70 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             />
           </div>
 
-          {/* 2. Commodity / Field Selection (كتابة اسم السلعة) */}
+          {/* 2. Destination Selector (Personal vs General Expenses) مباشرة تحت المبلغ */}
+          <div className="space-y-1.5 p-3.5 bg-slate-50 dark:bg-slate-750 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <label className="block font-black text-slate-800 dark:text-slate-200 text-xs">
+              2. جهة الصرف *:
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setIsForGeneralExpenses(false)}
+                className={`p-2.5 rounded-2xl flex items-center justify-center gap-1.5 font-bold transition border text-xs cursor-pointer ${
+                  !isForGeneralExpenses
+                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500 font-black'
+                    : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-600 dark:text-slate-300'
+                }`}
+              >
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>لحسابي المصرفي 💳</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsForGeneralExpenses(true)}
+                className={`p-2.5 rounded-2xl flex items-center justify-center gap-1.5 font-bold transition border text-xs cursor-pointer ${
+                  isForGeneralExpenses
+                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500 font-black'
+                    : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-600 dark:text-slate-300'
+                }`}
+              >
+                <span>📦 {generalExpensesName || 'مصاريف عامة'}</span>
+              </button>
+            </div>
+            
+            {/* User Details / Destination Preview */}
+            <div className="mt-2 p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-600 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+                  style={{ backgroundColor: isForGeneralExpenses ? '#f59e0b' : (currentBrother?.avatarColor || '#10b981') }}
+                >
+                  {isForGeneralExpenses ? '📦' : (currentBrother?.name?.[0] || 'أ')}
+                </span>
+                <div>
+                  <span className="font-black text-[10px] text-slate-900 dark:text-white block">
+                    {isForGeneralExpenses ? (generalExpensesName || 'مصاريف عامة مشتركة') : currentBrother?.name}
+                  </span>
+                </div>
+              </div>
+              <div className="text-left">
+                <span className="text-[9px] text-slate-400 block font-bold">
+                  {isForGeneralExpenses ? 'التوجيه:' : 'البطاقة:'}
+                </span>
+                <span className={`text-[10px] font-black font-mono ${isForGeneralExpenses ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-700 dark:text-emerald-300'}`} dir="ltr">
+                  {isForGeneralExpenses ? 'للصندوق العام 🌐' : currentBrother?.bankAccountNumber}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Commodity / Field Selection (كتابة اسم السلعة) */}
           <div className="space-y-1.5 p-3.5 bg-slate-50 dark:bg-slate-750 rounded-2xl border border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <label className="block font-black text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-teal-600" />
-                <span>2. اسم السلعة / الغرض *:</span>
+                <span>3. اسم السلعة / الغرض *:</span>
               </label>
               {commodityName && (
                 <span className="text-[10px] text-teal-600 font-bold">
@@ -228,16 +266,16 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             />
           </div>
 
-          {/* 3. Reason / Notes Input (إجباري لتفعيل الإرسال) */}
+          {/* 4. Reason / Notes Input (إجباري لتفعيل الإرسال) */}
           <div>
             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
               <span className="flex items-center gap-1">
                 <FileText className="w-3.5 h-3.5 text-teal-500" />
-                <span>3. ملاحظات وتفاصيل الصرف <span className="text-rose-500 font-black">* (إجباري لتفعيل الزر)</span>:</span>
+                <span>4. ملاحظات وتفاصيل الصرف <span className="text-rose-500 font-black">* (إجباري لتفعيل الزر)</span>:</span>
               </span>
               {!isReasonValid ? (
                 <span className="text-[10px] text-rose-500 font-bold animate-pulse">
-                  🔒 مطلوب لتفعيل زر الإرسال *
+                  🔒 مطلوب *
                 </span>
               ) : (
                 <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-0.5">
@@ -272,7 +310,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             </div>
           )}
 
-          {/* Submit Action (غير فعّال إلى أن يتم إدخال ملاحظات الصرف) */}
+          {/* Submit Action */}
           <div className="pt-2">
             <button
               type="submit"
@@ -288,18 +326,18 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
               ) : !isReasonValid ? (
                 <>
                   <Lock className="w-4 h-4 text-slate-400" />
-                  <span>اكتب ملاحظة الصرف أولاً لتفعيل زر الإرسال 🔒</span>
+                  <span>اكتب سبب الصرف لتفعيل الإرسال 🔒</span>
                 </>
               ) : (
                 <>
                   <Send className="w-4 h-4 -rotate-45" />
-                  <span>إرسال طلب الأموال للأدمن 📤</span>
+                  <span>{isForGeneralExpenses ? 'إرسال طلب مصاريف عامة 📦' : 'إرسال طلب الأموال للأدمن 📤'}</span>
                 </>
               )}
             </button>
             {!isReasonValid && (
               <p className="text-center text-[10px] text-rose-500 dark:text-rose-400 font-bold mt-1.5 animate-pulse">
-                ⚠️ زر الإرسال غير فعّال حالياً — يرجى كتابة تفاصيل وملاحظات الصرف في الحقل أعلاه لتفعيله.
+                ⚠️ يرجى كتابة سبب وتفاصيل الصرف في الحقل أعلاه لتفعيل الزر.
               </p>
             )}
           </div>

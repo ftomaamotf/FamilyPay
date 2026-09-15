@@ -17,10 +17,16 @@ import {
 } from 'lucide-react';
 
 export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null, initialFieldId = null }) => {
-  const { brothers, sendingCard, executeTransfer, settings, isCardFrozen, canCurrentUserSend, currentUser } = useFinance();
+  const { brothers, sendingCard, executeTransfer, settings, isCardFrozen, canCurrentUserSend, currentUser, generalExpensesName } = useFinance();
   const currency = settings.currencySymbol;
 
-  const [recipientId, setRecipientId] = useState(initialRecipientId || '');
+  const getInitialId = (init) => {
+    if (!init) return '';
+    if (typeof init === 'object') return init.id || (init.isGeneralExpense ? 'b-general' : '');
+    return String(init);
+  };
+
+  const [recipientId, setRecipientId] = useState(getInitialId(initialRecipientId));
   const [fieldId, setFieldId] = useState(initialFieldId || '');
   const [commodityName, setCommodityName] = useState('');
   const [amount, setAmount] = useState('');
@@ -30,7 +36,11 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
   const [completedTransfer, setCompletedTransfer] = useState(null);
 
   const isSenderAuthorized = canCurrentUserSend ? canCurrentUserSend() : true;
-  const selectedRecipient = brothers.find((b) => b.id === recipientId) || null;
+  const isGeneralRecipient = recipientId === 'b-general' || (typeof initialRecipientId === 'object' && initialRecipientId?.isGeneralExpense);
+
+  const selectedRecipient = isGeneralRecipient
+    ? { id: 'b-general', name: generalExpensesName || 'مصاريف عامة', bankAccountNumber: '', isGeneralExpense: true }
+    : (brothers.find((b) => b.id === recipientId) || null);
 
   useEffect(() => {
     if (isOpen) {
@@ -38,7 +48,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
       setAmount('');
       setReason('');
       if (initialRecipientId) {
-        setRecipientId(initialRecipientId);
+        setRecipientId(getInitialId(initialRecipientId));
       } else {
         setRecipientId('');
       }
@@ -74,14 +84,14 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
 
   const isRecipientValid = Boolean(recipientId && selectedRecipient);
   const isReasonValid = reason.trim().length >= 2;
-  const isCommodityValid = (commodityName.trim().length >= 2) || Boolean(fieldId);
+  const isCommodityValid = (commodityName.trim().length >= 2) || Boolean(fieldId) || isGeneralRecipient;
   const isAmountValid = Number(amount) > 0;
   const canSubmit = isRecipientValid && isReasonValid && isCommodityValid && isAmountValid && !isCardFrozen && !loading && isSenderAuthorized;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isRecipientValid) {
-      setErrorMsg('⚠️ يرجى اختيار الأخ المستلم أولاً بالضغط على اسمه أو دائرته');
+      setErrorMsg('⚠️ يرجى اختيار المستلم أولاً بالضغط على اسمه أو دائرته');
       return;
     }
     if (isCardFrozen) {
@@ -92,7 +102,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
       setErrorMsg('⚠️ يرجى إدخال مبلغ صحيح أكبر من الصفر');
       return;
     }
-    if (!commodityName.trim() && !fieldId) {
+    if (!commodityName.trim() && !fieldId && !isGeneralRecipient) {
       setErrorMsg('⚠️ يرجى تحديد أو كتابة اسم السلعة المطلوبة');
       return;
     }
@@ -105,11 +115,11 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     setErrorMsg('');
 
     const targetRecipientId = recipientId;
-    const finalCommodity = commodityName.trim() || selectedRecipient?.approvedFields?.find(f => f.id === fieldId)?.name || 'مصروف عام';
-    const targetAccount = selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber;
+    const finalCommodity = commodityName.trim() || selectedRecipient?.approvedFields?.find(f => f.id === fieldId)?.name || (isGeneralRecipient ? (generalExpensesName || 'مصاريف عامة') : 'مصروف عام');
+    const targetAccount = selectedRecipient?.bankAccountNumber || selectedRecipient?.accountNumber || '';
 
-    // Automatically copy recipient card number to clipboard on transfer button click!
-    if (targetAccount) {
+    // Automatically copy recipient card number to clipboard on transfer button click if available
+    if (targetAccount && !isGeneralRecipient) {
       copyAccountNumberSilently(targetAccount);
     }
 
@@ -118,6 +128,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
       recipientAccountNumber: targetAccount,
       brotherAccountNumber: selectedRecipient?.accountNumber,
       bankAccountNumber: selectedRecipient?.bankAccountNumber,
+      isGeneralExpense: Boolean(isGeneralRecipient),
       amount: Number(amount),
       fieldId: commodityName.trim() ? null : (fieldId || null),
       commodityName: finalCommodity,
@@ -127,14 +138,13 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
     setLoading(false);
 
     if (res.success) {
-      // Re-copy to ensure clipboard has it firmly
-      if (targetAccount) {
+      if (targetAccount && !isGeneralRecipient) {
         copyAccountNumberSilently(targetAccount);
       }
 
       setCompletedTransfer(res.transfer || {
-        recipientName: selectedRecipient?.name || 'الأخ المستلم',
-        recipientAccountNumber: targetAccount,
+        recipientName: selectedRecipient?.name || 'المستلم',
+        recipientAccountNumber: targetAccount || 'مصاريف عامة مشتركة 🌐',
         amount: Number(amount),
         reason: reason.trim(),
         date: new Date().toISOString().split('T')[0],
@@ -255,6 +265,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
           </div>
         ) : (
           /* Main Form */
+          
           <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-4 flex-1">
             
             {/* Sending Card Live Balance */}
@@ -271,12 +282,49 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               </div>
             </div>
 
-            {/* 1. Recipient Brother Selector */}
+            {/* 1. Amount Input (المبلغ أولاً) */}
+            <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-300 dark:border-emerald-700">
+              <label className="block text-xs font-black text-emerald-900 dark:text-emerald-200 mb-1.5 flex items-center justify-between">
+                <span>1. المبلغ المراد تحويله ({currency}) *:</span>
+                <span className="text-[10px] text-emerald-600 font-bold">المبلغ المطلوب بدقة</span>
+              </label>
+              <input
+                type="number"
+                step="any"
+                required
+                min="1"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="اكتب المبلغ هنا (مثال: 70000)"
+                className="w-full text-2xl font-black bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-2xl px-4 py-3 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 text-center font-mono shadow-xs"
+              />
+            </div>
+
+            {/* 2. Recipient Selector */}
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                1. اختر الأخ المستلم (يتم جلب حسابه تلقائياً):
+                2. اختر المستلم أو المصاريف العامة *:
               </label>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2">
+                {/* General Expenses Option */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRecipientId('b-general');
+                    setFieldId('');
+                    setCommodityName('');
+                  }}
+                  className={`col-span-3 sm:col-span-4 md:col-span-3 p-3 rounded-2xl flex items-center justify-center gap-2 transition border text-xs cursor-pointer shadow-sm ${
+                    recipientId === 'b-general'
+                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500 font-black scale-[1.02]'
+                      : 'border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold'
+                  }`}
+                >
+                  <span className="text-lg">📦</span>
+                  <span className="text-xs sm:text-sm font-black">{generalExpensesName || 'مصاريف عامة للصندوق'}</span>
+                </button>
+
+                {/* Personal Users Buttons */}
                 {brothers.map((b) => {
                   const isSelected = recipientId === b.id;
                   return (
@@ -288,9 +336,9 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                         setFieldId('');
                         setCommodityName('');
                       }}
-                      className={`p-2.5 rounded-2xl flex flex-col items-center gap-1 transition border text-xs font-bold ${
+                      className={`p-2.5 rounded-2xl flex flex-col items-center justify-center gap-1 transition border text-xs font-bold ${
                         isSelected
-                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500'
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500 scale-[1.02]'
                           : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-700 dark:text-slate-300'
                       }`}
                     >
@@ -301,67 +349,53 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                         {b.name[0]}
                       </span>
                       <span className="truncate font-black">{b.name}</span>
-                      <span className="text-[10px] text-slate-400 font-mono" dir="ltr">{b.bankAccountNumber}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* 2. Recipient Pre-Saved Bank Account Display */}
+            {/* Recipient Preview */}
             {selectedRecipient && (
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
                   <span className="flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>رقم البطاقة المصرفية للأخ ({selectedRecipient.name}):</span>
+                    <span>{selectedRecipient.isGeneralExpense ? 'جهة التحويل:' : `رقم البطاقة المصرفية للأخ (${selectedRecipient.name}):`}</span>
                   </span>
-                  <span className="text-emerald-600 font-bold">بطاقة المستلم</span>
+                  <span className={selectedRecipient.isGeneralExpense ? "text-amber-600 font-bold" : "text-emerald-600 font-bold"}>
+                    {selectedRecipient.isGeneralExpense ? "مصاريف عامة 🌐" : "بطاقة المستلم"}
+                  </span>
                 </div>
 
                 <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs">
-                  <strong className="text-emerald-700 dark:text-emerald-300 text-sm sm:text-base font-black tracking-wider" dir="ltr">
-                    {selectedRecipient.bankAccountNumber}
-                  </strong>
-                  <span className="text-[10px] text-slate-400 font-bold font-sans">
-                    ⚡ سيتم نسخ الرقم تلقائياً عند الضغط على زر التحويل
-                  </span>
+                  {selectedRecipient.isGeneralExpense ? (
+                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-sans font-bold">
+                      <span>📦 مصاريف عامة للصندوق (بدون رقم بطاقة ⚡)</span>
+                    </div>
+                  ) : (
+                    <>
+                      <strong className="text-emerald-700 dark:text-emerald-300 text-sm sm:text-base font-black tracking-wider" dir="ltr">
+                        {selectedRecipient.bankAccountNumber}
+                      </strong>
+                      <span className="text-[10px] text-slate-400 font-bold font-sans">
+                        ⚡ سيتم نسخ الرقم تلقائياً 
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             )}
-
-            {/* 3. Amount Input (المبلغ) */}
-            <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-300 dark:border-emerald-700">
-              <label className="block text-xs font-black text-emerald-900 dark:text-emerald-200 mb-1.5 flex items-center justify-between">
-                <span>المبلغ المراد تحويله ({currency}) *:</span>
-                <span className="text-[10px] text-emerald-600 font-bold">المبلغ المطلوب بدقة</span>
-              </label>
-              <input
-                type="number"
-                step="any"
-                required
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="اكتب المبلغ هنا (مثال: 70000)"
-                className="w-full text-2xl font-black bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-2xl px-4 py-3 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 text-center font-mono shadow-xs"
-              />
-            </div>
 
             {/* 3. Commodity / Item Entry (كتابة اسم السلعة) */}
             <div className="space-y-1.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-black text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>اسم السلعة / الغرض *:</span>
+                  <span>3. اسم السلعة / الغرض *:</span>
                 </label>
-                {commodityName && (
-                  <span className="text-[10px] text-emerald-600 font-bold">
-                    تُحسب في دائرته
-                  </span>
-                )}
               </div>
 
-              {/* Custom Commodity Name Input */}
               <input
                 type="text"
                 required
@@ -375,16 +409,16 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
               />
             </div>
 
-            {/* 5. Notes / Reason (ملاحظة الصرف) */}
+            {/* 4. Notes / Reason (ملاحظة الصرف) */}
             <div className="p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
                   <AlertCircle className="w-4 h-4 text-amber-600" />
-                  <span>ملاحظة وتفاصيل سبب الصرف <span className="text-rose-500 font-black">* (إجباري لإتمام الإرسال)</span>:</span>
+                  <span>4. ملاحظة وتفاصيل سبب الصرف <span className="text-rose-500 font-black">* (إجباري)</span>:</span>
                 </label>
                 {!isReasonValid && (
                   <span className="text-[10px] text-rose-600 font-bold animate-pulse">
-                    مطلوب قبل الإرسال *
+                    مطلوب *
                   </span>
                 )}
               </div>
@@ -394,7 +428,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                 required
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="اكتب ملاحظة توضح سبب وتفاصيل الصرف..."
+                placeholder="اكتب ملاحظة توضح سبب وتفاصيل الصرف بدقة..."
                 className="w-full bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-amber-500 shadow-xs"
               />
             </div>
@@ -409,26 +443,33 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={!canSubmit}
-                className={`w-full py-3.5 rounded-2xl font-black text-xs sm:text-sm shadow-lg flex items-center justify-center gap-2 transition active:scale-95 ${
-                  canSubmit
-                    ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 text-white shadow-emerald-600/30 cursor-pointer'
-                    : 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
+                disabled={loading || !isAmountValid || !isReasonValid || !recipientId}
+                className={`w-full py-4 rounded-2xl text-sm font-black transition shadow-xl flex items-center justify-center gap-2 ${
+                  (loading || !isAmountValid || !isReasonValid || !recipientId)
+                    ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed shadow-none border border-slate-300 dark:border-slate-600'
+                    : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-600/30 active:scale-95 cursor-pointer'
                 }`}
               >
                 {loading ? (
-                  <span>جاري تنفيذ التحويل ونسخ رقم البطاقة...</span>
+                  <span>جاري التنفيذ والتحويل...</span>
+                ) : !isReasonValid ? (
+                  <>
+                    <Lock className="w-4 h-4 text-white/50" />
+                    <span>اكتب سبب الصرف لتفعيل التحويل</span>
+                  </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4 -rotate-45" />
-                    <span>
-                      تأكيد وتحويل الأموال فوراً 🚀
-                    </span>
+                    <Send className="w-5 h-5 -rotate-45" />
+                    <span>تأكيد وتحويل الأموال فوراً 💸</span>
                   </>
                 )}
               </button>
+              {!isReasonValid && (
+                <p className="text-center text-[10px] text-rose-500 dark:text-rose-400 font-bold mt-1.5 animate-pulse">
+                  ⚠️ يرجى كتابة تفاصيل سبب الصرف في الحقل أعلاه لتفعيل زر التحويل.
+                </p>
+              )}
             </div>
-
           </form>
         )}
 

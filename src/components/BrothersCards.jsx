@@ -20,11 +20,6 @@ import {
   Edit3,
   MessageSquare,
   Radio,
-  Phone,
-  PhoneOff,
-  Volume1,
-  Volume2,
-  VolumeX,
   MessageCircle,
   X,
   Search
@@ -202,15 +197,9 @@ export const BrothersCards = ({
     canCurrentUserSend,
     updateBrotherFields,
     deleteBrother,
-    startVoiceCall,
-    acceptVoiceCall,
-    rejectVoiceCall,
-    endVoiceCall,
-    activeCall,
-    incomingCall,
-    isLoudspeakerOn,
-    toggleLoudspeaker,
-    callDurationSeconds
+    generalExpensesName,
+    updateGeneralExpensesName,
+    totalGeneralExpensesSpent
   } = useFinance();
   const [copiedId, setCopiedId] = useState(null);
   const [copiedToast, setCopiedToast] = useState(null);
@@ -221,8 +210,18 @@ export const BrothersCards = ({
   const [inspectedCommodity, setInspectedCommodity] = useState(null);
   const [adjustingCommodity, setAdjustingCommodity] = useState(null);
   const [circleSearchNum, setCircleSearchNum] = useState('');
+  const [genNameInput, setGenNameInput] = useState('');
+  const [genNameMsg, setGenNameMsg] = useState('');
+  const [genNameLoading, setGenNameLoading] = useState(false);
   const pressTimerRef = React.useRef(null);
   const currency = settings.currencySymbol;
+
+  // Initialize name input when general expenses name changes
+  React.useEffect(() => {
+    if (generalExpensesName) {
+      setGenNameInput(generalExpensesName);
+    }
+  }, [generalExpensesName]);
 
   const handleLaunchCircleSearch = (e) => {
     if (e) e.preventDefault();
@@ -467,6 +466,52 @@ export const BrothersCards = ({
               </div>
             </div>
 
+            {/* 📦 1.5 GENERAL EXPENSES CIRCLE (دائرة مصاريف عامة بعد دائرة البحث مباشرة) */}
+            <div className="flex flex-col items-center shrink-0 w-auto lg:w-full">
+              <button
+                type="button"
+                onClick={() => setSelectedBrotherId('b-general')}
+                title={`اضغط لعرض ${generalExpensesName || 'المصاريف العامة'} وسجل المصروفات المشتركة`}
+                className={`flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full cursor-pointer ${
+                  selectedBrotherId === 'b-general' ? 'scale-105' : 'opacity-85 hover:opacity-100 hover:scale-102'
+                }`}
+              >
+                {/* Outer Circular Ring with Amber / Orange Radiant Theme */}
+                <div
+                  className={`relative p-1 rounded-full ring-2 ring-amber-500 group-hover:ring-amber-400 ring-offset-2 ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-amber-500/25 ${
+                    selectedBrotherId === 'b-general' ? 'ring-4 ring-amber-400 shadow-amber-500/40' : ''
+                  }`}
+                >
+                  {/* The Inner Avatar Circle */}
+                  <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex flex-col items-center justify-center bg-gradient-to-tr from-amber-600 via-orange-500 to-amber-400 text-slate-950 shadow-inner relative overflow-hidden">
+                    <span className="text-2xl sm:text-3xl drop-shadow select-none">📦</span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/30 pointer-events-none" />
+                  </div>
+
+                  {/* Top Badge */}
+                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-amber-400 flex items-center justify-center shadow-md border border-amber-400 text-[10px] font-bold">
+                    🌐
+                  </div>
+                </div>
+
+                {/* Circle Name Label */}
+                <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-amber-300 group-hover:text-amber-200">
+                  {generalExpensesName || 'مصاريف عامة'}
+                </span>
+
+                {/* Total Spent Pill Badge under the circle */}
+                <div
+                  className={`mt-1 px-3 py-1 rounded-full text-[11px] font-black font-mono shadow-sm flex items-center gap-1 transition-all ${
+                    selectedBrotherId === 'b-general'
+                      ? 'bg-amber-400 text-slate-950 font-bold scale-105 shadow-md shadow-amber-500/30'
+                      : 'bg-slate-800 text-amber-400 border border-slate-700 group-hover:bg-slate-700'
+                  }`}
+                >
+                  <span>{formatMoney(totalGeneralExpensesSpent, currency)}</span>
+                </div>
+              </button>
+            </div>
+
             {/* 👥 2. USER CIRCLES WITH NUMBER IN CENTER (دوائر المستخدمين مع الرقم في الوسط) */}
             {sortedBrothers.map((b, idx) => {
               const isSenderAdmin = b.id === activeAdminId;
@@ -689,12 +734,216 @@ export const BrothersCards = ({
           </div>
         </div>
 
-        {/* 2. LEFT AREA: The Expanded Details Card for Selected Brother */}
+        {/* 2. LEFT AREA: The Expanded Details Card for Selected Brother OR General Expenses */}
         <div className="flex-1 w-full min-w-0">
-          {selectedBrother && (() => {
-            const selectedPalette = getCirclePalette(selectedBrother, 0, sortedBrothers);
-            return (
-              <div className={`p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-800 border-2 ${selectedPalette.border} shadow-2xl space-y-6 animate-fadeIn`}>
+          {selectedBrotherId === 'b-general' ? (
+            /* 📦 SPECIAL EXPANDED CARD FOR GENERAL EXPENSES (بطاقة المصاريف العامة للصندوق) */
+            <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-800 border-2 border-amber-500/50 shadow-2xl space-y-6 animate-fadeIn">
+              
+              {/* Header Banner */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-slate-950 text-2xl font-black shadow-md shrink-0 ring-4 ring-amber-500/30 bg-gradient-to-tr from-amber-600 via-orange-500 to-amber-400">
+                    📦
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-black text-xl text-slate-800 dark:text-white">
+                        {generalExpensesName || 'مصاريف عامة'}
+                      </h4>
+                      <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40 flex items-center gap-1">
+                        🌐 مصاريف عامة مشتركة
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 font-bold mt-1">
+                      مصاريف الصندوق المشتركة (لا يوجد فيها رقم حساب بنكي) • يتم الصرف إليها بذكر السبب والملاحظة ⚡
+                    </p>
+                  </div>
+                </div>
+
+                {/* Quick Action Button to Transfer to General Expenses */}
+                {canCurrentUserSend && canCurrentUserSend() && onOpenTransferModal && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onOpenTransferModal({
+                        id: 'b-general',
+                        name: generalExpensesName || 'مصاريف عامة',
+                        bankAccountNumber: '',
+                        isGeneralExpense: true
+                      })
+                    }
+                    className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs rounded-xl shadow-lg transition active:scale-95 flex items-center gap-1.5 shrink-0 self-start sm:self-auto cursor-pointer"
+                  >
+                    <Send className="w-4 h-4 -rotate-45" />
+                    <span>تحويل وصرف للمصاريف العامة 💸</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Total General Expenses Stats Box */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-950/40 to-slate-900 border border-amber-500/30">
+                  <span className="text-xs text-amber-300/80 font-bold block mb-1">إجمالي ما تم صرفه للمصاريف العامة:</span>
+                  <span className="text-2xl font-black font-mono text-amber-400">
+                    {formatMoney(totalGeneralExpensesSpent, currency)}
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs text-slate-400 font-bold block mb-0.5">عدد العمليات المسجلة:</span>
+                    <span className="text-xl font-black font-mono text-slate-800 dark:text-white">
+                      {transfers.filter((t) => t.recipientId === 'b-general' || t.isGeneralExpense || t.recipientName === generalExpensesName || t.recipientName === 'مصاريف عامة').length} عمليات
+                    </span>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-lg">
+                    🧾
+                  </div>
+                </div>
+              </div>
+
+              {/* Itemized List of General Expenses Transfers */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <span>سجل عمليات المصاريف العامة ({generalExpensesName || 'مصاريف عامة'}):</span>
+                  </span>
+                </div>
+
+                {(() => {
+                  const genTransfers = transfers.filter(
+                    (t) => t.recipientId === 'b-general' || t.isGeneralExpense || t.recipientName === generalExpensesName || t.recipientName === 'مصاريف عامة'
+                  );
+
+                  if (genTransfers.length === 0) {
+                    return (
+                      <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-2">
+                        <span className="text-3xl block">📦</span>
+                        <p className="text-xs font-bold text-slate-400">
+                          لا توجد عمليات صرف مسجلة في المصاريف العامة حتى الآن
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                          يمكنك تحويل مبالغ إليها مباشرة عبر زر (تحويل وصرف للمصاريف العامة) مع كتابة الملاحظة وسبب الصرف.
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                      {genTransfers.map((t, idx) => (
+                        <div
+                          key={t.id || idx}
+                          className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 flex flex-col gap-3 shadow-xs hover:border-amber-500/40 transition relative"
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-black px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                {t.fieldName || 'مصروف عام'}
+                              </span>
+                              <span className="text-xs text-slate-400 font-mono">
+                                {formatArabicDate(t.date || t.timestamp)}
+                              </span>
+                            </div>
+                            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-100 dark:border-slate-700 mt-2">
+                              {t.reason || 'بدون تفاصيل'}
+                            </p>
+                            {(t.requestedBy || t.senderName) && (
+                              <p className="text-[11px] text-teal-600 dark:text-teal-400 font-bold mt-1">
+                                👤 {t.requestedBy ? `تم الصرف بطلب من المستخدم: ${t.requestedBy}` : `تم الصرف بواسطة: ${t.senderName}`}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
+                            <span className="text-base font-black font-mono text-amber-600 dark:text-amber-400">
+                              {formatMoney(t.amount, currency)}
+                            </span>
+                            {isCurrentAdmin && (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingTransfer(t)}
+                                  title="تعديل هذا الطلب"
+                                  className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-emerald-500 transition cursor-pointer"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => deleteTransfer(t.id)}
+                                  title="حذف هذا الطلب واسترجاع المبلغ"
+                                  className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition cursor-pointer"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* ✍️ EDIT CARD NAME SECTION AT THE BOTTOM (تعديل الاسم في البطاقة تحت) */}
+              {isCurrentAdmin && (
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Edit2 className="w-3.5 h-3.5 text-amber-500" />
+                      <span>تعديل اسم بطاقة ودائرة المصاريف العامة (خاص بالأدمن) ✍️:</span>
+                    </span>
+                    <span className="text-[10px] text-slate-400">يتم التحديث لجميع الأجهزة</span>
+                  </div>
+
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      if (!genNameInput.trim()) return;
+                      setGenNameLoading(true);
+                      setGenNameMsg('');
+                      const res = await updateGeneralExpensesName(genNameInput.trim());
+                      setGenNameLoading(false);
+                      setGenNameMsg(res?.message || 'تم تحديث الاسم بنجاح ✅');
+                      setTimeout(() => setGenNameMsg(''), 3000);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <input
+                      type="text"
+                      required
+                      value={genNameInput}
+                      onChange={(e) => setGenNameInput(e.target.value)}
+                      placeholder="اكتب اسم البطاقة (مثال: مصاريف عامة، احتياجات مشتركة...)"
+                      className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                    <button
+                      type="submit"
+                      disabled={genNameLoading || !genNameInput.trim()}
+                      className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs rounded-xl shadow-md transition active:scale-95 disabled:opacity-50 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>{genNameLoading ? 'جاري الحفظ...' : 'حفظ الاسم'}</span>
+                    </button>
+                  </form>
+                  {genNameMsg && (
+                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                      {genNameMsg}
+                    </p>
+                  )}
+                </div>
+              )}
+
+            </div>
+          ) : (
+            selectedBrother && (() => {
+              const selectedPalette = getCirclePalette(selectedBrother, 0, sortedBrothers);
+              return (
+                <div className={`p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-800 border-2 ${selectedPalette.border} shadow-2xl space-y-6 animate-fadeIn`}>
                 
                 {/* Selected Brother Clean Header Banner */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-700">
@@ -910,171 +1159,21 @@ export const BrothersCards = ({
             </div>
           </div>
 
-          {/* Action Buttons: Unified Split (Half Chat / Half Live Voice Call with Loudspeaker) + Edit Commodities */}
+          {/* Action Buttons: Chat & Messages & Voice Notes + Edit Commodities */}
           <div className="pt-2 flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
             
-            {/* Unified Split Control: Half Chat 💬 + Half Direct Call 📞 (بدون نافذة منبثقة) */}
-            <div className="flex-1 flex flex-col sm:flex-row items-stretch gap-2 min-w-0">
-              
-              {/* 1. HALF 1: Chat Button */}
-              {onOpenChat && (
-                <button
-                  type="button"
-                  onClick={() => onOpenChat(selectedBrother.id)}
-                  className="flex-1 py-3 px-3.5 bg-gradient-to-r from-teal-700 via-emerald-700 to-teal-600 hover:from-teal-600 hover:to-emerald-600 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition active:scale-98 border border-emerald-500/30"
-                  title="فتح المحادثة النصية وبصمات الصوت 💬"
-                >
-                  <MessageSquare className="w-4 h-4 shrink-0" />
-                  <span className="truncate">محادثة وتواصل 💬</span>
-                </button>
-              )}
-
-              {/* 2. HALF 2: In-App Voice Call Button (بدون نافذة منبثقة + يصبح أحمر عند الرد + زر السماعة الخارجية) */}
-              {(() => {
-                const isMe = selectedBrother?.id === currentUser?.id;
-                const isThisIncoming = Boolean(incomingCall && incomingCall.callerId === selectedBrother.id);
-                const isConnected = activeCall && activeCall.status === 'connected';
-                const isRinging = activeCall && activeCall.status === 'ringing';
-
-                const formatCallTime = (totalSec) => {
-                  const mins = Math.floor(totalSec / 60);
-                  const secs = totalSec % 60;
-                  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-                };
-
-                // Case 1: Incoming Call (مكالمة واردة)
-                if (isThisIncoming || (incomingCall && incomingCall.receiverId === currentUser?.id)) {
-                  return (
-                    <div className="flex-1 py-1.5 px-2.5 bg-gradient-to-r from-amber-600 to-rose-600 rounded-2xl shadow-lg shadow-rose-600/30 flex items-center justify-between gap-2 border-2 border-rose-400 animate-pulse">
-                      <div className="flex items-center gap-1.5 min-w-0 text-white text-xs font-black truncate">
-                        <Phone className="w-4 h-4 animate-bounce shrink-0" />
-                        <span className="truncate">مكالمة واردة 📲</span>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => acceptVoiceCall(incomingCall.id)}
-                          className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 rounded-xl text-xs font-black shadow transition active:scale-95 flex items-center gap-1"
-                        >
-                          <Phone className="w-3.5 h-3.5" />
-                          <span>رد</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => rejectVoiceCall(incomingCall.id)}
-                          className="px-2.5 py-1.5 bg-rose-950 hover:bg-rose-900 text-white rounded-xl text-xs font-black shadow transition active:scale-95 flex items-center gap-1"
-                        >
-                          <PhoneOff className="w-3.5 h-3.5" />
-                          <span>رفض</span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                }
-
-                // Case 2: Call is CONNECTED -> Turns RED (يصبح الزر لونه أحمر + قطع الاتصال + زر السماعة الخارجية)
-                if (isConnected) {
-                  return (
-                    <div className="flex-1 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl shadow-xl shadow-rose-600/40 flex items-center justify-between gap-2 border-2 border-rose-300 animate-pulse transition">
-                      
-                      {/* Live Call Duration & Status */}
-                      <div className="flex items-center gap-1.5 min-w-0 font-mono font-black text-xs sm:text-sm">
-                        <div className="w-2.5 h-2.5 rounded-full bg-white animate-ping shrink-0" />
-                        <span className="truncate">متصل ({formatCallTime(callDurationSeconds)}) 🔴</span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {/* Loudspeaker Button (وضع زر لفتح السماعة الخارجية داخل الزر) */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleLoudspeaker();
-                          }}
-                          className={`p-1.5 rounded-xl border transition active:scale-90 flex items-center justify-center ${
-                            isLoudspeakerOn
-                              ? 'bg-white text-rose-700 border-white shadow-md'
-                              : 'bg-rose-800/90 hover:bg-rose-900 text-white border-rose-400'
-                          }`}
-                          title={isLoudspeakerOn ? 'السماعة الخارجية: مفعّلة 🔊 (اضغط لإيقافها)' : 'تشغيل السماعة الخارجية 🔈'}
-                        >
-                          {isLoudspeakerOn ? (
-                            <Volume2 className="w-4 h-4 fill-rose-600" />
-                          ) : (
-                            <Volume1 className="w-4 h-4" />
-                          )}
-                        </button>
-
-                        {/* Cut / Hangup Call Button (يقطع الاتصال ويرجع الزر للونه الأول) */}
-                        <button
-                          type="button"
-                          onClick={() => endVoiceCall()}
-                          className="px-3 py-1.5 bg-slate-950 hover:bg-rose-950 text-rose-200 border border-rose-400/60 rounded-xl text-xs font-black transition active:scale-95 flex items-center gap-1 shrink-0"
-                          title="قطع وإنهاء المكالمة"
-                        >
-                          <PhoneOff className="w-3.5 h-3.5 text-rose-400" />
-                          <span>قطع ❌</span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                }
-
-                // Case 3: Ringing / Dialing (جاري الاتصال والرنين)
-                if (isRinging) {
-                  return (
-                    <div className="flex-1 py-2 px-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-2xl shadow-lg shadow-amber-600/30 flex items-center justify-between gap-2 border border-amber-400 animate-pulse">
-                      <div className="flex items-center gap-1.5 min-w-0 text-xs font-black truncate">
-                        <Phone className="w-4 h-4 animate-bounce shrink-0" />
-                        <span className="truncate">جاري الاتصال... 🔔</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => endVoiceCall()}
-                        className="px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-black shadow transition active:scale-95 flex items-center gap-1 shrink-0"
-                      >
-                        <PhoneOff className="w-3.5 h-3.5" />
-                        <span>إلغاء</span>
-                      </button>
-                    </div>
-                  );
-                }
-
-                // Case 4: Idle (اللون الأخضر المبدئي للاتصال الصوتي المباشر)
-                if (isMe) {
-                  return (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const other = sortedBrothers.find((b) => b.id !== currentUser?.id);
-                        if (other) {
-                          setSelectedBrotherId(other.id);
-                          startVoiceCall(other.id);
-                        }
-                      }}
-                      className="flex-1 py-3 px-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition active:scale-98 border border-emerald-400/30"
-                      title="اختر مستخدماً للاتصال به"
-                    >
-                      <Phone className="w-4 h-4 shrink-0" />
-                      <span className="truncate">اتصال بمستخدم 📞</span>
-                    </button>
-                  );
-                }
-
-                return (
-                  <button
-                    type="button"
-                    onClick={() => startVoiceCall(selectedBrother.id)}
-                    className="flex-1 py-3 px-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition active:scale-95 border border-emerald-400/40"
-                    title={`اتصال صوتي مباشر مع ${selectedBrother.name}`}
-                  >
-                    <Phone className="w-4 h-4 shrink-0" />
-                    <span className="truncate">اتصال بـ ({selectedBrother.name}) 📞</span>
-                  </button>
-                );
-              })()}
-
-            </div>
+            {/* Chat & Voice Notes Button */}
+            {onOpenChat && (
+              <button
+                type="button"
+                onClick={() => onOpenChat(selectedBrother.id)}
+                className="flex-1 py-3 px-3.5 bg-gradient-to-r from-teal-700 via-emerald-700 to-teal-600 hover:from-teal-600 hover:to-emerald-600 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition active:scale-98 border border-emerald-500/30"
+                title="فتح المحادثة النصية وبصمات الصوت 💬"
+              >
+                <MessageSquare className="w-4 h-4 shrink-0" />
+                <span className="truncate">المحادثة والرسائل وبصمات الصوت 💬</span>
+              </button>
+            )}
 
             {/* Admin Commodity Edit Button */}
             {isCurrentAdmin && (
@@ -1089,7 +1188,7 @@ export const BrothersCards = ({
           </div>
 
         </div>
-      ); })()}
+      ); })())}
 
       </div>
 
