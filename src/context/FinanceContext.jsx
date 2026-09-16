@@ -12,6 +12,16 @@ import { STORAGE_KEYS, loadFromStorage, saveToStorage, exportAllDataBackup, read
 
 const FinanceContext = createContext(null);
 
+const REMOVED_LOCAL_BROTHER_IDS = ['b-3', 'b-4', 'b-5', 'b-6', 'b-1787553982824'];
+const REMOVED_LOCAL_BROTHER_NAMES = ['يوسف', 'خالد', 'أحمد', 'علي فاضل', 'حسن عجمي'];
+
+const normalizeBrotherName = (name) => String(name || '').replace(/\s+/g, ' ').trim();
+const isRemovedLocalBrother = (brother) => (
+  !brother ||
+  REMOVED_LOCAL_BROTHER_IDS.includes(brother.id) ||
+  REMOVED_LOCAL_BROTHER_NAMES.includes(normalizeBrotherName(brother.name))
+);
+
 const API_BASE = (() => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
@@ -25,9 +35,10 @@ const API_BASE = (() => {
 
 export const FinanceProvider = ({ children }) => {
   // Current Logged-In Brother / User State (null by default to show Login Screen)
-  const [currentUser, setCurrentUser] = useState(() =>
-    loadFromStorage('bait_finance_current_user', null)
-  );
+  const [currentUser, setCurrentUser] = useState(() => {
+    const storedUser = loadFromStorage('bait_finance_current_user', null);
+    return isRemovedLocalBrother(storedUser) ? null : storedUser;
+  });
 
   // Active Admin Brother ID (Default: Abdullah Ajmi)
   const [activeAdminId, setActiveAdminId] = useState('b-2');
@@ -98,6 +109,12 @@ export const FinanceProvider = ({ children }) => {
         if (data.state.generalExpensesName) {
           setGeneralExpensesName(data.state.generalExpensesName);
           saveToStorage('bait_finance_general_expenses_name', data.state.generalExpensesName);
+        }
+        if (typeof data.state.monthlyFundAmount !== 'undefined') {
+          setSettings((prev) => ({
+            ...prev,
+            monthlyFundAmount: Number(data.state.monthlyFundAmount) || 0
+          }));
         }
       }
     } catch {
@@ -200,7 +217,7 @@ export const FinanceProvider = ({ children }) => {
       }
     ]);
     // Filter out any legacy dummy sample names or deleted accounts
-    return (raw || []).filter((b) => b && !['b-3', 'b-4', 'b-5', 'b-6', 'b-1787553982824'].includes(b.id) && !['يوسف', 'خالد', 'أحمد', 'علي فاضل'].includes(b.name));
+    return (raw || []).filter((b) => !isRemovedLocalBrother(b));
   });
 
   // Transfers Log (Real transfers only, no dummy items)
@@ -394,8 +411,7 @@ export const FinanceProvider = ({ children }) => {
       const missingToSync = [];
       (prevLocal || []).forEach((lb) => {
         const key = lb.id || lb.accountNumber;
-        const isDummy = ['b-3', 'b-4', 'b-5', 'b-6'].includes(lb.id) || ['يوسف', 'خالد', 'أحمد'].includes(lb.name);
-        if (!isDummy && !mergedMap.has(key) && lb.name) {
+        if (!isRemovedLocalBrother(lb) && !mergedMap.has(key) && lb.name) {
           mergedMap.set(key, lb);
           missingToSync.push(lb);
           hasMissing = true;
@@ -427,6 +443,12 @@ export const FinanceProvider = ({ children }) => {
           if (data.state.security?.fundPin) setFundPin(data.state.security.fundPin);
           if (data.state.security?.transferPermissions) setTransferPermissions(data.state.security.transferPermissions);
           if (data.state.fundRequests) setFundRequests(data.state.fundRequests);
+          if (typeof data.state.monthlyFundAmount !== 'undefined') {
+            setSettings((prev) => ({
+              ...prev,
+              monthlyFundAmount: Number(data.state.monthlyFundAmount) || 0
+            }));
+          }
           if (typeof data.state.security?.isBalanceHiddenByAdmin === 'boolean') {
             setIsBalanceHiddenByAdmin(data.state.security.isBalanceHiddenByAdmin);
           }
@@ -733,7 +755,7 @@ export const FinanceProvider = ({ children }) => {
   }, [bankCards]);
 
   // Monthly Spending & Total Fund Metrics
-  const monthlyFundTotal = 30000;
+  const monthlyFundTotal = Number(settings.monthlyFundAmount) || 0;
   const currentMonthTransfers = useMemo(() => {
     const now = new Date();
     const currYear = Number(settings.selectedYear);
