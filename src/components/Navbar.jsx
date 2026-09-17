@@ -162,52 +162,14 @@ export const Navbar = ({
               </div>
             )}
 
-            {/* Logout Button */}
-            {currentUser && (
+            {isCurrentAdmin && pendingRequestsCount > 0 && onOpenPendingRequests && (
               <button
-                type="button"
-                onClick={() => {
-                  if (window.confirm('هل تريد تسجيل الخروج والعودة للشاشة الترحيبية؟')) {
-                    if (onLogout) onLogout();
-                  }
-                }}
-                title="تسجيل الخروج والعودة لشاشة الترحيب والتسجيل 🚪"
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-black bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition active:scale-95 shrink-0"
+                onClick={onOpenPendingRequests}
+                className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-1.5 rounded-xl text-xs font-black shadow transition active:scale-95 animate-pulse"
               >
-                <LogOut className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">خروج 🚪</span>
+                <Inbox className="w-3.5 h-3.5" />
+                <span>طلبات معلقة ({pendingRequestsCount})</span>
               </button>
-            )}
-
-            {isCurrentAdmin && (
-              <>
-                {/* Guest Approvals Badge Button for Admin */}
-                {onOpenGuestApprovals && (
-                  <button
-                    onClick={onOpenGuestApprovals}
-                    title="طلبات انضمام الضيوف (الموافقة بكلمة المرور)"
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black shadow-sm transition active:scale-95 ${
-                      guestRequests && guestRequests.length > 0
-                        ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 ring-2 ring-amber-300 animate-bounce'
-                        : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-600 dark:text-amber-300 border border-amber-500/40'
-                    }`}
-                  >
-                    <UserCheck className="w-3.5 h-3.5" />
-                    <span>انضمام الضيوف {guestRequests && guestRequests.length > 0 ? `(${guestRequests.length})` : ''}</span>
-                  </button>
-                )}
-
-                {/* Pending Money Requests Badge Button for Admin */}
-                {pendingRequestsCount > 0 && onOpenPendingRequests && (
-                  <button
-                    onClick={onOpenPendingRequests}
-                    className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-1.5 rounded-xl text-xs font-black shadow transition active:scale-95 animate-pulse"
-                  >
-                    <Inbox className="w-3.5 h-3.5" />
-                    <span>طلبات معلقة ({pendingRequestsCount})</span>
-                  </button>
-                )}
-              </>
             )}
 
           </div>
