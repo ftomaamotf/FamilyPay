@@ -768,10 +768,5 @@
   ],
   "guestRequests": [],
   "guestJoinRequests": [],
-  "settings": {
-    "whatsappReminderEnabled": true,
-    "whatsappReminderDelayMinutes": 2,
-    "whatsappAdminPhone": "07702206214",
-    "callmebotApiKey": ""
-  }
+  "settings": {}
 }
