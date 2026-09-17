@@ -73,115 +73,115 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
   return (
     <div className="relative">
       
-      {/* 🔴 المستطيل الشبيه لمربع الدوائر لتصفح المربعات أسفل البطاقة بسلاسة 🔴 */}
-      <div className="bg-gradient-to-b from-slate-900/95 to-slate-950/95 p-4 sm:p-5 rounded-3xl border border-slate-800 shadow-xl space-y-3" dir="rtl">
+      {/* 🔴 المستطيل الأنيق المدمج الشبيه لمربع الدوائر لتصفح المربعات بسلاسة 🔴 */}
+      <div className="bg-gradient-to-b from-slate-900/95 to-slate-950/95 p-2 sm:p-2.5 rounded-2xl border border-slate-800/90 shadow-lg space-y-1.5" dir="rtl">
         
-        {/* شريط عنوان المستطيل - شبيه لمربع الدوائر */}
-        <div className="flex items-center justify-between pb-2.5 border-b border-slate-800/80 px-1">
-          <span className="text-xs font-black text-emerald-400 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5" />
+        {/* شريط عنوان مدمج وأنيق */}
+        <div className="flex items-center justify-between px-1.5 pb-1 border-b border-slate-800/60">
+          <span className="text-[11px] font-black text-emerald-400 flex items-center gap-1">
+            <Sparkles className="w-3 h-3" />
             <span>مؤشرات وإحصائيات الصندوق والحسابات 📊</span>
           </span>
-          <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1 bg-slate-800/60 px-2.5 py-0.5 rounded-full border border-slate-700/50">
+          <span className="text-[9px] text-slate-400 font-bold flex items-center gap-1 bg-slate-800/50 px-2 py-0.5 rounded-full border border-slate-700/40">
             <span>تصفح سلس</span>
             <span className="text-emerald-400 font-mono">⟷</span>
           </span>
         </div>
 
-        {/* شريط المربعات المتصفح بسلاسة (سحب أفقي سلس على الموبايل وتوزيع متناسق على الشاشات الكبيرة) */}
-        <div className="flex flex-row items-stretch gap-3 sm:gap-4 overflow-x-auto p-1 pb-2 scrollbar-thin scrollbar-thumb-slate-700 scroll-smooth snap-x">
+        {/* شريط الأزرار والمربعات المدمجة بحجم متناسق وانسيابي */}
+        <div className="flex flex-row items-stretch gap-2 sm:gap-2.5 overflow-x-auto p-0.5 pb-1 scrollbar-thin scrollbar-thumb-slate-700 scroll-smooth snap-x">
           
           {/* Card 1: Sending Card Balance */}
           <div
             onClick={() => isCurrentAdmin && handleOpenEditBalance()}
-            className={`w-[230px] sm:w-[250px] lg:flex-1 shrink-0 snap-start bg-slate-800/90 dark:bg-slate-800/90 hover:bg-slate-800 p-4 rounded-2xl border border-emerald-500/30 hover:border-emerald-400 shadow-md relative overflow-hidden transition-all duration-200 flex flex-col justify-between ${
-              isCurrentAdmin ? 'cursor-pointer hover:shadow-lg active:scale-98 group' : ''
+            className={`w-[185px] sm:w-[210px] lg:flex-1 shrink-0 snap-start bg-slate-800/80 hover:bg-slate-800 p-2.5 sm:p-3 rounded-xl border border-emerald-500/30 hover:border-emerald-400 shadow-sm relative overflow-hidden transition-all duration-200 flex flex-col justify-between ${
+              isCurrentAdmin ? 'cursor-pointer hover:shadow-md active:scale-98 group' : ''
             }`}
             title={isCurrentAdmin ? 'اضغط هنا لتعديل رصيد بطاقة الإرسال مباشرة ✏️' : ''}
           >
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1">
+              <span className="text-[10.5px] font-bold text-slate-300 flex items-center gap-1">
                 <span>رصيد بطاقة الإرسال</span>
                 {isCurrentAdmin && (
-                  <span className="p-0.5 rounded bg-emerald-500/20 text-emerald-300 opacity-90 group-hover:opacity-100 flex items-center gap-0.5 text-[9px] font-extrabold px-1 border border-emerald-500/30">
-                    <Edit2 className="w-2.5 h-2.5" />
+                  <span className="p-0.5 rounded bg-emerald-500/20 text-emerald-300 opacity-90 group-hover:opacity-100 flex items-center gap-0.5 text-[8.5px] font-extrabold px-1 border border-emerald-500/30">
+                    <Edit2 className="w-2 h-2" />
                     <span>تعديل</span>
                   </span>
                 )}
               </span>
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shrink-0">
-                <CreditCard className="w-4 h-4" />
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shrink-0">
+                <CreditCard className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="mt-3">
-              <div className="text-base sm:text-xl font-black text-emerald-400 font-mono">
+            <div className="mt-1.5 sm:mt-2">
+              <div className="text-sm sm:text-base font-black text-emerald-400 font-mono">
                 {canSeeBalance ? formatMoney(sendingCard.balance, currency) : '••••••'}
               </div>
-              <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5 mt-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                {canSeeBalance ? (isCurrentAdmin ? 'اضغط لتعديل الرصيد ✏️' : 'محدث لحظياً') : 'مخفي بقرار الأدمن 🔒'}
+              <span className="text-[9px] text-slate-400 font-medium flex items-center gap-1 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping shrink-0" />
+                <span className="truncate">{canSeeBalance ? (isCurrentAdmin ? 'اضغط لتعديل الرصيد ✏️' : 'محدث لحظياً') : 'مخفي بقرار الأدمن 🔒'}</span>
               </span>
             </div>
           </div>
 
           {/* Card 2: Total Spent This Month */}
-          <div className="w-[230px] sm:w-[250px] lg:flex-1 shrink-0 snap-start bg-slate-800/90 dark:bg-slate-800/90 hover:bg-slate-800 p-4 rounded-2xl border border-slate-700/80 hover:border-rose-500/40 shadow-md relative overflow-hidden transition-all duration-200 flex flex-col justify-between">
+          <div className="w-[185px] sm:w-[210px] lg:flex-1 shrink-0 snap-start bg-slate-800/80 hover:bg-slate-800 p-2.5 sm:p-3 rounded-xl border border-slate-700/80 hover:border-rose-500/40 shadow-sm relative overflow-hidden transition-all duration-200 flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-300">ما تم صرفه هذا الشهر</span>
-              <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30 shrink-0">
-                <TrendingDown className="w-4 h-4" />
+              <span className="text-[10.5px] font-bold text-slate-300">ما تم صرفه هذا الشهر</span>
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30 shrink-0">
+                <TrendingDown className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="mt-3">
-              <div className="text-base sm:text-xl font-black text-rose-400 font-mono">
+            <div className="mt-1.5 sm:mt-2">
+              <div className="text-sm sm:text-base font-black text-rose-400 font-mono">
                 {formatMoney(totalSpentThisMonth, currency)}
               </div>
-              <span className="text-[10px] text-slate-400 font-medium block mt-1">إجمالي تحويلات المستخدمين</span>
+              <span className="text-[9px] text-slate-400 font-medium block mt-0.5 truncate">إجمالي تحويلات المستخدمين</span>
             </div>
           </div>
 
           {/* Card 3: Remaining Monthly Budget */}
-          <div className="w-[230px] sm:w-[250px] lg:flex-1 shrink-0 snap-start bg-slate-800/90 dark:bg-slate-800/90 hover:bg-slate-800 p-4 rounded-2xl border border-slate-700/80 hover:border-blue-500/40 shadow-md relative overflow-hidden transition-all duration-200 flex flex-col justify-between">
+          <div className="w-[185px] sm:w-[210px] lg:flex-1 shrink-0 snap-start bg-slate-800/80 hover:bg-slate-800 p-2.5 sm:p-3 rounded-xl border border-slate-700/80 hover:border-blue-500/40 shadow-sm relative overflow-hidden transition-all duration-200 flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-300">المتبقي من ميزانية الشهر</span>
-              <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30 shrink-0">
-                <Wallet className="w-4 h-4" />
+              <span className="text-[10.5px] font-bold text-slate-300">المتبقي من الميزانية</span>
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30 shrink-0">
+                <Wallet className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="mt-3">
-              <div className="text-base sm:text-xl font-black text-blue-400 font-mono">
+            <div className="mt-1.5 sm:mt-2">
+              <div className="text-sm sm:text-base font-black text-blue-400 font-mono">
                 {formatMoney(remainingMonthlyFund, currency)}
               </div>
-              <span className="text-[10px] text-slate-400 font-medium block mt-1">من سقف {formatMoney(monthlyFundTotal, currency)}</span>
+              <span className="text-[9px] text-slate-400 font-medium block mt-0.5 truncate">من سقف {formatMoney(monthlyFundTotal, currency)}</span>
             </div>
           </div>
 
           {/* Card 4: Notification Alerts Counter */}
           <button
             onClick={handleToggleNotifs}
-            className="w-[230px] sm:w-[250px] lg:flex-1 shrink-0 snap-start bg-slate-800/90 dark:bg-slate-800/90 hover:bg-slate-800 p-4 rounded-2xl border border-slate-700/80 hover:border-purple-500/40 shadow-md relative text-right transition-all duration-200 hover:border-emerald-400 active:scale-98 flex flex-col justify-between cursor-pointer"
+            className="w-[185px] sm:w-[210px] lg:flex-1 shrink-0 snap-start bg-slate-800/80 hover:bg-slate-800 p-2.5 sm:p-3 rounded-xl border border-slate-700/80 hover:border-purple-500/40 shadow-sm relative text-right transition-all duration-200 hover:border-emerald-400 active:scale-98 flex flex-col justify-between cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-300">إشعارات وتنبيهات المستخدمين</span>
-              <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30 relative shrink-0">
-                <Bell className="w-4 h-4" />
+              <span className="text-[10.5px] font-bold text-slate-300">إشعارات وتنبيهات</span>
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30 relative shrink-0">
+                <Bell className="w-3.5 h-3.5" />
                 {unreadNotifsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[9px] font-extrabold flex items-center justify-center animate-bounce">
+                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 text-white rounded-full text-[8.5px] font-extrabold flex items-center justify-center animate-bounce">
                     {unreadNotifsCount}
                   </span>
                 )}
               </div>
             </div>
-            <div className="mt-3">
-              <div className="text-base sm:text-xl font-black text-purple-400 flex items-center gap-1.5">
+            <div className="mt-1.5 sm:mt-2">
+              <div className="text-sm sm:text-base font-black text-purple-400 flex items-center gap-1.5">
                 <span>{notifications.length} إشعار</span>
                 {unreadNotifsCount > 0 && (
-                  <span className="text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1.5 py-0.2 rounded-md font-bold">
+                  <span className="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1 py-0.2 rounded font-bold">
                     {unreadNotifsCount} جديد
                   </span>
                 )}
               </div>
-              <span className="text-[10px] text-slate-400 font-medium block mt-1">اضغط لعرض سجل التنبيهات</span>
+              <span className="text-[9px] text-slate-400 font-medium block mt-0.5 truncate">اضغط لعرض السجل</span>
             </div>
           </button>
 
