@@ -27,15 +27,23 @@ export const NotificationToast = ({ onOpenPendingRequests, onOpenGuestApprovals,
     if (onOpenChat) onOpenChat(targetId);
   };
 
+  const handleToastClick = () => {
+    if (isChatMessage) {
+      handleOpenChatAction();
+    } else if (isMoneyRequest) {
+      setActiveAlert(null);
+      if (onOpenPendingRequests) onOpenPendingRequests();
+    } else if (isGuestRequest) {
+      setActiveAlert(null);
+      if (onOpenGuestApprovals) onOpenGuestApprovals();
+    }
+  };
+
   return (
     <div className="fixed top-5 left-4 right-4 sm:left-auto sm:right-5 z-60 max-w-md w-full animate-bounce">
       <div
-        onClick={() => {
-          if (isChatMessage) handleOpenChatAction();
-        }}
-        className={`bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white p-4 rounded-3xl shadow-2xl border-2 border-emerald-400 flex items-start gap-3 ${
-          isChatMessage ? 'cursor-pointer hover:border-emerald-300 transition-colors' : ''
-        }`}
+        onClick={handleToastClick}
+        className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white p-4 rounded-3xl shadow-2xl border-2 border-emerald-400 flex items-start gap-3 cursor-pointer hover:border-emerald-300 transition-colors"
       >
         <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 border border-emerald-400/40 shadow-md">
           {isChatMessage ? (

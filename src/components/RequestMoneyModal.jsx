@@ -16,7 +16,7 @@ import {
   EyeOff
 } from 'lucide-react';
 
-export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, initialFieldId = null }) => {
+export const RequestMoneyModal = ({ isOpen, onClose, onSuccess = null, initialBrotherId = null, initialFieldId = null }) => {
   const { currentUser, brothers, submitMoneyRequest, settings, generalExpensesName } = useFinance();
   const currency = settings.currencySymbol;
 
@@ -107,6 +107,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       setCommodityName('');
       setTimeout(() => {
         onClose();
+        if (onSuccess) onSuccess();
       }, 1500);
     } else {
       setErrorMsg(res.message || 'حدث خطأ أثناء إرسال الطلب');

@@ -524,6 +524,24 @@ export const FinanceProvider = ({ children }) => {
               setNotifications((prev) => [notification, ...prev]);
               setActiveAlert(notification);
               playChimeSound();
+
+              // If browser notifications allowed, show banner with click handler to open money request in dashboard
+              if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                try {
+                  const bNotif = new Notification(notification.title || '📥 طلب أموال جديد', {
+                    body: notification.message,
+                    icon: '/favicon.svg',
+                    tag: 'money-req-' + (request?.id || Date.now())
+                  });
+                  bNotif.onclick = () => {
+                    window.focus();
+                    bNotif.close();
+                    window.dispatchEvent(new CustomEvent('familypay:open-money-requests'));
+                  };
+                } catch (err) {
+                  console.log('Browser notification note:', err);
+                }
+              }
             }
           }
 

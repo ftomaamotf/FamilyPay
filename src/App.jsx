@@ -131,22 +131,32 @@ function MainApp() {
     setChatModalOpen(true);
   };
 
-  // Handle Opening Chat from Notification Click (Push Notification, Service Worker, Browser API, or URL Params)
+  // Handle Opening Chat or Money Requests from Notification Click (Push Notification, Service Worker, Browser API, or URL Params)
   useEffect(() => {
-    // 1. Custom event from in-app browser notification click
+    // 1. Custom event from in-app browser notification click (Chat)
     const handleOpenChatEvent = (e) => {
       const recipientId = e.detail?.recipientId || 'all';
       handleOpenChat(recipientId);
     };
     window.addEventListener('familypay:open-chat', handleOpenChatEvent);
 
-    // 2. Service Worker postMessage when background notification is clicked
+    // 2. Custom event from in-app browser notification click (Money Requests -> Go to Dashboard)
+    const handleOpenMoneyRequestsEvent = () => {
+      setActiveTab('dashboard');
+      setPendingRequestsModalOpen(true);
+    };
+    window.addEventListener('familypay:open-money-requests', handleOpenMoneyRequestsEvent);
+
+    // 3. Service Worker postMessage when background notification is clicked
     const handleSwMessage = (event) => {
       const msg = event.data;
       if (msg?.type === 'NOTIFICATION_OPENED' && msg.data) {
         if (msg.data.openChat || msg.data.type === 'MESSAGE' || msg.action === 'open_chat') {
           const targetId = msg.data.chatRecipientId || (msg.data.recipientId === 'all' ? 'all' : (msg.data.senderId || 'all'));
           handleOpenChat(targetId);
+        } else if (msg.data.openPendingRequests || msg.data.type === 'REQUEST' || msg.data.type === 'NEW_MONEY_REQUEST' || msg.action === 'open_requests') {
+          setActiveTab('dashboard');
+          setPendingRequestsModalOpen(true);
         }
       }
     };
@@ -154,23 +164,27 @@ function MainApp() {
       navigator.serviceWorker.addEventListener('message', handleSwMessage);
     }
 
-    // 3. Cold Start / Direct URL Query Params (?openChat=1&recipientId=...)
+    // 4. Cold Start / Direct URL Query Params (?openChat=1 or ?openPendingRequests=1)
     try {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('openChat') === '1' || urlParams.get('notifType') === 'MESSAGE') {
         const targetId = urlParams.get('recipientId') || urlParams.get('senderId') || 'all';
         handleOpenChat(targetId);
-
-        // Clean query parameters from address bar without reloading
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
+      } else if (urlParams.get('openPendingRequests') === '1' || urlParams.get('notifType') === 'REQUEST' || urlParams.get('notifType') === 'NEW_MONEY_REQUEST') {
+        setActiveTab('dashboard');
+        setPendingRequestsModalOpen(true);
       }
+
+      // Clean query parameters from address bar without reloading
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
     } catch (err) {
       console.log('Error checking notification URL params:', err);
     }
 
     return () => {
       window.removeEventListener('familypay:open-chat', handleOpenChatEvent);
+      window.removeEventListener('familypay:open-money-requests', handleOpenMoneyRequestsEvent);
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.removeEventListener('message', handleSwMessage);
       }
@@ -219,8 +233,14 @@ function MainApp() {
 
       {/* Realtime Toast Notifications with Audio Chime & Direct Action Buttons */}
       <NotificationToast
-        onOpenPendingRequests={() => setPendingRequestsModalOpen(true)}
-        onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
+        onOpenPendingRequests={() => {
+          setActiveTab('dashboard');
+          setPendingRequestsModalOpen(true);
+        }}
+        onOpenGuestApprovals={() => {
+          setActiveTab('dashboard');
+          setGuestApprovalsOpen(true);
+        }}
         onOpenChat={handleOpenChat}
       />
 
@@ -327,8 +347,14 @@ function MainApp() {
 
             {/* Live Counters & Summary Stats Bar (تم النقل أسفل بطاقة المستخدم) */}
             <LiveCountersBar
-              onOpenPendingRequests={() => setPendingRequestsModalOpen(true)}
-              onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
+              onOpenPendingRequests={() => {
+                setActiveTab('dashboard');
+                setPendingRequestsModalOpen(true);
+              }}
+              onOpenGuestApprovals={() => {
+                setActiveTab('dashboard');
+                setGuestApprovalsOpen(true);
+              }}
               onOpenChat={handleOpenChat}
             />
           </div>
@@ -398,6 +424,9 @@ function MainApp() {
           setRequestMoneyModalOpen(false);
           setRequestMoneyBrotherId(null);
           setRequestMoneyFieldId(null);
+        }}
+        onSuccess={() => {
+          setActiveTab('dashboard');
         }}
         initialBrotherId={requestMoneyBrotherId}
         initialFieldId={requestMoneyFieldId}
