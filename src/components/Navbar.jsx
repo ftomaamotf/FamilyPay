@@ -54,52 +54,53 @@ export const Navbar = ({
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
   return (
-    <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs pt-[max(6px,env(safe-area-inset-top,0px))]">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between min-h-[3.75rem] h-14 sm:h-16 gap-1 sm:gap-4">
           
           {/* Logo & App Name */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
-              <Wallet className="w-6 h-6" />
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 shrink-0">
+              <Wallet className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-black text-base sm:text-lg text-slate-800 dark:text-white tracking-tight">
-                  الصندوق والحسابات المشتركة
+              <div className="flex items-center gap-1">
+                <span className="font-black text-xs sm:text-lg text-slate-800 dark:text-white tracking-tight">
+                  <span className="inline sm:hidden">الصندوق</span>
+                  <span className="hidden sm:inline">الصندوق والحسابات المشتركة</span>
                 </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hidden sm:inline-block">
-                  النظام المالي المباشر
+                <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hidden md:inline-block">
+                  مباشر
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block">
+              <p className="text-[10px] text-slate-400 hidden lg:block">
                 مزامنة حية وبطاقات مصرفية
               </p>
             </div>
           </div>
 
-          {/* Month & Year Selector */}
-          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-            <Calendar className="w-3.5 h-3.5 text-slate-400 mr-1 hidden sm:block" />
+          {/* Month & Year Selector - Always prominently visible in center */}
+          <div className="flex items-center gap-1 bg-emerald-50/80 dark:bg-slate-800 px-2 py-1 rounded-xl border border-emerald-200/60 dark:border-slate-700 shrink-0 shadow-2xs">
+            <Calendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <select
               value={settings.selectedMonth}
               onChange={(e) => updateSettings({ selectedMonth: Number(e.target.value) })}
-              className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 outline-none cursor-pointer py-1"
+              className="bg-transparent text-[11px] sm:text-xs font-black text-emerald-900 dark:text-emerald-200 outline-none cursor-pointer py-0.5"
             >
               {months.map((m) => (
-                <option key={m} value={m} className="dark:bg-slate-800">
+                <option key={m} value={m} className="dark:bg-slate-800 text-slate-900 dark:text-white">
                   {getMonthName(m - 1)}
                 </option>
               ))}
             </select>
-            <span className="text-slate-300 dark:text-slate-600">|</span>
+            <span className="text-emerald-400 dark:text-slate-500 text-xs">|</span>
             <select
               value={settings.selectedYear}
               onChange={(e) => updateSettings({ selectedYear: Number(e.target.value) })}
-              className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 outline-none cursor-pointer py-1"
+              className="bg-transparent text-[11px] sm:text-xs font-black text-emerald-900 dark:text-emerald-200 outline-none cursor-pointer py-0.5"
             >
               {years.map((y) => (
-                <option key={y} value={y} className="dark:bg-slate-800">
+                <option key={y} value={y} className="dark:bg-slate-800 text-slate-900 dark:text-white">
                   {y}
                 </option>
               ))}
@@ -107,7 +108,7 @@ export const Navbar = ({
           </div>
 
           {/* User Profile & Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             
             {/* Background Call Notifications Activator */}
             <button
