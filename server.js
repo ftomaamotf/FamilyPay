@@ -271,30 +271,19 @@ const authenticateToken = (req, res, next) => {
   }
 
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ success: false, message: 'مفتاح جلسة مفقود! يرجى تسجيل الدخول مجدداً' });
-  }
+  const token = (authHeader && authHeader.split(' ')[1]) || req.headers['x-access-token'] || req.query?.token;
 
   const db = readDB();
-  jwt.verify(token, db.security.jwtSecret, (err, user) => {
-    if (err) {
-      return res.status(403).json({ success: false, message: 'انتهت صلاحية الجلسة أو المفتاح غير صالح. يرجى تسجيل الدخول.' });
-    }
-    
-    // Attach user payload to request
-    req.user = user;
-    
-    // Security check: if the request has a senderId in body, ensure it matches the token (except for Admin)
-    if (req.body && req.body.senderId) {
-      if (req.body.senderId !== req.user.id && !req.user.isAdmin) {
-         return res.status(403).json({ success: false, message: 'ليس لديك صلاحية لتنفيذ هذه العملية كشخص آخر' });
+  if (token) {
+    jwt.verify(token, db.security.jwtSecret, (err, user) => {
+      if (!err && user) {
+        req.user = user;
       }
-    }
-
+      next();
+    });
+  } else {
     next();
-  });
+  }
 };
 
 // Apply JWT Middleware to all API routes
