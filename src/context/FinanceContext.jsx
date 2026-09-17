@@ -66,6 +66,9 @@ export const FinanceProvider = ({ children }) => {
   const [generalExpensesName, setGeneralExpensesName] = useState(() =>
     loadFromStorage('bait_finance_general_expenses_name', 'مصاريف عامة')
   );
+  const [monthlyFundAmount, setMonthlyFundAmount] = useState(() =>
+    Number(loadFromStorage('bait_finance_monthly_fund_amount', 1000000)) || 1000000
+  );
 
   // Guest Join Requests (طلبات انضمام الضيوف المعلقة)
   const [guestRequests, setGuestRequests] = useState([]);
@@ -95,6 +98,7 @@ export const FinanceProvider = ({ children }) => {
         if (data.state.brothers) setBrothers(data.state.brothers);
         if (data.state.bankCards) setBankCards(data.state.bankCards);
         if (data.state.transfers) setTransfers(data.state.transfers);
+        if (Number(data.state.monthlyFundAmount) > 0) setMonthlyFundAmount(Number(data.state.monthlyFundAmount));
         if (data.state.generalExpensesName) {
           setGeneralExpensesName(data.state.generalExpensesName);
           saveToStorage('bait_finance_general_expenses_name', data.state.generalExpensesName);
@@ -259,6 +263,7 @@ export const FinanceProvider = ({ children }) => {
   useEffect(() => saveToStorage('bait_finance_yearly_archives', yearlyArchives), [yearlyArchives]);
   useEffect(() => saveToStorage('bait_finance_notifs', notifications), [notifications]);
   useEffect(() => saveToStorage('bait_finance_messages', messages), [messages]);
+  useEffect(() => saveToStorage('bait_finance_monthly_fund_amount', monthlyFundAmount), [monthlyFundAmount]);
   useEffect(() => saveToStorage(STORAGE_KEYS.SETTINGS, settings), [settings]);
 
   // Handle Dark mode
@@ -424,6 +429,7 @@ export const FinanceProvider = ({ children }) => {
           if (data.state.bankCards) setBankCards(data.state.bankCards);
           if (data.state.transfers) setTransfers(data.state.transfers);
           if (data.state.messages) setMessages(data.state.messages);
+          if (Number(data.state.monthlyFundAmount) > 0) setMonthlyFundAmount(Number(data.state.monthlyFundAmount));
           if (data.state.security?.fundPin) setFundPin(data.state.security.fundPin);
           if (data.state.security?.transferPermissions) setTransferPermissions(data.state.security.transferPermissions);
           if (data.state.fundRequests) setFundRequests(data.state.fundRequests);
@@ -542,6 +548,7 @@ export const FinanceProvider = ({ children }) => {
             if (payload.data.transfers) setTransfers(payload.data.transfers);
             if (payload.data.bankCards) setBankCards(payload.data.bankCards);
             if (payload.data.fundRequests) setFundRequests(payload.data.fundRequests);
+            if (Number(payload.data.monthlyFundAmount) > 0) setMonthlyFundAmount(Number(payload.data.monthlyFundAmount));
           }
 
           if (payload.type === 'FIELDS_UPDATED') {
@@ -733,9 +740,8 @@ export const FinanceProvider = ({ children }) => {
   }, [bankCards]);
 
   // Monthly Spending & Total Fund Metrics
-  const monthlyFundTotal = 30000;
+  const monthlyFundTotal = Number(monthlyFundAmount) || 0;
   const currentMonthTransfers = useMemo(() => {
-    const now = new Date();
     const currYear = Number(settings.selectedYear);
     const currMonth = Number(settings.selectedMonth);
     return transfers.filter((t) => {

@@ -1045,7 +1045,7 @@ export const BrothersCards = ({
                   if (!isForThisBrother) return false;
                   if (r.fieldId && r.fieldId === f.id) return true;
                   const normR = normalizeArabicText(r.fieldName || r.commodityName || r.reason);
-                  return normR && normF && (normR === normF || normR.includes(normF) || normR.includes(normR));
+                  return normR && normF && (normR === normF || normR.includes(normF) || normF.includes(normR));
                 }).length;
 
                 const totalEvents = timesTransferred + timesPending;
