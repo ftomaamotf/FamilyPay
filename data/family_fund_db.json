@@ -7,6 +7,7 @@
   },
   "monthlyFundAmount": 1000000,
   "sendingCardId": "card-1",
+  "generalExpensesName": "مصاريف عامة",
   "security": {
     "fundPin": "1988",
     "isCardFrozen": false,
@@ -18,7 +19,8 @@
       "allowedSenderIds": [
         "b-2"
       ]
-    }
+    },
+    "jwtSecret": "SUPER_SECRET_FAMILY_FUND_JWT_KEY_2026"
   },
   "bankCards": [
     {
@@ -70,7 +72,36 @@
       "bankName": "ماستر كي / Qi Card",
       "avatarColor": "#6366f1",
       "isAdmin": true,
-      "approvedFields": []
+      "approvedFields": [
+        {
+          "id": "f-4",
+          "name": "بنزين ومواصلات ⛽",
+          "limit": 150000,
+          "spent": 49999,
+          "createdAt": "2026-08-23T16:21:04.733Z"
+        },
+        {
+          "id": "f-1787246913231-83",
+          "name": "صيدلية وأطباء 🩺",
+          "limit": 100000,
+          "spent": 8000,
+          "createdAt": "2026-08-23T10:37:33.497Z"
+        },
+        {
+          "id": "f-5",
+          "name": "حليب للأطفال 🥛",
+          "limit": 150000,
+          "spent": 1000,
+          "createdAt": "2026-08-23T10:44:12.508Z"
+        },
+        {
+          "id": "f-6",
+          "name": "مصاريف عامة 🛒",
+          "limit": 100000,
+          "spent": 0,
+          "createdAt": "2026-08-20T12:00:00.000Z"
+        }
+      ]
     },
     {
       "id": "b-1787243535948",
@@ -85,11 +116,11 @@
       "isAdmin": false,
       "approvedFields": [
         {
-          "id": "f-1787760742037-348",
-          "name": "بنزين ومواصلات ⛽",
-          "limit": 0,
-          "spent": 0,
-          "createdAt": "2026-08-26T16:12:22.037Z"
+          "id": "f-1787503326641-740",
+          "name": "بنزين وسفر ⛽",
+          "limit": 500000,
+          "spent": 50000,
+          "createdAt": "2026-08-23T16:42:06.641Z"
         },
         {
           "id": "f-1787761604619-123",
@@ -97,6 +128,48 @@
           "limit": 15000,
           "spent": 10000,
           "createdAt": "2026-08-26T16:26:44.619Z"
+        },
+        {
+          "id": "f-1787243536212-2",
+          "name": "بنزين ومواصلات ⛽",
+          "limit": 150000,
+          "spent": 14000,
+          "createdAt": "2026-08-22T14:00:00.000Z"
+        },
+        {
+          "id": "f-1787541751196-523",
+          "name": "حليب للأطفال 🥛",
+          "limit": 500000,
+          "spent": 2000,
+          "createdAt": "2026-08-24T03:22:31.196Z"
+        },
+        {
+          "id": "f-1787502055641-f",
+          "name": "صيانة وتصليح 🔧",
+          "limit": 100000,
+          "spent": 4000,
+          "createdAt": "2026-08-23T10:35:48.260Z"
+        },
+        {
+          "id": "f-1787501941685-f",
+          "name": "أدوية وصيدلية 💊",
+          "limit": 100000,
+          "spent": 10000,
+          "createdAt": "2026-08-23T16:17:14.623Z"
+        },
+        {
+          "id": "f-1787243536212-1",
+          "name": "مصروف عام",
+          "limit": 100000,
+          "spent": 8000,
+          "createdAt": "2026-08-23T10:27:07.910Z"
+        },
+        {
+          "id": "f-1787243536212-3",
+          "name": "حليب ومواد غذائية 🥛",
+          "limit": 200000,
+          "spent": 0,
+          "createdAt": "2026-08-20T12:00:00.000Z"
         }
       ]
     },
@@ -111,7 +184,71 @@
       "bankName": "ماستر كي / Qi Card",
       "avatarColor": "#10b981",
       "isAdmin": false,
-      "approvedFields": []
+      "approvedFields": [
+        {
+          "id": "f-1",
+          "name": "حليب للأطفال 🥛",
+          "limit": 200000,
+          "spent": 9000,
+          "createdAt": "2026-08-20T12:00:00.000Z"
+        },
+        {
+          "id": "f-2",
+          "name": "فواتير وانترنت ⚡",
+          "limit": 100000,
+          "spent": 0,
+          "createdAt": "2026-08-20T12:00:00.000Z"
+        },
+        {
+          "id": "f-3",
+          "name": "صيانة منزلية 🔧",
+          "limit": 100000,
+          "spent": 0,
+          "createdAt": "2026-08-20T12:00:00.000Z"
+        },
+        {
+          "id": "f-1787246876444-537",
+          "name": "أطباء وصيدلية 🩺",
+          "limit": 100000,
+          "spent": 0,
+          "createdAt": "2026-08-21T10:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "id": "b-3",
+      "name": "مستخدم مسجل",
+      "email": "registered.user@familyfund.iq",
+      "accountNumber": "1004",
+      "phone": "07709313213",
+      "bankAccountNumber": "7188234910",
+      "password": "123",
+      "bankName": "ماستر كي / Qi Card",
+      "avatarColor": "#8b5cf6",
+      "isAdmin": false,
+      "approvedFields": [
+        {
+          "id": "f-1787503326652-513",
+          "name": "حليب وحفاضات أطفال 🍼",
+          "limit": 500000,
+          "spent": 25000,
+          "createdAt": "2026-08-23T16:42:06.657Z"
+        },
+        {
+          "id": "f-1787503326651-1",
+          "name": "مصاريف عامة 🛒",
+          "limit": 100000,
+          "spent": 0,
+          "createdAt": "2026-08-23T16:00:00.000Z"
+        },
+        {
+          "id": "f-1787503326651-2",
+          "name": "بنزين ومواصلات ⛽",
+          "limit": 100000,
+          "spent": 0,
+          "createdAt": "2026-08-23T16:00:00.000Z"
+        }
+      ]
     }
   ],
   "transfers": [
@@ -132,6 +269,241 @@
       "isSecurityVerified": true,
       "timestamp": "2026-08-26T16:26:44.619Z",
       "date": "2026-08-26"
+    },
+    {
+      "id": "tx-1787542189014",
+      "senderId": "b-2",
+      "senderName": "الأدمن (موافقة على طلب)",
+      "recipientId": "b-1787243535948",
+      "recipientName": "محمد عجمي",
+      "recipientAccountNumber": "7145810946",
+      "accountNumber": "1003",
+      "amount": 1000,
+      "fieldId": "f-1787541751196-523",
+      "fieldName": "حليب للأطفال 🥛",
+      "reason": "[موافقة على طلب - حليب للأطفال 🥛] شراء حليب ومستلزمات للأطفال",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-24T03:29:49.014Z",
+      "date": "2026-08-24"
+    },
+    {
+      "id": "tx-1787503326641",
+      "senderId": "b-2",
+      "senderName": "عبدالله عجمي مطشر",
+      "recipientId": "b-1787243535948",
+      "recipientName": "محمد عجمي مطشر",
+      "recipientAccountNumber": "7145810946",
+      "accountNumber": "1003",
+      "amount": 50000,
+      "fieldId": "f-1787503326641-740",
+      "fieldName": "بنزين وسفر ⛽",
+      "reason": "تعبئة وقود بنزين للسفر إلى بغداد",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-23T16:42:06.641Z",
+      "date": "2026-08-23"
+    },
+    {
+      "id": "tx-1787503248872",
+      "senderId": "b-2",
+      "senderName": "عبدالله عجمي مطشر",
+      "recipientId": "b-1787243535948",
+      "recipientName": "محمد عجمي مطشر",
+      "recipientAccountNumber": "7145810946",
+      "accountNumber": "1003",
+      "amount": 45000,
+      "fieldId": null,
+      "fieldName": "مصروف عام",
+      "reason": "تعبئة بنزين للسيارة اليومية",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-23T16:40:48.872Z",
+      "date": "2026-08-23"
+    },
+    {
+      "id": "tx-1787502064733",
+      "senderId": "b-2",
+      "senderName": "عبدالله عجمي مطشر",
+      "recipientId": "b-2",
+      "recipientName": "عبدالله عجمي مطشر",
+      "recipientAccountNumber": "9256869125",
+      "accountNumber": "1002",
+      "amount": 49999,
+      "fieldId": "f-4",
+      "fieldName": "بنزين ومواصلات ⛽",
+      "reason": "صيانة وتصليح 🔧",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-23T16:21:04.733Z",
+      "date": "2026-08-23"
+    },
+    {
+      "id": "tx-1787502055641",
+      "senderId": "b-2",
+      "senderName": "عبدالله عجمي مطشر",
+      "recipientId": "b-1787243535948",
+      "recipientName": "محمد عجمي مطشر",
+      "recipientAccountNumber": "7145810946",
+      "accountNumber": "1003",
+      "amount": 3000,
+      "fieldId": "f-4",
+      "fieldName": "مصروف عام",
+      "reason": "صيانة وتصليح 🔧",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-23T16:20:55.641Z",
+      "date": "2026-08-23"
+    },
+    {
+      "id": "tx-1787503326657",
+      "senderId": "b-2",
+      "senderName": "الأدمن (موافقة على طلب)",
+      "recipientId": "b-3",
+      "recipientName": "مستخدم مسجل",
+      "recipientAccountNumber": "7188234910",
+      "accountNumber": "1004",
+      "amount": 25000,
+      "fieldId": "f-1787503326652-513",
+      "fieldName": "حليب وحفاضات أطفال 🍼",
+      "reason": "[موافقة على طلب - حليب وحفاضات أطفال 🍼] شراء حليب ومستلزمات أطفال",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-23T16:42:06.657Z",
+      "date": "2026-08-23"
+    },
+    {
+      "id": "tx-1787481852508",
+      "senderId": "b-2",
+      "senderName": "عبدالله عجمي مطشر",
+      "recipientId": "b-2",
+      "recipientName": "عبدالله عجمي مطشر",
+      "recipientAccountNumber": "9256869125",
+      "accountNumber": "1002",
+      "amount": 1000,
+      "fieldId": "f-5",
+      "fieldName": "حليب للأطفال 🥛",
+      "reason": "حليب للأطفال 🥛",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-23T10:44:12.508Z",
+      "date": "2026-08-23"
+    },
+    {
+      "id": "tx-1787481453497",
+      "senderId": "b-2",
+      "senderName": "عبدالله عجمي مطشر",
+      "recipientId": "b-2",
+      "recipientName": "عبدالله عجمي مطشر",
+      "recipientAccountNumber": "9256869125",
+      "accountNumber": "1002",
+      "amount": 8000,
+      "fieldId": "f-1787246913231-83",
+      "fieldName": "صيدلية وأطباء 🩺",
+      "reason": "أدوية وصيدلية 💊",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-23T10:37:33.497Z",
+      "date": "2026-08-23"
+    },
+    {
+      "id": "tx-1787481348260",
+      "senderId": "b-2",
+      "senderName": "عبدالله عجمي مطشر",
+      "recipientId": "b-1787243535948",
+      "recipientName": "محمد عجمي مطشر",
+      "recipientAccountNumber": "7145810946",
+      "accountNumber": "1003",
+      "amount": 4000,
+      "fieldId": "f-1787502055641-f",
+      "fieldName": "صيانة وتصليح 🔧",
+      "reason": "صيانة وتصليح 🔧",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-23T10:35:48.260Z",
+      "date": "2026-08-23"
+    },
+    {
+      "id": "tx-1787480827910",
+      "senderId": "b-2",
+      "senderName": "عبدالله عجمي مطشر",
+      "recipientId": "b-1787243535948",
+      "recipientName": "محمد عجمي مطشر",
+      "recipientAccountNumber": "7145810946",
+      "accountNumber": "1003",
+      "amount": 5000,
+      "fieldId": "f-1787243536212-1",
+      "fieldName": "مصروف عام",
+      "reason": "تجربة توثيق تحويل مالي",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-23T10:27:07.910Z",
+      "date": "2026-08-23"
+    },
+    {
+      "id": "tx-1787396340000",
+      "senderId": "b-2",
+      "senderName": "عبدالله عجمي مطشر (الأدمن)",
+      "recipientId": "b-1787243535948",
+      "recipientName": "محمد عجمي مطشر",
+      "recipientAccountNumber": "7145810946",
+      "accountNumber": "1003",
+      "amount": 14000,
+      "fieldId": "f-1787243536212-2",
+      "fieldName": "بنزين ومواصلات ⛽",
+      "reason": "بانزين سيارة",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-22T14:00:00.000Z",
+      "date": "2026-08-22"
+    },
+    {
+      "id": "tx-1787481900000",
+      "senderId": "b-2",
+      "senderName": "الأدمن الرئيسي",
+      "recipientId": "b-1",
+      "recipientName": "عمر عجمي",
+      "recipientAccountNumber": "7115069812",
+      "accountNumber": "1001",
+      "amount": 9000,
+      "fieldId": "f-1",
+      "fieldName": "حليب للأطفال 🥛",
+      "reason": "حليب للأطفال 🥛",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "timestamp": "2026-08-22T12:00:00.000Z",
+      "date": "2026-08-22"
+    },
+    {
+      "id": "tx-1787859022058",
+      "senderId": "b-2",
+      "senderName": "عبدالله عجمي",
+      "recipientId": "b-general",
+      "recipientName": "مصاريف عامة",
+      "recipientAccountNumber": "",
+      "accountNumber": "GENERAL",
+      "amount": 5000,
+      "fieldId": "f-general-cleaning",
+      "fieldName": "شراء منظفات للصندوق",
+      "reason": "شراء منظفات للصندوق",
+      "sendingCardId": "card-1",
+      "sendingCardName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "isSecurityVerified": true,
+      "isGeneralExpense": true,
+      "timestamp": "2026-08-27T19:30:22.058Z",
+      "date": "2026-08-27"
     }
   ],
   "notifications": [
@@ -147,26 +519,12 @@
       "readBy": []
     },
     {
-      "id": "notif-1787774372480",
-      "title": "✏️ تم تعديل سعر سلعة [بنزين]",
-      "message": "قام الأدمن بتعديل وتخفيض سعر [بنزين] للأخ (محمد عجمي) من (15,000 د.ع) إلى (10,000 د.ع). وتم استرجاع وإيداع (5,000 د.ع) إلى بطاقة الصندوق بنجاح! السبب: تصحيح خطأ إدخال المبلغ من 15 ألف إلى 10 آلاف واسترجاع 5 آلاف للصندوق",
-      "timestamp": "2026-08-26T19:59:32.480Z",
-      "readBy": []
-    },
-    {
-      "id": "notif-1787774372428",
-      "title": "✏️ تم تعديل سعر سلعة [بنزين]",
-      "message": "قام الأدمن بتعديل وزيادة سعر [بنزين] للأخ (محمد عجمي) من (1,000 د.ع) إلى (15,000 د.ع). وتم خصم (14,000 د.ع) من بطاقة الصندوق. السبب: تعديل السعر إلى 15 ألف",
-      "timestamp": "2026-08-26T19:59:32.470Z",
-      "readBy": []
-    },
-    {
       "id": "notif-1787761604619",
-      "title": "💰 تحويل مالي: 1000 د.ع",
-      "message": "تم تحويل 1000 د.ع إلى حساب الأخ (محمد عجمي) رقم (7145810946) لحاجة [تعبئة بنزين للسيارة أثناء المشوار]. المتبقي في بطاقة الصندوق: 825001 د.ع",
+      "title": "💰 تحويل مالي: 10000 د.ع",
+      "message": "قام الأدمن بتعديل وتخفيض سعر [بنزين] للأخ (محمد عجمي) من (15,000 د.ع) إلى (10,000 د.ع). وتم استرجاع وإيداع (5,000 د.ع) إلى بطاقة الصندوق بنجاح! السبب: تصحيح خطأ إدخال المبلغ من 15 ألف إلى 10 آلاف واسترجاع 5 آلاف للصندوق",
       "transferId": "tx-1787761604619",
       "recipientId": "b-1787243535948",
-      "amount": 1000,
+      "amount": 10000,
       "reason": "تعبئة بنزين للسيارة أثناء المشوار",
       "timestamp": "2026-08-26T16:26:44.619Z",
       "readBy": []
@@ -185,7 +543,7 @@
     {
       "id": "notif-1787503326657",
       "title": "💰 تحويل مالي: 25000 د.ع",
-      "message": "تم تحويل 25000 د.ع إلى حساب الأخ (مستخدم مسجل) رقم (1003) لحاجة [حليب وحفاضات أطفال 🍼]. المتبقي في بطاقة الصندوق: 827001 د.ع",
+      "message": "تم تحويل 25000 د.ع إلى حساب الأخ (مستخدم مسجل) رقم (1004) لحاجة [حليب وحفاضات أطفال 🍼]. المتبقي في بطاقة الصندوق: 827001 د.ع",
       "transferId": "tx-1787503326657",
       "recipientId": "b-3",
       "amount": 25000,
@@ -205,146 +563,14 @@
       "readBy": []
     },
     {
-      "id": "notif-1787503248872",
-      "title": "💰 تحويل مالي: 45000 د.ع",
-      "message": "تم تحويل 45000 د.ع إلى حساب الأخ (محمد عجمي مطشر) رقم (7145810946) لحاجة [تعبئة بنزين للسيارة اليومية]. المتبقي في بطاقة الصندوق: 902001 د.ع",
-      "transferId": "tx-1787503248872",
-      "recipientId": "b-1787243535948",
-      "amount": 45000,
-      "reason": "تعبئة بنزين للسيارة اليومية",
-      "timestamp": "2026-08-23T16:40:48.873Z",
-      "readBy": []
-    },
-    {
-      "id": "notif-1787502064733",
-      "title": "💰 تحويل مالي: 50000 د.ع",
-      "message": "تم تحويل 50000 د.ع إلى حساب الأخ (عبدالله عجمي مطشر) رقم (9256869125) لحاجة [صيانة وتصليح 🔧]. المتبقي في بطاقة الصندوق: 900000 د.ع",
-      "transferId": "tx-1787502064733",
-      "recipientId": "b-2",
-      "amount": 50000,
-      "reason": "صيانة وتصليح 🔧",
-      "timestamp": "2026-08-23T16:21:04.733Z",
-      "readBy": []
-    },
-    {
-      "id": "notif-1787502055641",
-      "title": "💰 تحويل مالي: 50000 د.ع",
-      "message": "تم تحويل 50000 د.ع إلى حساب الأخ (محمد عجمي مطشر) رقم (7145810946) لحاجة [صيانة وتصليح 🔧]. المتبقي في بطاقة الصندوق: 950000 د.ع",
-      "transferId": "tx-1787502055641",
-      "recipientId": "b-1787243535948",
-      "amount": 50000,
-      "reason": "صيانة وتصليح 🔧",
-      "timestamp": "2026-08-23T16:20:55.641Z",
-      "readBy": []
-    },
-    {
-      "id": "notif-1787501941685",
-      "title": "💰 تحويل مالي: 9996 د.ع",
-      "message": "تم تحويل 9996 د.ع إلى حساب الأخ (محمد عجمي مطشر) رقم (7145810946) لحاجة [أدوية وصيدلية 💊]. المتبقي في بطاقة الصندوق: 980004 د.ع",
-      "transferId": "tx-1787501941685",
-      "recipientId": "b-1787243535948",
-      "amount": 9996,
-      "reason": "أدوية وصيدلية 💊",
-      "timestamp": "2026-08-23T16:19:01.686Z",
-      "readBy": []
-    },
-    {
-      "id": "notif-1787501834623",
-      "title": "💰 تحويل مالي: 10000 د.ع",
-      "message": "تم تحويل 10000 د.ع إلى حساب الأخ (محمد عجمي مطشر) رقم (7145810946) لحاجة [أدوية وصيدلية 💊]. المتبقي في بطاقة الصندوق: 990000 د.ع",
-      "transferId": "tx-1787501834623",
-      "recipientId": "b-1787243535948",
-      "amount": 10000,
-      "reason": "أدوية وصيدلية 💊",
-      "timestamp": "2026-08-23T16:17:14.623Z",
-      "readBy": []
-    },
-    {
-      "id": "notif-1787501789614",
-      "title": "💰 تحويل مالي: 10000 د.ع",
-      "message": "تم تحويل 10000 د.ع إلى حساب الأخ (محمد عجمي مطشر) رقم (7145810946) لحاجة [أدوية وصيدلية 💊]. المتبقي في بطاقة الصندوق: 989000 د.ع",
-      "transferId": "tx-1787501789614",
-      "recipientId": "b-1787243535948",
-      "amount": 10000,
-      "reason": "أدوية وصيدلية 💊",
-      "timestamp": "2026-08-23T16:16:29.614Z",
-      "readBy": []
-    },
-    {
-      "id": "notif-1787481852508",
-      "title": "💰 تحويل مالي: 1000 د.ع",
-      "message": "تم تحويل 1000 د.ع إلى حساب الأخ (عبدالله عجمي مطشر) رقم (9256869125) لحاجة [حليب للأطفال 🥛]. المتبقي في بطاقة الصندوق: 999000 د.ع",
-      "transferId": "tx-1787481852508",
-      "recipientId": "b-2",
-      "amount": 1000,
+      "id": "notif-1787481900000",
+      "title": "💰 تحويل مالي: 9000 د.ع",
+      "message": "تم تحويل 9000 د.ع إلى حساب الأخ (عمر عجمي) رقم (7115069812) لحاجة [حليب للأطفال 🥛]. المتبقي في بطاقة الصندوق: 991000 د.ع",
+      "transferId": "tx-1787481900000",
+      "recipientId": "b-1",
+      "amount": 9000,
       "reason": "حليب للأطفال 🥛",
-      "timestamp": "2026-08-23T10:44:12.508Z",
-      "readBy": []
-    },
-    {
-      "id": "notif-1787481453497",
-      "title": "💰 تحويل مالي: 8000 د.ع",
-      "message": "تم تحويل 8000 د.ع إلى حساب الأخ (عبدالله عجمي مطشر) رقم (9256869125) لحاجة [أدوية وصيدلية 💊]. المتبقي في بطاقة الصندوق: 912000 د.ع",
-      "transferId": "tx-1787481453497",
-      "recipientId": "b-2",
-      "amount": 8000,
-      "reason": "أدوية وصيدلية 💊",
-      "timestamp": "2026-08-23T10:37:33.497Z",
-      "readBy": []
-    },
-    {
-      "id": "notif-1787481348260",
-      "title": "💰 تحويل مالي: 4000 د.ع",
-      "message": "تم تحويل 4000 د.ع إلى حساب الأخ (محمد عجمي مطشر) رقم (7145810946) لحاجة [صيانة وتصليح 🔧]. المتبقي في بطاقة الصندوق: 920000 د.ع",
-      "transferId": "tx-1787481348260",
-      "recipientId": "b-1787243535948",
-      "amount": 4000,
-      "reason": "صيانة وتصليح 🔧",
-      "timestamp": "2026-08-23T10:35:48.260Z",
-      "readBy": []
-    },
-    {
-      "id": "notif-1787481168815",
-      "title": "💰 تحويل مالي: 70000 د.ع",
-      "message": "تم تحويل 70000 د.ع إلى حساب الأخ (عبدالله عجمي مطشر) رقم (9256869125) لحاجة [بنزين للسيارة ⛽]. المتبقي في بطاقة الصندوق: 924000 د.ع",
-      "transferId": "tx-1787481168815",
-      "recipientId": "b-2",
-      "amount": 70000,
-      "reason": "بنزين للسيارة ⛽",
-      "timestamp": "2026-08-23T10:32:48.815Z",
-      "readBy": []
-    },
-    {
-      "id": "notif-1787481002216",
-      "title": "💰 تحويل مالي: 1000 د.ع",
-      "message": "تم تحويل 1000 د.ع إلى حساب الأخ (محمد عجمي مطشر) رقم (7145810946) لحاجة [حليب للأطفال 🥛]. المتبقي في بطاقة الصندوق: 994000 د.ع",
-      "transferId": "tx-1787481002216",
-      "recipientId": "b-1787243535948",
-      "amount": 1000,
-      "reason": "حليب للأطفال 🥛",
-      "timestamp": "2026-08-23T10:30:02.216Z",
-      "readBy": []
-    },
-    {
-      "id": "notif-1787480827910",
-      "title": "💰 تحويل مالي: 5000 د.ع",
-      "message": "تم تحويل 5000 د.ع إلى حساب الأخ (محمد عجمي مطشر) رقم (7145810946) لحاجة [تجربة توثيق تحويل مالي]. المتبقي في بطاقة الصندوق: 995000 د.ع",
-      "transferId": "tx-1787480827910",
-      "recipientId": "b-1787243535948",
-      "amount": 5000,
-      "reason": "تجربة توثيق تحويل مالي",
-      "timestamp": "2026-08-23T10:27:07.910Z",
-      "readBy": []
-    },
-    {
-      "id": "notif-1787396340000",
-      "title": "💰 تحويل مالي: 14,000 د.ع",
-      "message": "تم تحويل 14,000 د.ع إلى حساب الأخ (محمد عجمي مطشر) رقم (7145810946) لحاجة [بانزين سيارة]. المتبقي في بطاقة الصندوق: 986,000 د.ع",
-      "transferId": "tx-1787396340000",
-      "recipientId": "b-1787243535948",
-      "amount": 14000,
-      "reason": "بانزين سيارة",
-      "timestamp": "2026-08-22T14:00:00.000Z",
+      "timestamp": "2026-08-22T12:00:00.000Z",
       "readBy": []
     }
   ],
@@ -356,7 +582,7 @@
     {
       "id": "t-1787761604619",
       "type": "expense",
-      "amount": 1000,
+      "amount": 10000,
       "categoryId": "c-transfers",
       "categoryName": "تحويل مالي (محمد عجمي) 💸",
       "categoryIcon": "Send",
@@ -368,6 +594,102 @@
       "description": "تحويل مالي مباشر: تعبئة بنزين للسيارة أثناء المشوار (حساب #7145810946)",
       "transferId": "tx-1787761604619",
       "createdAt": "2026-08-26T16:26:44.619Z"
+    },
+    {
+      "id": "t-1787542189014",
+      "type": "expense",
+      "amount": 1000,
+      "categoryId": "c-transfers",
+      "categoryName": "تحويل مالي (محمد عجمي) 💸",
+      "categoryIcon": "Send",
+      "memberId": "b-1787243535948",
+      "memberName": "محمد عجمي",
+      "paymentMethodId": "pm-qi",
+      "paymentMethodName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "date": "2026-08-24",
+      "description": "تحويل مالي مباشر: حليب للأطفال 🥛 (حساب #7145810946)",
+      "transferId": "tx-1787542189014",
+      "createdAt": "2026-08-24T03:29:49.014Z"
+    },
+    {
+      "id": "t-1787503326641",
+      "type": "expense",
+      "amount": 50000,
+      "categoryId": "c-transfers",
+      "categoryName": "تحويل مالي (محمد عجمي مطشر) 💸",
+      "categoryIcon": "Send",
+      "memberId": "b-1787243535948",
+      "memberName": "محمد عجمي مطشر",
+      "paymentMethodId": "pm-qi",
+      "paymentMethodName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "date": "2026-08-23",
+      "description": "تحويل مالي مباشر: تعبئة وقود بنزين للسفر إلى بغداد (حساب #7145810946)",
+      "transferId": "tx-1787503326641",
+      "createdAt": "2026-08-23T16:42:06.641Z"
+    },
+    {
+      "id": "t-1787503326657",
+      "type": "expense",
+      "amount": 25000,
+      "categoryId": "c-transfers",
+      "categoryName": "تحويل مالي (مستخدم مسجل) 💸",
+      "categoryIcon": "Send",
+      "memberId": "b-3",
+      "memberName": "مستخدم مسجل",
+      "paymentMethodId": "pm-qi",
+      "paymentMethodName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "date": "2026-08-23",
+      "description": "تحويل مالي مباشر: حليب وحفاضات أطفال 🍼 (حساب #7188234910)",
+      "transferId": "tx-1787503326657",
+      "createdAt": "2026-08-23T16:42:06.657Z"
+    },
+    {
+      "id": "t-1787502064733",
+      "type": "expense",
+      "amount": 49999,
+      "categoryId": "c-transfers",
+      "categoryName": "تحويل مالي (عبدالله عجمي مطشر) 💸",
+      "categoryIcon": "Send",
+      "memberId": "b-2",
+      "memberName": "عبدالله عجمي مطشر",
+      "paymentMethodId": "pm-qi",
+      "paymentMethodName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "date": "2026-08-23",
+      "description": "تحويل مالي مباشر: بنزين ومواصلات ⛽ (حساب #9256869125)",
+      "transferId": "tx-1787502064733",
+      "createdAt": "2026-08-23T16:21:04.733Z"
+    },
+    {
+      "id": "t-1787481900000",
+      "type": "expense",
+      "amount": 9000,
+      "categoryId": "c-transfers",
+      "categoryName": "تحويل مالي (عمر عجمي) 💸",
+      "categoryIcon": "Send",
+      "memberId": "b-1",
+      "memberName": "عمر عجمي",
+      "paymentMethodId": "pm-qi",
+      "paymentMethodName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "date": "2026-08-22",
+      "description": "تحويل مالي مباشر: حليب للأطفال 🥛 (حساب #7115069812)",
+      "transferId": "tx-1787481900000",
+      "createdAt": "2026-08-22T12:00:00.000Z"
+    },
+    {
+      "id": "t-1787859022058",
+      "type": "expense",
+      "amount": 5000,
+      "categoryId": "c-transfers",
+      "categoryName": "تحويل وصرف (مصاريف عامة) 💸",
+      "categoryIcon": "Send",
+      "memberId": "b-general",
+      "memberName": "مصاريف عامة",
+      "paymentMethodId": "pm-qi",
+      "paymentMethodName": "بطاقة الصندوق المشترك (ماستر كي / مصرف الرافدين)",
+      "date": "2026-08-27",
+      "description": "صرف مصاريف عامة: شراء منظفات للصندوق",
+      "transferId": "tx-1787859022058",
+      "createdAt": "2026-08-27T19:30:22.058Z"
     }
   ],
   "messages": [
@@ -387,201 +709,6 @@
       ]
     },
     {
-      "id": "msg-1787540854364-549",
-      "senderId": "b-1787243535948",
-      "senderName": "محمد عجمي",
-      "senderAvatarColor": "#10b981",
-      "recipientId": "b-2",
-      "text": "❤️",
-      "audioUrl": null,
-      "audioDuration": 0,
-      "type": "text",
-      "timestamp": "2026-08-24T03:07:34.364Z",
-      "readBy": [
-        "b-1787243535948"
-      ]
-    },
-    {
-      "id": "msg-1787540881031-603",
-      "senderId": "b-1787243535948",
-      "senderName": "محمد عجمي",
-      "senderAvatarColor": "#10b981",
-      "recipientId": "b-1787243535948",
-      "text": "❤️",
-      "audioUrl": null,
-      "audioDuration": 0,
-      "type": "text",
-      "timestamp": "2026-08-24T03:08:01.031Z",
-      "readBy": [
-        "b-1787243535948"
-      ]
-    },
-    {
-      "id": "msg-1787540881694-608",
-      "senderId": "b-1787243535948",
-      "senderName": "محمد عجمي",
-      "senderAvatarColor": "#10b981",
-      "recipientId": "b-1787243535948",
-      "text": "❤️",
-      "audioUrl": null,
-      "audioDuration": 0,
-      "type": "text",
-      "timestamp": "2026-08-24T03:08:01.694Z",
-      "readBy": [
-        "b-1787243535948"
-      ]
-    },
-    {
-      "id": "msg-1787540891671-118",
-      "senderId": "b-1787243535948",
-      "senderName": "محمد عجمي",
-      "senderAvatarColor": "#10b981",
-      "recipientId": "all",
-      "text": "بلبالالات",
-      "audioUrl": null,
-      "audioDuration": 0,
-      "type": "text",
-      "timestamp": "2026-08-24T03:08:11.671Z",
-      "readBy": [
-        "b-1787243535948"
-      ]
-    },
-    {
-      "id": "msg-1787541827016-701",
-      "senderId": "b-1787243535948",
-      "senderName": "محمد عجمي",
-      "senderAvatarColor": "#10b981",
-      "recipientId": "b-2",
-      "text": "⛽",
-      "audioUrl": null,
-      "audioDuration": 0,
-      "type": "text",
-      "timestamp": "2026-08-24T03:23:47.016Z",
-      "readBy": [
-        "b-1787243535948"
-      ]
-    },
-    {
-      "id": "msg-1787541837547-683",
-      "senderId": "b-1787243535948",
-      "senderName": "محمد عجمي",
-      "senderAvatarColor": "#10b981",
-      "recipientId": "b-2",
-      "text": "بابلابلت",
-      "audioUrl": null,
-      "audioDuration": 0,
-      "type": "text",
-      "timestamp": "2026-08-24T03:23:57.547Z",
-      "readBy": [
-        "b-1787243535948"
-      ]
-    },
-    {
-      "id": "msg-1787541852241-23",
-      "senderId": "b-1787243535948",
-      "senderName": "محمد عجمي",
-      "senderAvatarColor": "#10b981",
-      "recipientId": "b-2",
-      "text": "❤️",
-      "audioUrl": null,
-      "audioDuration": 0,
-      "type": "text",
-      "timestamp": "2026-08-24T03:24:12.241Z",
-      "readBy": [
-        "b-1787243535948"
-      ]
-    },
-    {
-      "id": "msg-1787541852738-819",
-      "senderId": "b-1787243535948",
-      "senderName": "محمد عجمي",
-      "senderAvatarColor": "#10b981",
-      "recipientId": "b-2",
-      "text": "❤️",
-      "audioUrl": null,
-      "audioDuration": 0,
-      "type": "text",
-      "timestamp": "2026-08-24T03:24:12.738Z",
-      "readBy": [
-        "b-1787243535948"
-      ]
-    },
-    {
-      "id": "msg-1787541852946-649",
-      "senderId": "b-1787243535948",
-      "senderName": "محمد عجمي",
-      "senderAvatarColor": "#10b981",
-      "recipientId": "b-2",
-      "text": "❤️",
-      "audioUrl": null,
-      "audioDuration": 0,
-      "type": "text",
-      "timestamp": "2026-08-24T03:24:12.946Z",
-      "readBy": [
-        "b-1787243535948"
-      ]
-    },
-    {
-      "id": "msg-1787541853155-69",
-      "senderId": "b-1787243535948",
-      "senderName": "محمد عجمي",
-      "senderAvatarColor": "#10b981",
-      "recipientId": "b-2",
-      "text": "❤️",
-      "audioUrl": null,
-      "audioDuration": 0,
-      "type": "text",
-      "timestamp": "2026-08-24T03:24:13.155Z",
-      "readBy": [
-        "b-1787243535948"
-      ]
-    },
-    {
-      "id": "msg-1787541853364-876",
-      "senderId": "b-1787243535948",
-      "senderName": "محمد عجمي",
-      "senderAvatarColor": "#10b981",
-      "recipientId": "b-2",
-      "text": "❤️",
-      "audioUrl": null,
-      "audioDuration": 0,
-      "type": "text",
-      "timestamp": "2026-08-24T03:24:13.364Z",
-      "readBy": [
-        "b-1787243535948"
-      ]
-    },
-    {
-      "id": "msg-1787541853584-692",
-      "senderId": "b-1787243535948",
-      "senderName": "محمد عجمي",
-      "senderAvatarColor": "#10b981",
-      "recipientId": "b-2",
-      "text": "❤️",
-      "audioUrl": null,
-      "audioDuration": 0,
-      "type": "text",
-      "timestamp": "2026-08-24T03:24:13.584Z",
-      "readBy": [
-        "b-1787243535948"
-      ]
-    },
-    {
-      "id": "msg-1787541853625-313",
-      "senderId": "b-1787243535948",
-      "senderName": "محمد عجمي",
-      "senderAvatarColor": "#10b981",
-      "recipientId": "b-2",
-      "text": "❤️",
-      "audioUrl": null,
-      "audioDuration": 0,
-      "type": "text",
-      "timestamp": "2026-08-24T03:24:13.625Z",
-      "readBy": [
-        "b-1787243535948"
-      ]
-    },
-    {
       "id": "msg-1787542007173-929",
       "senderId": "b-1787243535948",
       "senderName": "محمد عجمي",
@@ -598,6 +725,5 @@
     }
   ],
   "guestRequests": [],
-  "guestJoinRequests": [],
-  "generalExpensesName": "مصاريف عامة"
+  "guestJoinRequests": []
 }

@@ -123,10 +123,27 @@ const INITIAL_DB = {
       avatarColor: '#10b981',
       isAdmin: false,
       approvedFields: [
-        { id: 'f-1', name: 'حليب ومواد غذائية 🥛', limit: 200000, spent: 0 },
+        { id: 'f-1', name: 'حليب للأطفال 🥛', limit: 200000, spent: 9000 },
         { id: 'f-2', name: 'فواتير وانترنت ⚡', limit: 100000, spent: 0 },
         { id: 'f-3', name: 'صيانة منزلية 🔧', limit: 100000, spent: 0 },
-        { id: 'f-1787246876444-537', name: 'اطباء', limit: 100000, spent: 0 }
+        { id: 'f-1787246876444-537', name: 'أطباء وصيدلية 🩺', limit: 100000, spent: 0 }
+      ]
+    },
+    {
+      id: 'b-3',
+      name: 'مستخدم مسجل',
+      email: 'registered.user@familyfund.iq',
+      accountNumber: '1004',
+      phone: '07709313213',
+      bankAccountNumber: '7188234910',
+      password: '123',
+      bankName: 'ماستر كي / Qi Card',
+      avatarColor: '#8b5cf6',
+      isAdmin: false,
+      approvedFields: [
+        { id: 'f-1787503326652-513', name: 'حليب وحفاضات أطفال 🍼', limit: 500000, spent: 25000 },
+        { id: 'f-1787503326651-1', name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
+        { id: 'f-1787503326651-2', name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
       ]
     }
   ],

@@ -170,7 +170,12 @@ export const FinanceProvider = ({ children }) => {
         bankName: 'ماستر كي / Qi Card',
         avatarColor: '#6366f1',
         isAdmin: true,
-        approvedFields: []
+        approvedFields: [
+          { id: 'f-4', name: 'بنزين ومواصلات ⛽', limit: 150000, spent: 49999 },
+          { id: 'f-1787246913231-83', name: 'صيدلية وأطباء 🩺', limit: 100000, spent: 8000 },
+          { id: 'f-5', name: 'حليب للأطفال 🥛', limit: 150000, spent: 1000 },
+          { id: 'f-6', name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 }
+        ]
       },
       {
         id: 'b-1787243535948',
@@ -179,11 +184,20 @@ export const FinanceProvider = ({ children }) => {
         accountNumber: '1003',
         phone: '07727959161',
         bankAccountNumber: '7145810946',
-        password: '123',
+        password: '1986',
         bankName: 'ماستر كي / Qi Card',
         avatarColor: '#10b981',
         isAdmin: false,
-        approvedFields: []
+        approvedFields: [
+          { id: 'f-1787503326641-740', name: 'بنزين وسفر ⛽', limit: 500000, spent: 50000 },
+          { id: 'f-1787761604619-123', name: 'بنزين', limit: 15000, spent: 10000 },
+          { id: 'f-1787243536212-2', name: 'بنزين ومواصلات ⛽', limit: 150000, spent: 14000 },
+          { id: 'f-1787541751196-523', name: 'حليب للأطفال 🥛', limit: 500000, spent: 2000 },
+          { id: 'f-1787502055641-f', name: 'صيانة وتصليح 🔧', limit: 100000, spent: 4000 },
+          { id: 'f-1787501941685-f', name: 'أدوية وصيدلية 💊', limit: 100000, spent: 10000 },
+          { id: 'f-1787243536212-1', name: 'مصروف عام', limit: 100000, spent: 8000 },
+          { id: 'f-1787243536212-3', name: 'حليب ومواد غذائية 🥛', limit: 200000, spent: 0 }
+        ]
       },
       {
         id: 'b-1',
@@ -196,11 +210,32 @@ export const FinanceProvider = ({ children }) => {
         bankName: 'ماستر كي / Qi Card',
         avatarColor: '#10b981',
         isAdmin: false,
-        approvedFields: []
+        approvedFields: [
+          { id: 'f-1', name: 'حليب للأطفال 🥛', limit: 200000, spent: 9000 },
+          { id: 'f-2', name: 'فواتير وانترنت ⚡', limit: 100000, spent: 0 },
+          { id: 'f-3', name: 'صيانة منزلية 🔧', limit: 100000, spent: 0 },
+          { id: 'f-1787246876444-537', name: 'أطباء وصيدلية 🩺', limit: 100000, spent: 0 }
+        ]
+      },
+      {
+        id: 'b-3',
+        name: 'مستخدم مسجل',
+        email: 'registered.user@familyfund.iq',
+        accountNumber: '1004',
+        phone: '07709313213',
+        bankAccountNumber: '7188234910',
+        password: '123',
+        bankName: 'ماستر كي / Qi Card',
+        avatarColor: '#8b5cf6',
+        isAdmin: false,
+        approvedFields: [
+          { id: 'f-1787503326652-513', name: 'حليب وحفاضات أطفال 🍼', limit: 500000, spent: 25000 },
+          { id: 'f-1787503326651-1', name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
+          { id: 'f-1787503326651-2', name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
+        ]
       }
     ]);
-    // Filter out any legacy dummy sample names or deleted accounts
-    return (raw || []).filter((b) => b && !['b-3', 'b-4', 'b-5', 'b-6', 'b-1787553982824'].includes(b.id) && !['يوسف', 'خالد', 'أحمد', 'علي فاضل'].includes(b.name));
+    return (raw || []).filter((b) => b && b.name);
   });
 
   // Transfers Log (Real transfers only, no dummy items)
@@ -394,7 +429,7 @@ export const FinanceProvider = ({ children }) => {
       const missingToSync = [];
       (prevLocal || []).forEach((lb) => {
         const key = lb.id || lb.accountNumber;
-        const isDummy = ['b-3', 'b-4', 'b-5', 'b-6'].includes(lb.id) || ['يوسف', 'خالد', 'أحمد'].includes(lb.name);
+        const isDummy = ['b-4', 'b-5', 'b-6'].includes(lb.id) || ['يوسف', 'خالد', 'أحمد'].includes(lb.name);
         if (!isDummy && !mergedMap.has(key) && lb.name) {
           mergedMap.set(key, lb);
           missingToSync.push(lb);
