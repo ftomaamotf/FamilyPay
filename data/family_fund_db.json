@@ -217,14 +217,14 @@
     },
     {
       "id": "b-3",
-      "name": "مستخدم مسجل",
-      "email": "registered.user@familyfund.iq",
+      "name": "علي عجمي",
+      "email": "ali.ajmi@familyfund.iq",
       "accountNumber": "1004",
       "phone": "07709313213",
       "bankAccountNumber": "7188234910",
       "password": "123",
       "bankName": "ماستر كي / Qi Card",
-      "avatarColor": "#8b5cf6",
+      "avatarColor": "#f59e0b",
       "isAdmin": false,
       "approvedFields": [
         {
@@ -244,6 +244,48 @@
         {
           "id": "f-1787503326651-2",
           "name": "بنزين ومواصلات ⛽",
+          "limit": 100000,
+          "spent": 0,
+          "createdAt": "2026-08-23T16:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "id": "b-5",
+      "name": "عثمان عجمي",
+      "email": "othman.ajmi@familyfund.iq",
+      "accountNumber": "1005",
+      "phone": "07705554433",
+      "bankAccountNumber": "7199228833",
+      "password": "123",
+      "bankName": "ماستر كي / Qi Card",
+      "avatarColor": "#3b82f6",
+      "isAdmin": false,
+      "approvedFields": [
+        {
+          "id": "f-501",
+          "name": "مصاريف عامة 🛒",
+          "limit": 200000,
+          "spent": 0,
+          "createdAt": "2026-08-23T16:00:00.000Z"
+        },
+        {
+          "id": "f-502",
+          "name": "بنزين ومواصلات ⛽",
+          "limit": 150000,
+          "spent": 0,
+          "createdAt": "2026-08-23T16:00:00.000Z"
+        },
+        {
+          "id": "f-503",
+          "name": "حليب ومواد غذائية 🥛",
+          "limit": 200000,
+          "spent": 0,
+          "createdAt": "2026-08-23T16:00:00.000Z"
+        },
+        {
+          "id": "f-504",
+          "name": "صيدلية وأطباء 🩺",
           "limit": 100000,
           "spent": 0,
           "createdAt": "2026-08-23T16:00:00.000Z"
@@ -365,7 +407,7 @@
       "senderId": "b-2",
       "senderName": "الأدمن (موافقة على طلب)",
       "recipientId": "b-3",
-      "recipientName": "مستخدم مسجل",
+      "recipientName": "علي عجمي",
       "recipientAccountNumber": "7188234910",
       "accountNumber": "1004",
       "amount": 25000,
@@ -543,7 +585,7 @@
     {
       "id": "notif-1787503326657",
       "title": "💰 تحويل مالي: 25000 د.ع",
-      "message": "تم تحويل 25000 د.ع إلى حساب الأخ (مستخدم مسجل) رقم (1004) لحاجة [حليب وحفاضات أطفال 🍼]. المتبقي في بطاقة الصندوق: 827001 د.ع",
+      "message": "تم تحويل 25000 د.ع إلى حساب الأخ (علي عجمي) رقم (1004) لحاجة [حليب وحفاضات أطفال 🍼]. المتبقي في بطاقة الصندوق: 827001 د.ع",
       "transferId": "tx-1787503326657",
       "recipientId": "b-3",
       "amount": 25000,

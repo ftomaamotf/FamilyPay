@@ -219,19 +219,37 @@ export const FinanceProvider = ({ children }) => {
       },
       {
         id: 'b-3',
-        name: 'مستخدم مسجل',
-        email: 'registered.user@familyfund.iq',
+        name: 'علي عجمي',
+        email: 'ali.ajmi@familyfund.iq',
         accountNumber: '1004',
         phone: '07709313213',
         bankAccountNumber: '7188234910',
         password: '123',
         bankName: 'ماستر كي / Qi Card',
-        avatarColor: '#8b5cf6',
+        avatarColor: '#f59e0b',
         isAdmin: false,
         approvedFields: [
           { id: 'f-1787503326652-513', name: 'حليب وحفاضات أطفال 🍼', limit: 500000, spent: 25000 },
           { id: 'f-1787503326651-1', name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
           { id: 'f-1787503326651-2', name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
+        ]
+      },
+      {
+        id: 'b-5',
+        name: 'عثمان عجمي',
+        email: 'othman.ajmi@familyfund.iq',
+        accountNumber: '1005',
+        phone: '07705554433',
+        bankAccountNumber: '7199228833',
+        password: '123',
+        bankName: 'ماستر كي / Qi Card',
+        avatarColor: '#3b82f6',
+        isAdmin: false,
+        approvedFields: [
+          { id: 'f-501', name: 'مصاريف عامة 🛒', limit: 200000, spent: 0 },
+          { id: 'f-502', name: 'بنزين ومواصلات ⛽', limit: 150000, spent: 0 },
+          { id: 'f-503', name: 'حليب ومواد غذائية 🥛', limit: 200000, spent: 0 },
+          { id: 'f-504', name: 'صيدلية وأطباء 🩺', limit: 100000, spent: 0 }
         ]
       }
     ]);
@@ -423,14 +441,20 @@ export const FinanceProvider = ({ children }) => {
     setBrothers((prevLocal) => {
       const mergedMap = new Map();
       // 1. Add all server brothers
-      serverBrothers.forEach((b) => mergedMap.set(b.id || b.accountNumber, b));
+      serverBrothers.forEach((b) => {
+        if (!b) return;
+        if (b.name === 'مستخدم مسجل') b.name = 'علي عجمي';
+        mergedMap.set(b.id || b.accountNumber, b);
+      });
       // 2. Check if local storage has brothers not present on server
       let hasMissing = false;
       const missingToSync = [];
       (prevLocal || []).forEach((lb) => {
+        if (!lb || !lb.name) return;
+        if (lb.name === 'مستخدم مسجل') lb.name = 'علي عجمي';
         const key = lb.id || lb.accountNumber;
-        const isDummy = ['b-4', 'b-5', 'b-6'].includes(lb.id) || ['يوسف', 'خالد', 'أحمد'].includes(lb.name);
-        if (!isDummy && !mergedMap.has(key) && lb.name) {
+        const isDummy = ['يوسف', 'خالد', 'أحمد'].includes(lb.name);
+        if (!isDummy && !mergedMap.has(key)) {
           mergedMap.set(key, lb);
           missingToSync.push(lb);
           hasMissing = true;

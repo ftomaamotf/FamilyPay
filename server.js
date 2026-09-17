@@ -131,19 +131,37 @@ const INITIAL_DB = {
     },
     {
       id: 'b-3',
-      name: 'مستخدم مسجل',
-      email: 'registered.user@familyfund.iq',
+      name: 'علي عجمي',
+      email: 'ali.ajmi@familyfund.iq',
       accountNumber: '1004',
       phone: '07709313213',
       bankAccountNumber: '7188234910',
       password: '123',
       bankName: 'ماستر كي / Qi Card',
-      avatarColor: '#8b5cf6',
+      avatarColor: '#f59e0b',
       isAdmin: false,
       approvedFields: [
         { id: 'f-1787503326652-513', name: 'حليب وحفاضات أطفال 🍼', limit: 500000, spent: 25000 },
         { id: 'f-1787503326651-1', name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
         { id: 'f-1787503326651-2', name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
+      ]
+    },
+    {
+      id: 'b-5',
+      name: 'عثمان عجمي',
+      email: 'othman.ajmi@familyfund.iq',
+      accountNumber: '1005',
+      phone: '07705554433',
+      bankAccountNumber: '7199228833',
+      password: '123',
+      bankName: 'ماستر كي / Qi Card',
+      avatarColor: '#3b82f6',
+      isAdmin: false,
+      approvedFields: [
+        { id: 'f-501', name: 'مصاريف عامة 🛒', limit: 200000, spent: 0 },
+        { id: 'f-502', name: 'بنزين ومواصلات ⛽', limit: 150000, spent: 0 },
+        { id: 'f-503', name: 'حليب ومواد غذائية 🥛', limit: 200000, spent: 0 },
+        { id: 'f-504', name: 'صيدلية وأطباء 🩺', limit: 100000, spent: 0 }
       ]
     }
   ],
@@ -172,6 +190,22 @@ const readDB = () => {
     if (!parsed.generalExpensesName) {
       parsed.generalExpensesName = 'مصاريف عامة';
     }
+
+    // Permanent Protection: Ensure core family brothers are never lost
+    if (Array.isArray(parsed.brothers)) {
+      parsed.brothers.forEach((b) => {
+        if (b.name === 'مستخدم مسجل') b.name = 'علي عجمي';
+      });
+      INITIAL_DB.brothers.forEach((coreB) => {
+        const found = parsed.brothers.find(
+          (b) => b.id === coreB.id || String(b.accountNumber) === String(coreB.accountNumber) || b.name === coreB.name
+        );
+        if (!found) {
+          parsed.brothers.push(coreB);
+        }
+      });
+    }
+
     return parsed;
   } catch (err) {
     console.error('Error reading DB:', err);
