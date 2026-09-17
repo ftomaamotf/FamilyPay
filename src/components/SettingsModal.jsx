@@ -29,7 +29,10 @@ import {
   Plus,
   Bell,
   Smartphone,
-  Share2
+  Share2,
+  MessageCircle,
+  Clock,
+  Wallet
 } from 'lucide-react';
 
 export const SettingsModal = ({
@@ -137,6 +140,89 @@ export const SettingsModal = ({
   const [apkPinInput, setApkPinInput] = useState('');
   const [apkPinError, setApkPinError] = useState('');
   const [apkSharingLoading, setApkSharingLoading] = useState(false);
+
+  // WhatsApp Delayed Reminder Settings State (تذكير الأدمن التلقائي عند طلب الأموال)
+  const [waReminderEnabled, setWaReminderEnabled] = useState(true);
+  const [waDelayMinutes, setWaDelayMinutes] = useState(2);
+  const [waAdminPhone, setWaAdminPhone] = useState('07727959161');
+  const [callmebotKey, setCallmebotKey] = useState('');
+  const [waLoading, setWaLoading] = useState(false);
+  const [waSaveMsg, setWaSaveMsg] = useState('');
+  const [waTestLoading, setWaTestLoading] = useState(false);
+  const [waTestMsg, setWaTestMsg] = useState('');
+  const [waTestSuccess, setWaTestSuccess] = useState(false);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    fetch('/api/settings/whatsapp')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.settings) {
+          setWaReminderEnabled(data.settings.whatsappReminderEnabled !== false);
+          setWaDelayMinutes(data.settings.whatsappReminderDelayMinutes || 2);
+          setWaAdminPhone(data.settings.whatsappAdminPhone || '07727959161');
+          setCallmebotKey(data.settings.callmebotApiKey || '');
+        }
+      })
+      .catch(() => {});
+  }, [isOpen]);
+
+  const handleSaveWhatsAppSettings = async (e) => {
+    if (e) e.preventDefault();
+    setWaLoading(true);
+    setWaSaveMsg('');
+    try {
+      const res = await fetch('/api/settings/whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          whatsappReminderEnabled: waReminderEnabled,
+          whatsappReminderDelayMinutes: Number(waDelayMinutes) || 2,
+          whatsappAdminPhone: waAdminPhone.trim(),
+          callmebotApiKey: callmebotKey.trim()
+        })
+      });
+      const data = await res.json();
+      setWaLoading(false);
+      if (data.success) {
+        setWaSaveMsg('✅ تم حفظ إعدادات تذكير الواتساب بنجاح');
+      } else {
+        setWaSaveMsg(data.message || 'حدث خطأ أثناء الحفظ');
+      }
+    } catch {
+      setWaLoading(false);
+      setWaSaveMsg('⚠️ تعذر الاتصال بالخادم لحفظ الإعدادات');
+    }
+    setTimeout(() => setWaSaveMsg(''), 4000);
+  };
+
+  const handleTestWhatsAppNotification = async () => {
+    setWaTestLoading(true);
+    setWaTestMsg('');
+    setWaTestSuccess(false);
+    try {
+      const res = await fetch('/api/settings/whatsapp/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: waAdminPhone.trim()
+        })
+      });
+      const data = await res.json();
+      setWaTestLoading(false);
+      if (data.success) {
+        setWaTestSuccess(true);
+        setWaTestMsg(data.message || '✅ تم إرسال رسالة الاختبار بنجاح');
+      } else {
+        setWaTestSuccess(false);
+        setWaTestMsg(data.message || '⚠️ فشل إرسال رسالة الاختبار');
+      }
+    } catch (err) {
+      setWaTestLoading(false);
+      setWaTestSuccess(false);
+      setWaTestMsg('⚠️ خطأ في الاتصال بالخادم: ' + err.message);
+    }
+  };
 
   const handleShareApkClick = () => {
     setApkPinInput('');
@@ -975,6 +1061,151 @@ export const SettingsModal = ({
                 </div>
               )}
 
+              {/* SECTION 4: AUTOMATED WHATSAPP REMINDER FOR ADMIN */}
+              {isCurrentAdminUser && (
+                <div className="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                        <MessageCircle className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
+                          <span>تذكير الواتساب التلقائي عند طلب الأموال</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 font-bold">
+                            تلقائي ⚡
+                          </span>
+                        </h4>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          إذا طلب أحد المستخدمين أموالاً وتأخر الأدمن عن فتح البرنامج، يرسل النظام رسالة تذكير تلقائية لواتساب الأدمن 📥
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Toggle switch */}
+                    <button
+                      type="button"
+                      onClick={() => setWaReminderEnabled(!waReminderEnabled)}
+                      className={`px-3 py-1.5 rounded-2xl font-black text-xs transition flex items-center gap-1 shrink-0 ${
+                        waReminderEnabled
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm'
+                          : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      <span>{waReminderEnabled ? 'مفعل ✅' : 'معطل ⏸️'}</span>
+                    </button>
+                  </div>
+
+                  {waReminderEnabled && (
+                    <form onSubmit={handleSaveWhatsAppSettings} className="space-y-3.5 pt-1 border-t border-slate-200 dark:border-slate-700">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* Delay duration */}
+                        <div>
+                          <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 text-[11px] flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-amber-500" />
+                            <span>مدة انتظار فتح البرنامج قبل إرسال الواتساب:</span>
+                          </label>
+                          <select
+                            value={waDelayMinutes}
+                            onChange={(e) => setWaDelayMinutes(Number(e.target.value))}
+                            className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold outline-none focus:border-emerald-500 text-slate-900 dark:text-white"
+                          >
+                            <option value={1}>دقيقة واحدة (تذكير سريع ⚡)</option>
+                            <option value={2}>دقيقتان (الموصى به ⏳)</option>
+                            <option value={5}>5 دقائق</option>
+                            <option value={10}>10 دقائق</option>
+                            <option value={15}>15 دقيقة</option>
+                          </select>
+                          <p className="text-[10px] text-slate-400 mt-1">
+                            إذا فتح الأدمن البرنامج واعتمد أو رفض الطلب خلال هذه المدة، يتم إلغاء رسالة الواتساب تلقائياً.
+                          </p>
+                        </div>
+
+                        {/* Admin phone */}
+                        <div>
+                          <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 text-[11px] flex items-center gap-1">
+                            <Smartphone className="w-3.5 h-3.5 text-emerald-500" />
+                            <span>رقم هاتف الأدمن المستلم لتذكير الواتساب:</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={waAdminPhone}
+                            onChange={(e) => setWaAdminPhone(e.target.value)}
+                            placeholder="07727959161"
+                            dir="ltr"
+                            className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold outline-none focus:border-emerald-500 text-slate-900 dark:text-white text-left"
+                          />
+                          <p className="text-[10px] text-slate-400 mt-1">
+                            الرقم الافتراضي المعتمد للأدمن: 07727959161
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* CallMeBot API Key */}
+                      <div>
+                        <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 text-[11px] flex items-center gap-1">
+                          <KeyRound className="w-3.5 h-3.5 text-teal-500" />
+                          <span>مفتاح CallMeBot المجاني (Free WhatsApp API Key):</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={callmebotKey}
+                          onChange={(e) => setCallmebotKey(e.target.value)}
+                          placeholder="أدخل مفتاح CallMeBot API Key (مثال: 1234567)"
+                          dir="ltr"
+                          className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold outline-none focus:border-emerald-500 text-slate-900 dark:text-white text-left"
+                        />
+                        <div className="mt-1.5 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-300 space-y-1">
+                          <span className="font-black block flex items-center gap-1">
+                            <span>💡 طريقة تفعيل الواتساب المجاني بخطوة واحدة:</span>
+                          </span>
+                          <p className="text-[10px] leading-relaxed">
+                            أرسل رسالة من واتسابك مكتوب فيها <span className="font-mono font-black select-all bg-emerald-100 dark:bg-emerald-900 px-1 rounded text-slate-900 dark:text-white">I allow callmebot to send me messages</span> إلى الرقم <span className="font-mono font-black select-all text-slate-900 dark:text-white" dir="ltr">+34 644 44 20 89</span>، وسيصلك الرمز فوراً في رسالة واتساب ضعه هنا واضغط حفظ.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
+                        <button
+                          type="submit"
+                          disabled={waLoading}
+                          className="w-full sm:flex-1 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white font-black text-xs rounded-xl shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        >
+                          <Check className="w-4 h-4" />
+                          <span>{waLoading ? 'جاري الحفظ...' : 'حفظ إعدادات تذكير الواتساب 💾'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleTestWhatsAppNotification}
+                          disabled={waTestLoading || !callmebotKey.trim()}
+                          className="w-full sm:w-auto px-4 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-650 text-slate-800 dark:text-slate-100 font-black text-xs rounded-xl border border-slate-300 dark:border-slate-600 transition active:scale-95 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        >
+                          <Smartphone className="w-4 h-4 text-emerald-500" />
+                          <span>{waTestLoading ? 'جاري الفحص...' : 'فحص إرسال رسالة لواتساب الأدمن الآن 📱'}</span>
+                        </button>
+                      </div>
+
+                      {waSaveMsg && (
+                        <p className="text-xs font-bold text-center text-emerald-600 dark:text-emerald-400">
+                          {waSaveMsg}
+                        </p>
+                      )}
+                      {waTestMsg && (
+                        <p className={`text-xs font-bold text-center p-2 rounded-xl border ${
+                          waTestSuccess
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                            : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800'
+                        }`}>
+                          {waTestMsg}
+                        </p>
+                      )}
+                    </form>
+                  )}
+                </div>
+              )}
+
             </div>
           )}
 
@@ -1044,6 +1275,22 @@ export const SettingsModal = ({
                     </>
                   )}
                 </div>
+
+                {isCurrentAdminUser && (
+                  <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                      <MessageCircle className="w-4 h-4 text-emerald-500" />
+                      <span className="text-[11px] font-bold">تذكير الواتساب التلقائي للأدمن عند تأخر فتح التطبيق:</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('permissions')}
+                      className="text-xs font-black text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+                    >
+                      <span>تعديل الإعدادات ⚙️</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* SECTION: Share & Export Clean Android APK (Strictly First Admin Owner: عبدالله عجمي 9256869125) */}

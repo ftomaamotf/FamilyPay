@@ -169,7 +169,13 @@ const INITIAL_DB = {
   notifications: [],
   monthlyArchives: [],
   yearlyArchives: [],
-  generalExpensesName: 'مصاريف عامة'
+  generalExpensesName: 'مصاريف عامة',
+  settings: {
+    whatsappReminderEnabled: true,
+    whatsappReminderDelayMinutes: 2,
+    whatsappAdminPhone: '07727959161',
+    callmebotApiKey: ''
+  }
 };
 
 // Helper to read DB
@@ -189,6 +195,19 @@ const readDB = () => {
     
     if (!parsed.generalExpensesName) {
       parsed.generalExpensesName = 'مصاريف عامة';
+    }
+
+    if (!parsed.settings) {
+      parsed.settings = {};
+    }
+    if (parsed.settings.whatsappReminderEnabled === undefined) {
+      parsed.settings.whatsappReminderEnabled = true;
+    }
+    if (!parsed.settings.whatsappReminderDelayMinutes) {
+      parsed.settings.whatsappReminderDelayMinutes = 2;
+    }
+    if (!parsed.settings.whatsappAdminPhone) {
+      parsed.settings.whatsappAdminPhone = '07727959161';
     }
 
     // Permanent Protection: Ensure core family brothers are never lost
@@ -2024,6 +2043,264 @@ app.delete('/api/transfers/:transferId', (req, res) => {
   });
 });
 
+// ================= Automated WhatsApp Reminder System for Admin =================
+const pendingWhatsAppTimers = new Map();
+
+// Helper to send a WhatsApp message via CallMeBot, UltraMsg, or Webhook
+async function sendWhatsAppNotification(toPhone, messageText, db) {
+  const cleanPhone = String(toPhone || '').replace(/[\s\-\+]/g, '').replace(/^0/, '964');
+  if (!cleanPhone) {
+    console.warn('[WhatsApp] No valid phone number provided for WhatsApp notification.');
+    return { success: false, message: 'رقم الهاتف غير متوفر' };
+  }
+
+  const settings = db?.settings || {};
+  let sent = false;
+  let logDetails = [];
+
+  // 1. CallMeBot (Free WhatsApp gateway - direct GET request)
+  const callmebotKey = settings.callmebotApiKey || process.env.CALLMEBOT_API_KEY;
+  if (callmebotKey) {
+    try {
+      const url = `https://api.callmebot.com/whatsapp.php?phone=${cleanPhone}&text=${encodeURIComponent(messageText)}&apikey=${callmebotKey.trim()}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        sent = true;
+        logDetails.push('CallMeBot');
+        console.log(`[WhatsApp] Successfully sent via CallMeBot to ${cleanPhone}`);
+      }
+    } catch (err) {
+      console.warn('[WhatsApp] CallMeBot error:', err.message);
+    }
+  }
+
+  // 2. UltraMsg Gateway (if instance and token configured)
+  const ultramsgInstance = settings.ultramsgInstance || process.env.ULTRAMSG_INSTANCE;
+  const ultramsgToken = settings.ultramsgToken || process.env.ULTRAMSG_TOKEN;
+  if (!sent && ultramsgInstance && ultramsgToken) {
+    try {
+      const url = `https://api.ultramsg.com/${ultramsgInstance}/messages/chat`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: ultramsgToken,
+          to: cleanPhone,
+          body: messageText
+        })
+      });
+      const data = await res.json();
+      if (data && (data.sent === 'true' || data.sent === true || data.id)) {
+        sent = true;
+        logDetails.push('UltraMsg');
+        console.log(`[WhatsApp] Successfully sent via UltraMsg to ${cleanPhone}`);
+      }
+    } catch (err) {
+      console.warn('[WhatsApp] UltraMsg error:', err.message);
+    }
+  }
+
+  // 3. Custom Webhook (if provided)
+  const customWebhook = settings.whatsappWebhookUrl || process.env.WHATSAPP_WEBHOOK_URL;
+  if (!sent && customWebhook) {
+    try {
+      const res = await fetch(customWebhook, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientPhone: cleanPhone,
+          message: messageText,
+          timestamp: new Date().toISOString()
+        })
+      });
+      if (res.ok) {
+        sent = true;
+        logDetails.push('Custom Webhook');
+        console.log(`[WhatsApp] Successfully sent via Webhook to ${cleanPhone}`);
+      }
+    } catch (err) {
+      console.warn('[WhatsApp] Webhook error:', err.message);
+    }
+  }
+
+  return { success: sent, providers: logDetails };
+}
+
+// Function to trigger reminder if Admin delayed in reviewing
+async function executeAdminWhatsAppReminder(requestId) {
+  try {
+    const db = readDB();
+    if (!db.fundRequests) return;
+
+    const reqItem = db.fundRequests.find((r) => r.id === requestId);
+    if (!reqItem || reqItem.status !== 'pending') {
+      // Already handled, do not send reminder!
+      return;
+    }
+
+    const admin = (db.brothers || []).find((b) => b.id === db.activeAdminId || b.isAdmin) || db.brothers[0];
+    const adminPhone = db.settings?.whatsappAdminPhone || admin?.phone || '07727959161';
+
+    const reminderText = `🔔 *تذكير من نظام الصندوق المالي* 📥
+مرحباً ${admin?.name || 'الأدمن'}،
+نود إشعارك بوجود طلب صرف أموال معلق في البرنامج بانتظار موافقتك:
+━━━━━━━━━━━━━━━━━
+👤 مقدم الطلب: ${reqItem.brotherName}
+💰 المبلغ: ${Number(reqItem.amount).toLocaleString()} ${db.currency?.symbol || 'د.ع'}
+📦 الغرض: ${reqItem.fieldName || reqItem.commodityName || 'طلب عام'}
+📝 الملاحظة: ${reqItem.reason || 'لا توجد ملاحظة'}
+📅 تاريخ الطلب: ${new Date(reqItem.createdAt).toLocaleTimeString('ar-IQ')}
+━━━━━━━━━━━━━━━━━
+يرجى فتح البرنامج للاطلاع على الطلب واعتماده 🌹`;
+
+    console.log(`[WhatsApp Reminder] Executing delayed reminder for request ${requestId} to Admin (${adminPhone})...`);
+
+    // 1. Attempt WhatsApp dispatch
+    const waResult = await sendWhatsAppNotification(adminPhone, reminderText, db);
+
+    // 2. Also send high-priority Push Notification to wake up phone
+    sendPushToUser(db.activeAdminId, {
+      title: `⏰ تذكير: طلب أموال معلق من ${reqItem.brotherName}`,
+      body: `مبلغ ${reqItem.amount} ${db.currency?.symbol || 'د.ع'} لبند [${reqItem.fieldName || 'طلب عام'}] بانتظار موافقتك!`,
+      type: 'REQUEST_REMINDER',
+      url: '/'
+    });
+
+    reqItem.whatsappReminderSent = true;
+    reqItem.whatsappReminderSentAt = new Date().toISOString();
+    saveDB(db);
+
+    broadcastEvent('REQUEST_REMINDER_FIRED', {
+      requestId,
+      sentViaWhatsApp: waResult.success,
+      adminPhone
+    });
+  } catch (err) {
+    console.error('[WhatsApp Reminder] Error in executeAdminWhatsAppReminder:', err);
+  }
+}
+
+function scheduleAdminWhatsAppReminder(request) {
+  const db = readDB();
+  if (db.settings?.whatsappReminderEnabled === false) {
+    console.log('[WhatsApp Reminder] Disabled in settings, skipping schedule.');
+    return;
+  }
+
+  // Configurable delay, default 2 minutes (120,000 ms)
+  const delayMinutes = Math.max(1, Number(db.settings?.whatsappReminderDelayMinutes || 2));
+  const delayMs = delayMinutes * 60 * 1000;
+
+  console.log(`[WhatsApp Reminder] Timer scheduled for request ${request.id} in ${delayMinutes} minute(s)`);
+
+  const timer = setTimeout(() => {
+    pendingWhatsAppTimers.delete(request.id);
+    executeAdminWhatsAppReminder(request.id);
+  }, delayMs);
+
+  pendingWhatsAppTimers.set(request.id, timer);
+}
+
+function cancelAdminWhatsAppReminder(requestId) {
+  const timer = pendingWhatsAppTimers.get(requestId);
+  if (timer) {
+    clearTimeout(timer);
+    pendingWhatsAppTimers.delete(requestId);
+    console.log(`[WhatsApp Reminder] Timer cancelled for request ${requestId} (Admin acted before timeout)`);
+  }
+}
+
+// 6.8 WhatsApp Reminder Settings Endpoints
+app.get('/api/settings/whatsapp', (req, res) => {
+  const db = readDB();
+  const s = db.settings || {};
+  res.json({
+    success: true,
+    settings: {
+      whatsappReminderEnabled: s.whatsappReminderEnabled !== false,
+      whatsappReminderDelayMinutes: s.whatsappReminderDelayMinutes || 2,
+      whatsappAdminPhone: s.whatsappAdminPhone || '07727959161',
+      callmebotApiKey: s.callmebotApiKey || '',
+      ultramsgInstance: s.ultramsgInstance || '',
+      ultramsgToken: s.ultramsgToken ? '••••••••' : '',
+      hasUltramsgToken: Boolean(s.ultramsgToken),
+      whatsappWebhookUrl: s.whatsappWebhookUrl || ''
+    }
+  });
+});
+
+app.post('/api/settings/whatsapp', (req, res) => {
+  const db = readDB();
+  if (!db.settings) db.settings = {};
+
+  const {
+    whatsappReminderEnabled,
+    whatsappReminderDelayMinutes,
+    whatsappAdminPhone,
+    callmebotApiKey,
+    ultramsgInstance,
+    ultramsgToken,
+    whatsappWebhookUrl
+  } = req.body;
+
+  if (whatsappReminderEnabled !== undefined) {
+    db.settings.whatsappReminderEnabled = Boolean(whatsappReminderEnabled);
+  }
+  if (whatsappReminderDelayMinutes !== undefined) {
+    db.settings.whatsappReminderDelayMinutes = Math.max(1, Number(whatsappReminderDelayMinutes) || 2);
+  }
+  if (whatsappAdminPhone !== undefined) {
+    db.settings.whatsappAdminPhone = String(whatsappAdminPhone).trim();
+  }
+  if (callmebotApiKey !== undefined) {
+    db.settings.callmebotApiKey = String(callmebotApiKey).trim();
+  }
+  if (ultramsgInstance !== undefined) {
+    db.settings.ultramsgInstance = String(ultramsgInstance).trim();
+  }
+  if (ultramsgToken !== undefined && ultramsgToken !== '••••••••') {
+    db.settings.ultramsgToken = String(ultramsgToken).trim();
+  }
+  if (whatsappWebhookUrl !== undefined) {
+    db.settings.whatsappWebhookUrl = String(whatsappWebhookUrl).trim();
+  }
+
+  saveDB(db);
+  broadcastEvent('WHATSAPP_SETTINGS_UPDATED', { settings: db.settings });
+
+  res.json({
+    success: true,
+    message: '✅ تم حفظ إعدادات إشعارات وتذكيرات الواتساب بنجاح',
+    settings: db.settings
+  });
+});
+
+app.post('/api/settings/whatsapp/test', async (req, res) => {
+  const db = readDB();
+  const phone = req.body.phone || db.settings?.whatsappAdminPhone || '07727959161';
+  const testMsg = `🧪 *رسالة اختبار من نظام الصندوق المالي* 📱\nمرحباً بك! نظام تذكير الأدمن التلقائي عبر الواتساب يعمل بنجاح.\nسيصلك إشعار تلقائي هنا إذا تأخرت عن فتح البرنامج عند وصول طلب أموال جديد ⚡`;
+
+  try {
+    const result = await sendWhatsAppNotification(phone, testMsg, db);
+    if (result.success) {
+      res.json({
+        success: true,
+        message: `✅ تم إرسال رسالة الاختبار بنجاح إلى الرقم (${phone}) عبر [${result.providers.join(', ')}]`
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: '⚠️ لم يتم الإرسال. يرجى التأكد من إضافة مفتاح CallMeBot API Key في الإعدادات ورقم الهاتف الصحيح.'
+      });
+    }
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: 'حدث خطأ أثناء محاولة إرسال الرسالة: ' + err.message
+    });
+  }
+});
+
 // 7. Money Requests: Brother submits a request for money (Requires User Password)
 app.post('/api/requests', (req, res) => {
   const { brotherId, brotherName, phone, bankAccountNumber, amount, fieldId, reason, password } = req.body;
@@ -2111,6 +2388,9 @@ app.post('/api/requests', (req, res) => {
     type: 'REQUEST',
     url: '/'
   });
+
+  // Automated WhatsApp Reminder to Admin if delayed in opening app
+  scheduleAdminWhatsAppReminder(newRequest);
 
   res.json({
     success: true,
@@ -2232,6 +2512,9 @@ app.post('/api/requests/:requestId/approve', (req, res) => {
     reqItem.fieldName = finalField.name;
   }
 
+  // Cancel pending WhatsApp reminder since Admin acted
+  cancelAdminWhatsAppReminder(requestId);
+
   const notif = {
     id: 'notif-' + Date.now(),
     title: `💰 تحويل مالي: ${reqItem.amount} ${db.currency.symbol}`,
@@ -2303,6 +2586,9 @@ app.post('/api/requests/:requestId/reject', (req, res) => {
   reqItem.status = 'rejected';
   reqItem.rejectedAt = new Date().toISOString();
   reqItem.rejectionReason = rejectionReason || 'تم رفض الطلب من قبل الأدمن';
+
+  // Cancel pending WhatsApp reminder since Admin acted
+  cancelAdminWhatsAppReminder(requestId);
 
   const notif = {
     id: 'notif-' + Date.now(),
