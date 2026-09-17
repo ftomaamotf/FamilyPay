@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '../context/FinanceContext';
+import { toEnglishDigits } from '../utils/formatters';
 import {
   X,
   UserPlus,
@@ -84,11 +85,11 @@ export const AddEditBrotherModal = ({ isOpen, onClose, brotherToEdit = null }) =
     if (isEditing) {
       const res = await updateBrother(brotherToEdit.id, {
         name: name.trim(),
-        accountNumber: accountNumber.trim(),
-        phone: phone.trim(),
-        bankAccountNumber: bankAccountNumber.trim() || accountNumber.trim(),
+        accountNumber: toEnglishDigits(accountNumber).trim(),
+        phone: toEnglishDigits(phone).trim(),
+        bankAccountNumber: toEnglishDigits(bankAccountNumber).trim() || toEnglishDigits(accountNumber).trim(),
         bankName: bankName.trim(),
-        password: password.trim(),
+        password: toEnglishDigits(password).trim(),
         avatarColor
       });
       setLoading(false);
@@ -101,11 +102,11 @@ export const AddEditBrotherModal = ({ isOpen, onClose, brotherToEdit = null }) =
     } else {
       const res = await addBrother({
         name: name.trim(),
-        accountNumber: accountNumber.trim(),
-        phone: phone.trim(),
-        bankAccountNumber: bankAccountNumber.trim() || accountNumber.trim(),
+        accountNumber: toEnglishDigits(accountNumber).trim(),
+        phone: toEnglishDigits(phone).trim(),
+        bankAccountNumber: toEnglishDigits(bankAccountNumber).trim() || toEnglishDigits(accountNumber).trim(),
         bankName: bankName.trim(),
-        password: password.trim(),
+        password: toEnglishDigits(password).trim(),
         avatarColor,
         requestingBrotherId: currentUser?.id
       });
@@ -147,7 +148,7 @@ export const AddEditBrotherModal = ({ isOpen, onClose, brotherToEdit = null }) =
     setLoading(true);
     setDeleteErrorMsg('');
     const res = await deleteBrother(brotherToEdit.id, {
-      adminPassword: adminPassword.trim(),
+      adminPassword: toEnglishDigits(adminPassword).trim(),
       deletionReason: deletionReason.trim()
     });
     setLoading(false);

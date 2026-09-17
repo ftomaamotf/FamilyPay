@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFinance } from '../context/FinanceContext';
 import { CategoryIcon } from './CategoryIcon';
 import { DEFAULT_PAYMENT_METHODS } from '../utils/defaultData';
+import { allowBothDigitsInput, toEnglishDigits } from '../utils/formatters';
 import {
   X,
   Plus,
@@ -70,13 +71,14 @@ export const TransactionModal = ({ isOpen, onClose, initialType = 'expense', edi
   };
 
   const handleQuickAmount = (val) => {
-    const current = Number(amount) || 0;
+    const current = Number(toEnglishDigits(amount)) || 0;
     setAmount(String(current + val));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!amount || Number(amount) <= 0) {
+    const cleanNum = Number(toEnglishDigits(amount));
+    if (!amount || isNaN(cleanNum) || cleanNum <= 0) {
       alert('يرجى إدخال مبلغ صحيح أكبر من الصفر');
       return;
     }
@@ -87,7 +89,7 @@ export const TransactionModal = ({ isOpen, onClose, initialType = 'expense', edi
 
     const payload = {
       type,
-      amount: Number(amount),
+      amount: cleanNum,
       title: title.trim(),
       categoryId: categoryId || (type === 'income' ? incomeCategories[0]?.id : expenseCategories[0]?.id),
       paymentMethod,
@@ -180,11 +182,11 @@ export const TransactionModal = ({ isOpen, onClose, initialType = 'expense', edi
             </label>
             <div className="relative">
               <input
-                type="number"
-                step="any"
+                type="text"
+                inputMode="decimal"
                 required
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => setAmount(allowBothDigitsInput(e.target.value))}
                 placeholder="0.00"
                 className="w-full text-2xl sm:text-3xl font-black bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-3 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 transition text-center"
               />

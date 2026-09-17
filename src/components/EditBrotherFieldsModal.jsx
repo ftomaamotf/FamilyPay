@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '../context/FinanceContext';
+import { allowBothDigitsInput, toEnglishDigits } from '../utils/formatters';
 import {
   X,
   Sliders,
@@ -60,7 +61,7 @@ export const EditBrotherFieldsModal = ({ isOpen, onClose, brother }) => {
     const newField = {
       id: 'f-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
       name: newFieldName.trim(),
-      limit: Number(newFieldLimit) || 0,
+      limit: Number(toEnglishDigits(newFieldLimit)) || 0,
       spent: 0
     };
     setFields([...fields, newField]);
@@ -74,7 +75,7 @@ export const EditBrotherFieldsModal = ({ isOpen, onClose, brother }) => {
         if (f.id === id) {
           return {
             ...f,
-            [key]: key === 'limit' || key === 'spent' ? Number(value) || 0 : value
+            [key]: key === 'limit' || key === 'spent' ? Number(toEnglishDigits(value)) || 0 : value
           };
         }
         return f;
@@ -106,9 +107,10 @@ export const EditBrotherFieldsModal = ({ isOpen, onClose, brother }) => {
 
   // Save specific edited transfer
   const handleSaveEditedTransfer = async (transferId) => {
-    if (!editTxAmount || Number(editTxAmount) <= 0) return;
+    const cleanAmt = Number(toEnglishDigits(editTxAmount));
+    if (!editTxAmount || cleanAmt <= 0) return;
     const res = await editTransfer(transferId, {
-      amount: Number(editTxAmount),
+      amount: cleanAmt,
       reason: editTxReason.trim()
     });
     setEditingTransferId(null);
@@ -191,12 +193,11 @@ export const EditBrotherFieldsModal = ({ isOpen, onClose, brother }) => {
               </div>
               <div className="sm:col-span-3">
                 <input
-                  type="number"
-                  step="any"
+                  type="text"
+                  inputMode="decimal"
                   required
-                  min="0"
                   value={newFieldLimit}
-                  onChange={(e) => setNewFieldLimit(e.target.value)}
+                  onChange={(e) => setNewFieldLimit(allowBothDigitsInput(e.target.value))}
                   placeholder={`السقف (${currency})`}
                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-center font-black text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
                 />
@@ -296,11 +297,10 @@ export const EditBrotherFieldsModal = ({ isOpen, onClose, brother }) => {
                         <span className="font-bold text-slate-500 dark:text-slate-400">السقف المالي:</span>
                         <div className="flex items-center gap-1">
                           <input
-                            type="number"
-                            step="any"
-                            min="0"
+                            type="text"
+                            inputMode="decimal"
                             value={f.limit}
-                            onChange={(e) => handleFieldChange(f.id, 'limit', e.target.value)}
+                            onChange={(e) => handleFieldChange(f.id, 'limit', allowBothDigitsInput(e.target.value))}
                             className="w-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-center font-black text-slate-900 dark:text-white font-mono outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
                           />
                           <span className="text-[10px] text-slate-400">{currency}</span>
@@ -311,11 +311,10 @@ export const EditBrotherFieldsModal = ({ isOpen, onClose, brother }) => {
                         <span className="font-bold text-slate-500 dark:text-slate-400">المصروف الإجمالي:</span>
                         <div className="flex items-center gap-1">
                           <input
-                            type="number"
-                            step="any"
-                            min="0"
+                            type="text"
+                            inputMode="decimal"
                             value={f.spent || 0}
-                            onChange={(e) => handleFieldChange(f.id, 'spent', e.target.value)}
+                            onChange={(e) => handleFieldChange(f.id, 'spent', allowBothDigitsInput(e.target.value))}
                             className="w-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-center font-black text-emerald-600 dark:text-emerald-400 font-mono outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
                           />
                           <span className="text-[10px] text-slate-400">{currency}</span>
@@ -360,9 +359,10 @@ export const EditBrotherFieldsModal = ({ isOpen, onClose, brother }) => {
                                     <div>
                                       <label className="text-[10px] font-bold text-slate-400 block mb-0.5">المبلغ المعدل:</label>
                                       <input
-                                        type="number"
+                                        type="text"
+                                        inputMode="decimal"
                                         value={editTxAmount}
-                                        onChange={(e) => setEditTxAmount(e.target.value)}
+                                        onChange={(e) => setEditTxAmount(allowBothDigitsInput(e.target.value))}
                                         className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-1.5 font-mono font-bold text-xs"
                                       />
                                     </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { formatMoney } from '../utils/formatters';
+import { formatMoney, allowBothDigitsInput, toEnglishDigits } from '../utils/formatters';
 import {
   X,
   CreditCard,
@@ -38,9 +38,9 @@ export const BankCardsManager = ({ isOpen, onClose }) => {
     const res = await addBankCard({
       name: name.trim(),
       bankName: bankName.trim() || 'مصرف',
-      accountNumber: accountNumber.trim(),
+      accountNumber: toEnglishDigits(accountNumber).trim(),
       cardHolder: cardHolder.trim(),
-      balance: Number(balance) || 0,
+      balance: Number(toEnglishDigits(balance)) || 0,
       isSendingCard: isSending,
       color
     });
@@ -183,10 +183,10 @@ export const BankCardsManager = ({ isOpen, onClose }) => {
                 <div>
                   <label className="block font-bold mb-1">الرصيد الافتتاحي ({currency})</label>
                   <input
-                    type="number"
-                    step="any"
+                    type="text"
+                    inputMode="decimal"
                     value={balance}
-                    onChange={(e) => setBalance(e.target.value)}
+                    onChange={(e) => setBalance(allowBothDigitsInput(e.target.value))}
                     placeholder="0.00"
                     className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-center font-bold"
                   />

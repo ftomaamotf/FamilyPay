@@ -9,6 +9,7 @@ import {
   INITIAL_SAVINGS
 } from '../utils/defaultData';
 import { STORAGE_KEYS, loadFromStorage, saveToStorage, exportAllDataBackup, readBackupFile } from '../utils/storage';
+import { toEnglishDigits, toArabicDigits } from '../utils/formatters';
 
 const FinanceContext = createContext(null);
 
@@ -290,6 +291,9 @@ export const FinanceProvider = ({ children }) => {
     if (!s.currencySymbol || s.currencySymbol === 'ج.م' || s.currencyCode === 'EGP') {
       s.currencyCode = 'IQD';
       s.currencySymbol = 'د.ع';
+    }
+    if (!s.numeralSystem) {
+      s.numeralSystem = 'en';
     }
     return s;
   });
@@ -1266,7 +1270,7 @@ export const FinanceProvider = ({ children }) => {
           brotherName: activeBrother?.name,
           phone: activeBrother?.phone,
           bankAccountNumber: activeBrother?.bankAccountNumber,
-          amount: Number(amount),
+          amount: Number(toEnglishDigits(amount)),
           fieldId,
           fieldName: finalCommodityName,
           commodityName: finalCommodityName,
@@ -1544,7 +1548,7 @@ export const FinanceProvider = ({ children }) => {
       return { success: false, message: '🔒 بطاقة الصندوق مجمدة ومقفلة أمنياً حالياً. يرجى إلغاء التجميد أولاً.' };
     }
 
-    const numAmount = Number(amount);
+    const numAmount = Number(toEnglishDigits(amount));
     if (!numAmount || numAmount <= 0) {
       return { success: false, message: 'يرجى إدخال مبلغ صحيح' };
     }
@@ -1757,7 +1761,7 @@ export const FinanceProvider = ({ children }) => {
 
   // 5.9.1 Update Monthly Fund Budget Cap
   const updateMonthlyFundTotal = async (amount) => {
-    const num = Number(amount);
+    const num = Number(toEnglishDigits(amount));
     if (isNaN(num) || num < 0) return { success: false, message: 'يرجى إدخال مبلغ صحيح لسقف الميزانية' };
     setMonthlyFundTotal(num);
     saveToStorage('bait_finance_monthly_fund_total', num);

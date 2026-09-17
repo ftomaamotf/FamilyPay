@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { formatMoney, getMonthName } from '../utils/formatters';
+import { formatMoney, getMonthName, allowBothDigitsInput, toEnglishDigits } from '../utils/formatters';
 import { CategoryIcon } from './CategoryIcon';
 import {
   PieChart,
@@ -53,11 +53,12 @@ export const Budgets = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!selectedCatId || !budgetLimit || Number(budgetLimit) <= 0) {
+    const cleanLimit = Number(toEnglishDigits(budgetLimit));
+    if (!selectedCatId || !budgetLimit || isNaN(cleanLimit) || cleanLimit <= 0) {
       alert('يرجى تحديد التصنيف وإدخال حد ميزانية صحيح');
       return;
     }
-    setCategoryBudget(selectedCatId, Number(budgetLimit));
+    setCategoryBudget(selectedCatId, cleanLimit);
     setIsModalOpen(false);
   };
 
@@ -271,13 +272,13 @@ export const Budgets = () => {
                   سقف الميزانية الشهري ({currency}) *
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   required
-                  step="any"
                   value={budgetLimit}
-                  onChange={(e) => setBudgetLimit(e.target.value)}
-                  placeholder="مثال: 3000"
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-lg font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 text-center"
+                  onChange={(e) => setBudgetLimit(allowBothDigitsInput(e.target.value))}
+                  placeholder="مثال: 3000 أو ٣٠٠٠"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-lg font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 text-center font-mono"
                 />
               </div>
 

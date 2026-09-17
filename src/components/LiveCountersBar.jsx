@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { formatMoney, formatArabicDate } from '../utils/formatters';
+import { formatMoney, formatArabicDate, allowBothDigitsInput, toEnglishDigits } from '../utils/formatters';
 import {
   CreditCard,
   TrendingDown,
@@ -63,12 +63,13 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals, o
 
   const handleSaveBalance = async (e) => {
     e.preventDefault();
-    if (newBalanceInput === '' || isNaN(Number(newBalanceInput))) {
+    const cleanBal = Number(toEnglishDigits(newBalanceInput));
+    if (newBalanceInput === '' || isNaN(cleanBal)) {
       alert('يرجى إدخال مبلغ رصيد صحيح');
       return;
     }
     setIsUpdatingBalance(true);
-    const res = await updateSendingCardBalance(Number(newBalanceInput), sendingCard?.id);
+    const res = await updateSendingCardBalance(cleanBal, sendingCard?.id);
     setIsUpdatingBalance(false);
     if (res && res.message) {
       alert(res.message);
@@ -83,12 +84,13 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals, o
 
   const handleSaveBudget = async (e) => {
     e.preventDefault();
-    if (newBudgetInput === '' || isNaN(Number(newBudgetInput)) || Number(newBudgetInput) < 0) {
+    const cleanBud = Number(toEnglishDigits(newBudgetInput));
+    if (newBudgetInput === '' || isNaN(cleanBud) || cleanBud < 0) {
       alert('يرجى إدخال مبلغ سقف ميزانية صحيح');
       return;
     }
     setIsUpdatingBudget(true);
-    const res = await updateMonthlyFundTotal(Number(newBudgetInput));
+    const res = await updateMonthlyFundTotal(cleanBud);
     setIsUpdatingBudget(false);
     if (res && res.message) {
       alert(res.message);
@@ -363,11 +365,10 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals, o
                 </label>
                 <div className="relative">
                   <input
-                    type="number"
-                    min="0"
-                    step="any"
+                    type="text"
+                    inputMode="decimal"
                     value={newBalanceInput}
-                    onChange={(e) => setNewBalanceInput(e.target.value)}
+                    onChange={(e) => setNewBalanceInput(allowBothDigitsInput(e.target.value))}
                     placeholder="أدخل مبلغ الرصيد الجديد..."
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-lg font-black font-mono text-emerald-600 dark:text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500 text-left"
                     dir="ltr"
@@ -446,11 +447,10 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals, o
                 </label>
                 <div className="relative">
                   <input
-                    type="number"
-                    min="0"
-                    step="any"
+                    type="text"
+                    inputMode="decimal"
                     value={newBudgetInput}
-                    onChange={(e) => setNewBudgetInput(e.target.value)}
+                    onChange={(e) => setNewBudgetInput(allowBothDigitsInput(e.target.value))}
                     placeholder="أدخل سقف الميزانية الجديد..."
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-lg font-black font-mono text-blue-600 dark:text-blue-400 outline-none focus:ring-2 focus:ring-blue-500 text-left"
                     dir="ltr"

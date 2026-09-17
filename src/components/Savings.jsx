@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { formatMoney, formatArabicDate } from '../utils/formatters';
+import { formatMoney, formatArabicDate, allowBothDigitsInput, toEnglishDigits } from '../utils/formatters';
 import { CategoryIcon, AVAILABLE_ICONS } from './CategoryIcon';
 import confetti from 'canvas-confetti';
 import {
@@ -62,14 +62,15 @@ export const Savings = () => {
 
   const handleAddSubmit = (e) => {
     e.preventDefault();
-    if (!title.trim() || !targetAmount || Number(targetAmount) <= 0) {
+    const cleanTarget = Number(toEnglishDigits(targetAmount));
+    if (!title.trim() || !targetAmount || isNaN(cleanTarget) || cleanTarget <= 0) {
       alert('يرجى كتابة اسم الهدف والمبلغ المستهدف');
       return;
     }
     addSavingsGoal({
       title,
-      targetAmount: Number(targetAmount),
-      currentAmount: Number(currentAmount) || 0,
+      targetAmount: cleanTarget,
+      currentAmount: Number(toEnglishDigits(currentAmount)) || 0,
       deadline,
       color,
       icon,
@@ -80,13 +81,14 @@ export const Savings = () => {
 
   const handleActionSubmit = (e) => {
     e.preventDefault();
-    if (!actionAmount || Number(actionAmount) <= 0 || !selectedGoal) return;
+    const cleanAction = Number(toEnglishDigits(actionAmount));
+    if (!actionAmount || isNaN(cleanAction) || cleanAction <= 0 || !selectedGoal) return;
 
-    const delta = actionType === 'deposit' ? Number(actionAmount) : -Number(actionAmount);
+    const delta = actionType === 'deposit' ? cleanAction : -cleanAction;
     updateSavingsAmount(selectedGoal.id, delta);
 
     // If goal reached 100%, trigger confetti!
-    if (actionType === 'deposit' && (selectedGoal.currentAmount || 0) + Number(actionAmount) >= selectedGoal.targetAmount) {
+    if (actionType === 'deposit' && (selectedGoal.currentAmount || 0) + cleanAction >= selectedGoal.targetAmount) {
       try {
         confetti({
           particleCount: 100,
@@ -321,11 +323,11 @@ export const Savings = () => {
                     المبلغ المستهدف ({currency}) *
                   </label>
                   <input
-                    type="number"
-                    step="any"
+                    type="text"
+                    inputMode="decimal"
                     required
                     value={targetAmount}
-                    onChange={(e) => setTargetAmount(e.target.value)}
+                    onChange={(e) => setTargetAmount(allowBothDigitsInput(e.target.value))}
                     placeholder="0"
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 text-center"
                   />
@@ -335,10 +337,10 @@ export const Savings = () => {
                     المبلغ الحالي المتوفر
                   </label>
                   <input
-                    type="number"
-                    step="any"
+                    type="text"
+                    inputMode="decimal"
                     value={currentAmount}
-                    onChange={(e) => setCurrentAmount(e.target.value)}
+                    onChange={(e) => setCurrentAmount(allowBothDigitsInput(e.target.value))}
                     placeholder="0"
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 text-center"
                   />
@@ -430,13 +432,13 @@ export const Savings = () => {
                   المبلغ ({currency}) *
                 </label>
                 <input
-                  type="number"
-                  step="any"
+                  type="text"
+                  inputMode="decimal"
                   required
                   value={actionAmount}
-                  onChange={(e) => setActionAmount(e.target.value)}
+                  onChange={(e) => setActionAmount(allowBothDigitsInput(e.target.value))}
                   placeholder="0.00"
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xl font-black text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-purple-500 text-center"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xl font-black text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-purple-500 text-center font-mono"
                 />
               </div>
 

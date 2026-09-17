@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '../context/FinanceContext';
+import { allowBothDigitsInput, toEnglishDigits } from '../utils/formatters';
 import {
   X,
   Send,
@@ -55,13 +56,13 @@ export const RequestMoneyModal = ({ isOpen, onClose, onSuccess = null, initialBr
   const fieldRemaining = Math.max(0, fieldLimit - fieldSpent);
 
   const isReasonValid = reason.trim().length >= 2;
-  const isAmountValid = Number(amount) > 0;
+  const isAmountValid = Number(toEnglishDigits(amount)) > 0;
   const isCommodityValid = Boolean(commodityName.trim()) || Boolean(fieldId) || isForGeneralExpenses;
   const canSubmit = isReasonValid && isAmountValid && isCommodityValid && !loading;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const numAmount = Number(amount);
+    const numAmount = Number(toEnglishDigits(amount));
     if (!numAmount || numAmount <= 0) {
       setErrorMsg('يرجى كتابة مبلغ صحيح أكبر من الصفر');
       return;
@@ -175,12 +176,12 @@ export const RequestMoneyModal = ({ isOpen, onClose, onSuccess = null, initialBr
               <span>1. المبلغ المطلوب تحويله ({currency}) *:</span>
             </label>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               required
-              min="1"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="اكتب المبلغ هنا (مثال: 70000)"
+              onChange={(e) => setAmount(allowBothDigitsInput(e.target.value))}
+              placeholder="اكتب المبلغ هنا (مثال: 70000 أو ٧٠٠٠٠)"
               className="w-full bg-white dark:bg-slate-900 border-2 border-teal-400 dark:border-teal-600 rounded-xl px-4 py-2.5 text-base font-black text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500 font-mono text-center shadow-xs"
             />
           </div>

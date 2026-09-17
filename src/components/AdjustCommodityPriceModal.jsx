@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { formatMoney } from '../utils/formatters';
+import { formatMoney, allowBothDigitsInput, toEnglishDigits } from '../utils/formatters';
 import {
   X,
   Edit3,
@@ -46,7 +46,7 @@ export const AdjustCommodityPriceModal = ({
   if (!isOpen || !brother || !field) return null;
 
   const numCurrent = Number(currentPrice) || 0;
-  const numNew = Number(newPrice);
+  const numNew = Number(toEnglishDigits(newPrice));
   const isValidNewPrice = !isNaN(numNew) && numNew >= 0;
   const diff = isValidNewPrice ? numNew - numCurrent : 0;
   const isReduction = diff < 0;
@@ -57,7 +57,7 @@ export const AdjustCommodityPriceModal = ({
   const canSubmit = isCurrentAdmin && isValidNewPrice && diff !== 0 && isReasonValid && !loading;
 
   const handleQuickAdjust = (delta) => {
-    const current = Number(newPrice) || 0;
+    const current = Number(toEnglishDigits(newPrice)) || 0;
     const nextVal = Math.max(0, current + delta);
     setNewPrice(String(nextVal));
   };
@@ -190,12 +190,11 @@ export const AdjustCommodityPriceModal = ({
               </label>
               <div className="relative">
                 <input
-                  type="number"
-                  step="any"
-                  min="0"
+                  type="text"
+                  inputMode="decimal"
                   required
                   value={newPrice}
-                  onChange={(e) => setNewPrice(e.target.value)}
+                  onChange={(e) => setNewPrice(allowBothDigitsInput(e.target.value))}
                   placeholder="أدخل السعر الجديد..."
                   className="w-full text-lg font-black bg-white dark:bg-slate-900 border border-emerald-400 dark:border-emerald-600 rounded-xl px-3 py-1.5 text-center text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono shadow-xs"
                 />

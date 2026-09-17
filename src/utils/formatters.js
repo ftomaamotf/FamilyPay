@@ -1,29 +1,110 @@
 import * as XLSX from 'xlsx';
 
-export const formatMoney = (amount, currencySymbol = 'ج.م') => {
-  if (amount === undefined || amount === null || isNaN(amount)) return `0 ${currencySymbol}`;
-  const formatted = Math.abs(Number(amount)).toLocaleString('en-US', {
+// Eastern Arabic / Arabic-Indic digits map
+const ARABIC_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+
+export const toArabicDigits = (str) => {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/[0-9]/g, (d) => ARABIC_DIGITS[+d]);
+};
+
+export const toEnglishDigits = (str) => {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/[٠۰]/g, '0')
+    .replace(/[١۱]/g, '1')
+    .replace(/[٢۲]/g, '2')
+    .replace(/[٣۳]/g, '3')
+    .replace(/[٤۴]/g, '4')
+    .replace(/[٥۵]/g, '5')
+    .replace(/[٦۶]/g, '6')
+    .replace(/[٧۷]/g, '7')
+    .replace(/[٨۸]/g, '8')
+    .replace(/[٩۹]/g, '9');
+};
+
+export const cleanNumberInput = (val, allowDecimals = true) => {
+  if (val === null || val === undefined) return '';
+  const eng = toEnglishDigits(String(val)).replace(/[\u066B,]/g, '.');
+  if (allowDecimals) {
+    return eng.replace(/[^0-9.]/g, '');
+  }
+  return eng.replace(/[^0-9]/g, '');
+};
+
+export const allowBothDigitsInput = (val, allowDecimals = true) => {
+  if (val === null || val === undefined) return '';
+  let cleaned = String(val).replace(/[\u066B,]/g, '.');
+  if (allowDecimals) {
+    cleaned = cleaned.replace(/[^0-9٠-٩۰-۹.]/g, '');
+  } else {
+    cleaned = cleaned.replace(/[^0-9٠-٩۰-۹]/g, '');
+  }
+  const parts = cleaned.split('.');
+  if (parts.length > 2) {
+    cleaned = parts[0] + '.' + parts.slice(1).join('');
+  }
+  return cleaned;
+};
+
+export const getActiveNumeralSystem = () => {
+  try {
+    if (typeof window !== 'undefined') {
+      const s = localStorage.getItem('bait_finance_settings');
+      if (s) {
+        const parsed = JSON.parse(s);
+        if (parsed.numeralSystem) return parsed.numeralSystem;
+      }
+    }
+  } catch {}
+  return 'en';
+};
+
+export const formatMoney = (amount, currencySymbol = 'د.ع', numeralSystem = null) => {
+  const sys = numeralSystem || getActiveNumeralSystem();
+  if (amount === undefined || amount === null || isNaN(amount)) {
+    const zero = sys === 'ar' ? '٠' : '0';
+    return `${zero} ${currencySymbol}`;
+  }
+  let formatted = Math.abs(Number(amount)).toLocaleString('en-US', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   });
+  if (sys === 'ar') {
+    formatted = toArabicDigits(formatted);
+  }
   return `${amount < 0 ? '-' : ''}${formatted} ${currencySymbol}`;
 };
 
-export const formatNumber = (num) => {
-  if (num === undefined || num === null || isNaN(num)) return '0';
-  return Number(num).toLocaleString('en-US', { maximumFractionDigits: 2 });
+export const formatNumber = (num, numeralSystem = null) => {
+  const sys = numeralSystem || getActiveNumeralSystem();
+  if (num === undefined || num === null || isNaN(num)) {
+    return sys === 'ar' ? '٠' : '0';
+  }
+  let formatted = Number(num).toLocaleString('en-US', { maximumFractionDigits: 2 });
+  if (sys === 'ar') {
+    formatted = toArabicDigits(formatted);
+  }
+  return formatted;
 };
 
-export const formatArabicDate = (dateString) => {
+export const formatArabicDate = (dateString, numeralSystem = null) => {
   if (!dateString) return '';
+  const sys = numeralSystem || getActiveNumeralSystem();
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
-    return new Intl.DateTimeFormat('ar-EG', {
+    let formatted = new Intl.DateTimeFormat('ar-EG', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     }).format(date);
+    if (sys === 'en') {
+      formatted = toEnglishDigits(formatted);
+    } else {
+      formatted = toArabicDigits(formatted);
+    }
+    return formatted;
   } catch {
     return dateString;
   }

@@ -1018,7 +1018,7 @@ app.post('/api/general-expenses/name', (req, res) => {
 // 4.0.0.1 Fund Budget Cap: Update Monthly Fund Amount / Budget Limit
 app.post('/api/fund/monthly-amount', (req, res) => {
   const { amount, requestingBrotherId } = req.body;
-  const numAmount = Number(amount);
+  const numAmount = Number(normalizeDigits(amount));
   if (isNaN(numAmount) || numAmount < 0) {
     return res.status(400).json({ success: false, message: 'يرجى إدخال مبلغ صحيح لسقف الميزانية' });
   }
@@ -1237,7 +1237,10 @@ app.post('/api/brothers', (req, res) => {
   }
 
   const db = readDB();
-  const cleanAcc = accountNumber ? String(accountNumber).trim() : String(1000 + db.brothers.length + 1);
+  const cleanAcc = accountNumber ? normalizeDigits(String(accountNumber)).trim() : String(1000 + db.brothers.length + 1);
+  const cleanPhone = phone ? normalizeDigits(String(phone)).trim() : '';
+  const cleanBankAcc = bankAccountNumber ? normalizeDigits(String(bankAccountNumber)).trim() : cleanAcc;
+  const cleanPassword = password ? normalizeDigits(String(password)).trim() : '123';
   const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#ef4444', '#6366f1'];
 
   // Check if requester is Admin
@@ -1252,10 +1255,10 @@ app.post('/api/brothers', (req, res) => {
     const newReq = {
       id: 'g-req-' + Date.now(),
       name: name.trim(),
-      phone: phone ? String(phone).trim() : '',
-      bankAccountNumber: bankAccountNumber ? String(bankAccountNumber).trim() : cleanAcc,
+      phone: cleanPhone,
+      bankAccountNumber: cleanBankAcc,
       bankName: bankName ? bankName.trim() : 'ماستر كي / Qi Card',
-      password: password ? String(password).trim() : '123',
+      password: cleanPassword,
       avatarColor: avatarColor || colors[db.brothers.length % colors.length],
       status: 'pending',
       suggestedBy: requester ? requester.name : 'مستخدم',
@@ -1318,10 +1321,10 @@ app.post('/api/brothers', (req, res) => {
     id: req.body.id || 'b-' + Date.now(),
     name: name.trim(),
     accountNumber: cleanAcc,
-    phone: phone ? String(phone).trim() : '0770' + Math.floor(1000000 + Math.random() * 9000000),
-    bankAccountNumber: bankAccountNumber ? String(bankAccountNumber).trim() : cleanAcc,
+    phone: cleanPhone || ('0770' + Math.floor(1000000 + Math.random() * 9000000)),
+    bankAccountNumber: cleanBankAcc,
     bankName: bankName ? bankName.trim() : 'ماستر كي / Qi Card',
-    password: password ? String(password).trim() : '123',
+    password: cleanPassword,
     avatarColor: avatarColor || colors[db.brothers.length % colors.length],
     isAdmin: false,
     approvedFields: approvedFields && approvedFields.length > 0 ? approvedFields : []
@@ -1358,11 +1361,11 @@ app.put('/api/brothers/:brotherId', (req, res) => {
   }
 
   if (name) brother.name = name.trim();
-  if (accountNumber) brother.accountNumber = String(accountNumber).trim();
-  if (phone !== undefined) brother.phone = String(phone).trim();
-  if (bankAccountNumber) brother.bankAccountNumber = String(bankAccountNumber).trim();
+  if (accountNumber) brother.accountNumber = normalizeDigits(String(accountNumber)).trim();
+  if (phone !== undefined) brother.phone = normalizeDigits(String(phone)).trim();
+  if (bankAccountNumber) brother.bankAccountNumber = normalizeDigits(String(bankAccountNumber)).trim();
   if (bankName) brother.bankName = bankName.trim();
-  if (password) brother.password = String(password).trim();
+  if (password) brother.password = normalizeDigits(String(password)).trim();
   if (avatarColor) brother.avatarColor = avatarColor;
 
   saveDB(db);
@@ -1802,7 +1805,7 @@ app.post('/api/transfers', (req, res) => {
   }
 
   // 2. Validate mandatory fields (المبلغ والملاحظة إجبارية 100%)
-  const numAmount = Number(amount);
+  const numAmount = Number(normalizeDigits(amount));
   if (!numAmount || numAmount <= 0) {
     return res.status(400).json({ success: false, message: 'يرجى تحديد مبلغ صحيح أكبر من الصفر' });
   }
@@ -2115,7 +2118,7 @@ app.post('/api/requests', (req, res) => {
 
   if (!db.fundRequests) db.fundRequests = [];
 
-  const numAmount = Number(amount);
+  const numAmount = Number(normalizeDigits(amount));
   if (!numAmount || numAmount <= 0) {
     return res.status(400).json({ success: false, message: 'يرجى تحديد مبلغ صحيح لطلب الأموال' });
   }

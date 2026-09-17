@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { formatMoney, formatArabicDate } from '../utils/formatters';
+import { formatMoney, formatArabicDate, allowBothDigitsInput, toEnglishDigits } from '../utils/formatters';
 import {
   HandCoins,
   Plus,
@@ -79,16 +79,17 @@ export const Debts = () => {
 
   const handleAddSubmit = (e) => {
     e.preventDefault();
-    if (!title.trim() || !amount || Number(amount) <= 0) {
+    const cleanAmount = Number(toEnglishDigits(amount));
+    if (!title.trim() || !amount || isNaN(cleanAmount) || cleanAmount <= 0) {
       alert('يرجى كتابة البيان وتحديد المبلغ');
       return;
     }
     addDebt({
       title,
       type,
-      amount: Number(amount),
-      paidAmount: Number(paidAmount) || 0,
-      monthlyInstallment: Number(monthlyInstallment) || 0,
+      amount: cleanAmount,
+      paidAmount: Number(toEnglishDigits(paidAmount)) || 0,
+      monthlyInstallment: Number(toEnglishDigits(monthlyInstallment)) || 0,
       dueDate,
       person,
       notes,
@@ -98,8 +99,9 @@ export const Debts = () => {
 
   const handlePaySubmit = (e) => {
     e.preventDefault();
-    if (!payAmount || Number(payAmount) <= 0 || !selectedDebt) return;
-    updateDebtPayment(selectedDebt.id, Number(payAmount), autoLogTx);
+    const cleanPay = Number(toEnglishDigits(payAmount));
+    if (!payAmount || isNaN(cleanPay) || cleanPay <= 0 || !selectedDebt) return;
+    updateDebtPayment(selectedDebt.id, cleanPay, autoLogTx);
     setIsPayModalOpen(false);
   };
 
@@ -416,11 +418,11 @@ export const Debts = () => {
                     المبلغ الإجمالي ({currency}) *
                   </label>
                   <input
-                    type="number"
-                    step="any"
+                    type="text"
+                    inputMode="decimal"
                     required
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={(e) => setAmount(allowBothDigitsInput(e.target.value))}
                     placeholder="0"
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 text-center"
                   />
@@ -430,10 +432,10 @@ export const Debts = () => {
                     المدفوع مسبقاً
                   </label>
                   <input
-                    type="number"
-                    step="any"
+                    type="text"
+                    inputMode="decimal"
                     value={paidAmount}
-                    onChange={(e) => setPaidAmount(e.target.value)}
+                    onChange={(e) => setPaidAmount(allowBothDigitsInput(e.target.value))}
                     placeholder="0"
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 text-center"
                   />
@@ -447,10 +449,10 @@ export const Debts = () => {
                     القسط الشهري (اختياري)
                   </label>
                   <input
-                    type="number"
-                    step="any"
+                    type="text"
+                    inputMode="decimal"
                     value={monthlyInstallment}
-                    onChange={(e) => setMonthlyInstallment(e.target.value)}
+                    onChange={(e) => setMonthlyInstallment(allowBothDigitsInput(e.target.value))}
                     placeholder="0"
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                   />
@@ -535,13 +537,13 @@ export const Debts = () => {
                   المبلغ المدفوع ({currency}) *
                 </label>
                 <input
-                  type="number"
-                  step="any"
+                  type="text"
+                  inputMode="decimal"
                   required
                   value={payAmount}
-                  onChange={(e) => setPayAmount(e.target.value)}
+                  onChange={(e) => setPayAmount(allowBothDigitsInput(e.target.value))}
                   placeholder="0.00"
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xl font-black text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 text-center"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xl font-black text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 text-center font-mono"
                 />
               </div>
 

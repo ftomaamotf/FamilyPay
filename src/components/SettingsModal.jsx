@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
 import { CURRENCIES } from '../utils/defaultData';
-import { formatMoney } from '../utils/formatters';
+import { formatMoney, allowBothDigitsInput, toEnglishDigits } from '../utils/formatters';
 import {
   X,
   Settings,
@@ -82,13 +82,14 @@ export const SettingsModal = ({
 
   const handleBudgetCapSubmit = async (e) => {
     e.preventDefault();
-    if (settingsBudgetInput === '' || isNaN(Number(settingsBudgetInput)) || Number(settingsBudgetInput) < 0) {
+    const cleanBudget = Number(toEnglishDigits(settingsBudgetInput));
+    if (settingsBudgetInput === '' || isNaN(cleanBudget) || cleanBudget < 0) {
       setSettingsBudgetMsg('يرجى إدخال مبلغ صحيح لسقف الميزانية');
       return;
     }
     setSettingsBudgetLoading(true);
     setSettingsBudgetMsg('');
-    const res = await updateMonthlyFundTotal(Number(settingsBudgetInput));
+    const res = await updateMonthlyFundTotal(cleanBudget);
     setSettingsBudgetLoading(false);
     if (res && res.message) {
       setSettingsBudgetMsg(res.message);
@@ -161,7 +162,7 @@ export const SettingsModal = ({
       setApkPinError('❌ عذراً! صلاحية نشر وإرسال التطبيق محصورة بصاحب الحساب الأول (عبدالله عجمي - 9256869125) فقط.');
       return;
     }
-    const cleanPin = apkPinInput.trim();
+    const cleanPin = toEnglishDigits(apkPinInput).trim();
     if (cleanPin !== String(fundPin) && cleanPin !== '1988' && cleanPin !== '9988') {
       setApkPinError('❌ رمز حماية الأدمن غير صحيح! لا يمكن إرسال التطبيق بدون موافقة الأدمن.');
       return;
@@ -243,7 +244,7 @@ export const SettingsModal = ({
 
     setDelegateLoading(true);
     setDelegateMsg('');
-    const res = await transferAdminRole(selectedTargetAdminId, adminPinForDelegate.trim());
+    const res = await transferAdminRole(selectedTargetAdminId, toEnglishDigits(adminPinForDelegate).trim());
     setDelegateLoading(false);
 
     if (res.success) {
@@ -265,7 +266,7 @@ export const SettingsModal = ({
     const res = await updateTransferPermissions({
       mode: permMode,
       allowedSenderIds: allowedSenders,
-      adminPin: permPin.trim()
+      adminPin: toEnglishDigits(permPin).trim()
     });
     setPermLoading(false);
 
@@ -282,12 +283,14 @@ export const SettingsModal = ({
   // Change My Password
   const handleUpdateMyPassword = async (e) => {
     e.preventDefault();
-    if (!myNewPassword.trim() || myNewPassword.trim().length < 3) {
+    const cleanMyPass = toEnglishDigits(myNewPassword).trim();
+    const cleanConfirmPass = toEnglishDigits(myConfirmPassword).trim();
+    if (!cleanMyPass || cleanMyPass.length < 3) {
       setMyPasswordMsg('⚠️ يرجى إدخال كلمة مرور جديدة مكونة من 3 خانات على الأقل');
       setMyPasswordSuccess(false);
       return;
     }
-    if (myConfirmPassword && myNewPassword.trim() !== myConfirmPassword.trim()) {
+    if (cleanConfirmPass && cleanMyPass !== cleanConfirmPass) {
       setMyPasswordMsg('⚠️ كلمتا المرور غير متطابقتين');
       setMyPasswordSuccess(false);
       return;
@@ -296,7 +299,7 @@ export const SettingsModal = ({
     setMyPasswordMsg('');
     const res = await changeUserPassword({
       targetBrotherId: currentUser?.id,
-      newPassword: myNewPassword.trim(),
+      newPassword: cleanMyPass,
       requestingUserId: currentUser?.id
     });
     setMyPasswordLoading(false);
@@ -319,7 +322,8 @@ export const SettingsModal = ({
       setAdminPasswordSuccess(false);
       return;
     }
-    if (!adminNewPassword.trim() || adminNewPassword.trim().length < 3) {
+    const cleanAdminPass = toEnglishDigits(adminNewPassword).trim();
+    if (!cleanAdminPass || cleanAdminPass.length < 3) {
       setAdminPasswordMsg('⚠️ يرجى إدخال كلمة مرور مكونة من 3 خانات على الأقل');
       setAdminPasswordSuccess(false);
       return;
@@ -328,7 +332,7 @@ export const SettingsModal = ({
     setAdminPasswordMsg('');
     const res = await changeUserPassword({
       targetBrotherId: adminTargetBrotherId,
-      newPassword: adminNewPassword.trim(),
+      newPassword: cleanAdminPass,
       requestingUserId: currentUser?.id
     });
     setAdminPasswordLoading(false);
@@ -345,11 +349,12 @@ export const SettingsModal = ({
   // Change Security PIN
   const handleChangePinSubmit = async (e) => {
     e.preventDefault();
-    if (!newPinInput.trim() || newPinInput.trim().length < 3) {
+    const cleanPin = toEnglishDigits(newPinInput).trim();
+    if (!cleanPin || cleanPin.length < 3) {
       setPinChangeMsg('يرجى إدخال رمز حماية مكون من 3 أرقام على الأقل');
       return;
     }
-    const res = await changeFundPin(newPinInput.trim());
+    const res = await changeFundPin(cleanPin);
     if (res.success) {
       setPinChangeMsg('✅ تم تغيير رمز حماية الصندوق بنجاح!');
       setNewPinInput('');
@@ -788,11 +793,10 @@ export const SettingsModal = ({
 
                   <div className="flex items-center gap-2 pt-1">
                     <input
-                      type="number"
-                      min="0"
-                      step="any"
+                      type="text"
+                      inputMode="decimal"
                       value={settingsBudgetInput}
-                      onChange={(e) => setSettingsBudgetInput(e.target.value)}
+                      onChange={(e) => setSettingsBudgetInput(allowBothDigitsInput(e.target.value))}
                       placeholder="أدخل سقف الميزانية..."
                       className="flex-1 px-3.5 py-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-black text-blue-600 dark:text-blue-400 outline-none focus:border-blue-500 text-left"
                       dir="ltr"
@@ -1121,6 +1125,50 @@ export const SettingsModal = ({
                   >
                     {settings.darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
                   </button>
+                </div>
+
+                {/* Numeral System: English (123) vs Arabic (١٢٣) */}
+                <div className="pt-3 border-t border-slate-200 dark:border-slate-700 space-y-2.5">
+                  <div>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 block text-xs">نظام كتابة وعرض الأرقام 🔢:</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">اختر الشكل المفضل لعرض وكتابة المبالغ والتواريخ</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => updateSettings({ numeralSystem: 'en' })}
+                      className={`py-2.5 px-3 rounded-2xl border flex items-center justify-center gap-2 font-bold text-xs transition cursor-pointer ${
+                        (settings.numeralSystem || 'en') === 'en'
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-600/30 font-black'
+                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      <span className="font-mono text-sm font-black">123</span>
+                      <span>إنجليزية (0-9)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => updateSettings({ numeralSystem: 'ar' })}
+                      className={`py-2.5 px-3 rounded-2xl border flex items-center justify-center gap-2 font-bold text-xs transition cursor-pointer ${
+                        settings.numeralSystem === 'ar'
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-600/30 font-black'
+                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      <span className="font-mono text-sm font-black">١٢٣</span>
+                      <span>عربية (٠-٩)</span>
+                    </button>
+                  </div>
+
+                  {/* Live preview banner */}
+                  <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-500 dark:text-slate-400">معاينة شكل المبالغ:</span>
+                    <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                      {settings.numeralSystem === 'ar' ? '١٥٠,٠٠٠ د.ع' : '150,000 د.ع'}
+                    </span>
+                  </div>
                 </div>
               </div>
 

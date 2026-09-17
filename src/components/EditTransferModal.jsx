@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { formatMoney } from '../utils/formatters';
+import { formatMoney, allowBothDigitsInput, toEnglishDigits } from '../utils/formatters';
 import {
   X,
   Edit3,
@@ -51,7 +51,7 @@ export const EditTransferModal = ({ isOpen, onClose, transfer }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const numAmount = Number(amount);
+    const numAmount = Number(toEnglishDigits(amount));
     if (!numAmount || numAmount <= 0) {
       setIsSuccess(false);
       setMsg('⚠️ يرجى إدخال مبلغ صحيح أكبر من الصفر');
@@ -170,9 +170,10 @@ export const EditTransferModal = ({ isOpen, onClose, transfer }) => {
             </label>
             <div className="relative">
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => setAmount(allowBothDigitsInput(e.target.value))}
                 placeholder="أدخل المبلغ المعدل..."
                 className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 focus:border-emerald-500 rounded-2xl px-3.5 py-3 text-base font-black font-mono text-slate-900 dark:text-white outline-none transition"
                 required

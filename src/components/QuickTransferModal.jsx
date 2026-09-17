@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { formatMoney } from '../utils/formatters';
+import { formatMoney, allowBothDigitsInput, toEnglishDigits } from '../utils/formatters';
 import {
   X,
   Send,
@@ -85,7 +85,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
   const isRecipientValid = Boolean(recipientId && selectedRecipient);
   const isReasonValid = reason.trim().length >= 2;
   const isCommodityValid = (commodityName.trim().length >= 2) || Boolean(fieldId) || isGeneralRecipient;
-  const isAmountValid = Number(amount) > 0;
+  const isAmountValid = Number(toEnglishDigits(amount)) > 0;
   const canSubmit = isRecipientValid && isReasonValid && isCommodityValid && isAmountValid && !isCardFrozen && !loading && isSenderAuthorized;
 
   const handleSubmit = async (e) => {
@@ -129,7 +129,7 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
       brotherAccountNumber: selectedRecipient?.accountNumber,
       bankAccountNumber: selectedRecipient?.bankAccountNumber,
       isGeneralExpense: Boolean(isGeneralRecipient),
-      amount: Number(amount),
+      amount: Number(toEnglishDigits(amount)),
       fieldId: commodityName.trim() ? null : (fieldId || null),
       commodityName: finalCommodity,
       reason: reason.trim()
@@ -289,13 +289,12 @@ export const QuickTransferModal = ({ isOpen, onClose, initialRecipientId = null,
                 <span className="text-[10px] text-emerald-600 font-bold">المبلغ المطلوب بدقة</span>
               </label>
               <input
-                type="number"
-                step="any"
+                type="text"
+                inputMode="decimal"
                 required
-                min="1"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="اكتب المبلغ هنا (مثال: 70000)"
+                onChange={(e) => setAmount(allowBothDigitsInput(e.target.value))}
+                placeholder="اكتب المبلغ هنا (مثال: 70000 أو ٧٠٠٠٠)"
                 className="w-full text-2xl font-black bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-2xl px-4 py-3 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 text-center font-mono shadow-xs"
               />
             </div>
