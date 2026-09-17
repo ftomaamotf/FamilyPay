@@ -16,8 +16,7 @@ import {
   CreditCard,
   Eye,
   EyeOff,
-  Copy,
-  MessageCircle
+  Copy
 } from 'lucide-react';
 
 export const PendingRequestsModal = ({ isOpen, onClose }) => {
@@ -251,19 +250,6 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
                       <Ban className="w-3.5 h-3.5" />
                       <span>رفض</span>
                     </button>
-
-                    {(req.phone || selectedBrother?.phone) && (
-                      <a
-                        href={`https://wa.me/${String(req.phone || selectedBrother?.phone).replace(/[\s\-\+]/g, '').replace(/^0/, '964')}?text=${encodeURIComponent(`مرحباً ${req.brotherName}، بخصوص طلبك لصرف مبلغ ${Number(req.amount).toLocaleString()} ${currency} لـ (${req.fieldName || req.commodityName || 'طلب عام'})..`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="مراسلة الأخ مقدم الطلب عبر واتساب"
-                        className="px-3 py-2 bg-green-50 hover:bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 font-extrabold text-xs rounded-xl border border-green-300 dark:border-green-800 transition flex items-center justify-center gap-1 cursor-pointer active:scale-95"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">واتساب</span>
-                      </a>
-                    )}
                   </div>
                 </div>
               ))}
