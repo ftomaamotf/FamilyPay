@@ -173,7 +173,7 @@ const INITIAL_DB = {
   settings: {
     whatsappReminderEnabled: true,
     whatsappReminderDelayMinutes: 2,
-    whatsappAdminPhone: '07727959161',
+    whatsappAdminPhone: '07702206214',
     callmebotApiKey: ''
   }
 };
@@ -207,7 +207,7 @@ const readDB = () => {
       parsed.settings.whatsappReminderDelayMinutes = 2;
     }
     if (!parsed.settings.whatsappAdminPhone) {
-      parsed.settings.whatsappAdminPhone = '07727959161';
+      parsed.settings.whatsappAdminPhone = '07702206214';
     }
 
     // Permanent Protection: Ensure core family brothers are never lost
@@ -2064,10 +2064,13 @@ async function sendWhatsAppNotification(toPhone, messageText, db) {
     try {
       const url = `https://api.callmebot.com/whatsapp.php?phone=${cleanPhone}&text=${encodeURIComponent(messageText)}&apikey=${callmebotKey.trim()}`;
       const res = await fetch(url);
-      if (res.ok) {
+      const resText = await res.text();
+      if (res.ok && !resText.includes('invalid') && !resText.includes('ERROR') && !resText.includes('error')) {
         sent = true;
         logDetails.push('CallMeBot');
         console.log(`[WhatsApp] Successfully sent via CallMeBot to ${cleanPhone}`);
+      } else {
+        console.warn(`[WhatsApp] CallMeBot rejected: ${resText.slice(0, 150)}`);
       }
     } catch (err) {
       console.warn('[WhatsApp] CallMeBot error:', err.message);
@@ -2139,7 +2142,7 @@ async function executeAdminWhatsAppReminder(requestId) {
     }
 
     const admin = (db.brothers || []).find((b) => b.id === db.activeAdminId || b.isAdmin) || db.brothers[0];
-    const adminPhone = db.settings?.whatsappAdminPhone || admin?.phone || '07727959161';
+    const adminPhone = db.settings?.whatsappAdminPhone || admin?.phone || '07702206214';
 
     const reminderText = `🔔 *تذكير من نظام الصندوق المالي* 📥
 مرحباً ${admin?.name || 'الأدمن'}،
@@ -2219,7 +2222,7 @@ app.get('/api/settings/whatsapp', (req, res) => {
     settings: {
       whatsappReminderEnabled: s.whatsappReminderEnabled !== false,
       whatsappReminderDelayMinutes: s.whatsappReminderDelayMinutes || 2,
-      whatsappAdminPhone: s.whatsappAdminPhone || '07727959161',
+      whatsappAdminPhone: s.whatsappAdminPhone || '07702206214',
       callmebotApiKey: s.callmebotApiKey || '',
       ultramsgInstance: s.ultramsgInstance || '',
       ultramsgToken: s.ultramsgToken ? '••••••••' : '',
@@ -2277,7 +2280,7 @@ app.post('/api/settings/whatsapp', (req, res) => {
 
 app.post('/api/settings/whatsapp/test', async (req, res) => {
   const db = readDB();
-  const phone = req.body.phone || db.settings?.whatsappAdminPhone || '07727959161';
+  const phone = req.body.phone || db.settings?.whatsappAdminPhone || '07702206214';
   const testMsg = `🧪 *رسالة اختبار من نظام الصندوق المالي* 📱\nمرحباً بك! نظام تذكير الأدمن التلقائي عبر الواتساب يعمل بنجاح.\nسيصلك إشعار تلقائي هنا إذا تأخرت عن فتح البرنامج عند وصول طلب أموال جديد ⚡`;
 
   try {

@@ -144,7 +144,7 @@ export const SettingsModal = ({
   // WhatsApp Delayed Reminder Settings State (تذكير الأدمن التلقائي عند طلب الأموال)
   const [waReminderEnabled, setWaReminderEnabled] = useState(true);
   const [waDelayMinutes, setWaDelayMinutes] = useState(2);
-  const [waAdminPhone, setWaAdminPhone] = useState('07727959161');
+  const [waAdminPhone, setWaAdminPhone] = useState('07702206214');
   const [callmebotKey, setCallmebotKey] = useState('');
   const [waLoading, setWaLoading] = useState(false);
   const [waSaveMsg, setWaSaveMsg] = useState('');
@@ -160,7 +160,7 @@ export const SettingsModal = ({
         if (data.success && data.settings) {
           setWaReminderEnabled(data.settings.whatsappReminderEnabled !== false);
           setWaDelayMinutes(data.settings.whatsappReminderDelayMinutes || 2);
-          setWaAdminPhone(data.settings.whatsappAdminPhone || '07727959161');
+          setWaAdminPhone(data.settings.whatsappAdminPhone || '07702206214');
           setCallmebotKey(data.settings.callmebotApiKey || '');
         }
       })
@@ -1131,12 +1131,12 @@ export const SettingsModal = ({
                             type="text"
                             value={waAdminPhone}
                             onChange={(e) => setWaAdminPhone(e.target.value)}
-                            placeholder="07727959161"
+                            placeholder="07702206214"
                             dir="ltr"
                             className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold outline-none focus:border-emerald-500 text-slate-900 dark:text-white text-left"
                           />
                           <p className="text-[10px] text-slate-400 mt-1">
-                            الرقم الافتراضي المعتمد للأدمن: 07727959161
+                            الرقم المعتمد للأدمن: 07702206214
                           </p>
                         </div>
                       </div>
@@ -1151,16 +1151,57 @@ export const SettingsModal = ({
                           type="text"
                           value={callmebotKey}
                           onChange={(e) => setCallmebotKey(e.target.value)}
-                          placeholder="أدخل مفتاح CallMeBot API Key (مثال: 1234567)"
+                          placeholder="أدخل رمز الـ APIKey الذي وصلك (مثال: 829104)"
                           dir="ltr"
                           className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold outline-none focus:border-emerald-500 text-slate-900 dark:text-white text-left"
                         />
-                        <div className="mt-1.5 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-300 space-y-1">
-                          <span className="font-black block flex items-center gap-1">
-                            <span>💡 طريقة تفعيل الواتساب المجاني بخطوة واحدة:</span>
+                        <div className="mt-2 p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-900 dark:text-emerald-200 space-y-2">
+                          <span className="font-black block flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300">
+                            <span>💡 تفعيل الواتساب بنقرة واحدة مباشرة من هاتفك:</span>
                           </span>
-                          <p className="text-[10px] leading-relaxed">
-                            أرسل رسالة من واتسابك مكتوب فيها <span className="font-mono font-black select-all bg-emerald-100 dark:bg-emerald-900 px-1 rounded text-slate-900 dark:text-white">I allow callmebot to send me messages</span> إلى الرقم <span className="font-mono font-black select-all text-slate-900 dark:text-white" dir="ltr">+34 644 44 20 89</span>، وسيصلك الرمز فوراً في رسالة واتساب ضعه هنا واضغط حفظ.
+                          <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                            اضغط على أي من الروابط التالية ليفتح لك تطبيق الواتساب مباشرة مع رسالة التفعيل جاهزة، ثم اضغط إرسال. سيصلك كود الـ APIKey في ثوانٍ:
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-0.5">
+                            <a
+                              href="https://wa.me/34623786449?text=I%20allow%20callmebot%20to%20send%20me%20messages"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-emerald-400 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center justify-between hover:bg-emerald-50 dark:hover:bg-slate-850 transition"
+                            >
+                              <span>📲 سيرفر واتساب 1 (+34 623 78 64 49)</span>
+                              <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 px-1.5 py-0.5 rounded font-mono">فتح محادثة ↗</span>
+                            </a>
+                            <a
+                              href="https://wa.me/34644263377?text=I%20allow%20callmebot%20to%20send%20me%20messages"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-emerald-400 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center justify-between hover:bg-emerald-50 dark:hover:bg-slate-850 transition"
+                            >
+                              <span>📲 سيرفر واتساب 2 (+34 644 26 33 77)</span>
+                              <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 px-1.5 py-0.5 rounded font-mono">فتح محادثة ↗</span>
+                            </a>
+                            <a
+                              href="https://wa.me/34644442089?text=I%20allow%20callmebot%20to%20send%20me%20messages"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-emerald-400 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center justify-between hover:bg-emerald-50 dark:hover:bg-slate-850 transition"
+                            >
+                              <span>📲 سيرفر واتساب 3 (+34 644 44 20 89)</span>
+                              <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 px-1.5 py-0.5 rounded font-mono">فتح محادثة ↗</span>
+                            </a>
+                            <a
+                              href="https://wa.me/34644103323?text=I%20allow%20callmebot%20to%20send%20me%20messages"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-emerald-400 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center justify-between hover:bg-emerald-50 dark:hover:bg-slate-850 transition"
+                            >
+                              <span>📲 سيرفر واتساب 4 (+34 644 10 33 23)</span>
+                              <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900 px-1.5 py-0.5 rounded font-mono">فتح محادثة ↗</span>
+                            </a>
+                          </div>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                            فور وصول رد البوت، انسخ الرمز (ApiKey) وضعه في الخانة أعلاه واضغط حفظ.
                           </p>
                         </div>
                       </div>
