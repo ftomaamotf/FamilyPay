@@ -676,16 +676,53 @@ export const FinanceProvider = ({ children }) => {
             if (allMsgs) setMessages(allMsgs);
             else if (message) setMessages((prev) => [...prev.filter((m) => m.id !== message.id), message]);
 
-            // If message is from another user, play distinct audio notification sound!
+            // If message is from another user and directed to me or everyone
             if (message && message.senderId !== currentUser?.id) {
-              playMessageNotificationSound();
-              
-              // If browser notifications allowed, show banner
-              if (Notification.permission === 'granted') {
-                new Notification(`💬 رسالة جديدة من ${message.senderName}`, {
-                  body: message.type === 'voice' ? '🎙️ [بصمة صوتية جديدة]' : message.text,
-                  icon: '/favicon.svg'
-                });
+              const isGroupMsg = !message.recipientId || message.recipientId === 'all';
+              const isDirectedToMe = isGroupMsg ||
+                message.recipientId === currentUser?.id ||
+                (currentUser?.accountNumber && String(message.recipientId) === String(currentUser.accountNumber)) ||
+                (currentUser?.bankAccountNumber && String(message.recipientId) === String(currentUser.bankAccountNumber)) ||
+                (currentUser?.phone && String(message.recipientId).replace(/[\s\-\+]/g, '') === String(currentUser.phone).replace(/[\s\-\+]/g, ''));
+
+              if (isDirectedToMe) {
+                playMessageNotificationSound();
+
+                const targetRecipient = isGroupMsg ? 'all' : message.senderId;
+                const notifData = {
+                  id: 'notif-msg-' + (message.id || Date.now()),
+                  title: isGroupMsg ? `💬 رسالة في الصندوق من ${message.senderName}` : `💬 رسالة خاصة من ${message.senderName}`,
+                  message: message.type === 'voice' ? '🎙️ أرسل رسالة وبصمة صوتية جديدة' : (message.text || 'رسالة جديدة'),
+                  type: 'MESSAGE',
+                  senderId: message.senderId,
+                  senderName: message.senderName,
+                  recipientId: message.recipientId,
+                  chatRecipientId: targetRecipient,
+                  timestamp: new Date().toISOString()
+                };
+
+                setActiveAlert(notifData);
+                setNotifications((prev) => [notifData, ...prev]);
+
+                // If browser notifications allowed, show banner with direct click navigation
+                if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                  try {
+                    const browserNotif = new Notification(notifData.title, {
+                      body: notifData.message,
+                      icon: '/favicon.svg',
+                      tag: 'chat-msg-' + (message.id || Date.now())
+                    });
+                    browserNotif.onclick = () => {
+                      window.focus();
+                      browserNotif.close();
+                      window.dispatchEvent(new CustomEvent('familypay:open-chat', {
+                        detail: { recipientId: targetRecipient }
+                      }));
+                    };
+                  } catch (err) {
+                    console.log('Browser notification note:', err);
+                  }
+                }
               }
             }
           }

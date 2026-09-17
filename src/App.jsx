@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FinanceProvider, useFinance } from './context/FinanceContext';
 import { AuthScreen } from './components/AuthScreen';
 import { Navbar } from './components/Navbar';
@@ -131,6 +131,52 @@ function MainApp() {
     setChatModalOpen(true);
   };
 
+  // Handle Opening Chat from Notification Click (Push Notification, Service Worker, Browser API, or URL Params)
+  useEffect(() => {
+    // 1. Custom event from in-app browser notification click
+    const handleOpenChatEvent = (e) => {
+      const recipientId = e.detail?.recipientId || 'all';
+      handleOpenChat(recipientId);
+    };
+    window.addEventListener('familypay:open-chat', handleOpenChatEvent);
+
+    // 2. Service Worker postMessage when background notification is clicked
+    const handleSwMessage = (event) => {
+      const msg = event.data;
+      if (msg?.type === 'NOTIFICATION_OPENED' && msg.data) {
+        if (msg.data.openChat || msg.data.type === 'MESSAGE' || msg.action === 'open_chat') {
+          const targetId = msg.data.chatRecipientId || (msg.data.recipientId === 'all' ? 'all' : (msg.data.senderId || 'all'));
+          handleOpenChat(targetId);
+        }
+      }
+    };
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleSwMessage);
+    }
+
+    // 3. Cold Start / Direct URL Query Params (?openChat=1&recipientId=...)
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('openChat') === '1' || urlParams.get('notifType') === 'MESSAGE') {
+        const targetId = urlParams.get('recipientId') || urlParams.get('senderId') || 'all';
+        handleOpenChat(targetId);
+
+        // Clean query parameters from address bar without reloading
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    } catch (err) {
+      console.log('Error checking notification URL params:', err);
+    }
+
+    return () => {
+      window.removeEventListener('familypay:open-chat', handleOpenChatEvent);
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleSwMessage);
+      }
+    };
+  }, []);
+
   const handleOpenTransfer = (recipientId = null, fieldId = null) => {
     setTransferRecipientId(recipientId);
     setTransferFieldId(fieldId);
@@ -175,6 +221,7 @@ function MainApp() {
       <NotificationToast
         onOpenPendingRequests={() => setPendingRequestsModalOpen(true)}
         onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
+        onOpenChat={handleOpenChat}
       />
 
       {/* Top Navigation */}
@@ -282,6 +329,7 @@ function MainApp() {
             <LiveCountersBar
               onOpenPendingRequests={() => setPendingRequestsModalOpen(true)}
               onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
+              onOpenChat={handleOpenChat}
             />
           </div>
         )}

@@ -189,9 +189,21 @@ export const CircleChatModal = ({ isOpen, onClose, initialRecipientId = 'all' })
 
   useEffect(() => {
     if (initialRecipientId) {
-      setActiveTab(initialRecipientId);
+      if (initialRecipientId === 'all') {
+        setActiveTab('all');
+      } else {
+        const cleanId = String(initialRecipientId).replace(/[\s\-\+]/g, '');
+        const targetBrother = (brothers || []).find((b) =>
+          b.id === initialRecipientId ||
+          String(b.accountNumber) === initialRecipientId ||
+          String(b.bankAccountNumber) === initialRecipientId ||
+          (b.phone && String(b.phone).replace(/[\s\-\+]/g, '') === cleanId) ||
+          b.name === initialRecipientId
+        );
+        setActiveTab(targetBrother ? targetBrother.id : initialRecipientId);
+      }
     }
-  }, [initialRecipientId, isOpen]);
+  }, [initialRecipientId, isOpen, brothers]);
 
   useEffect(() => {
     if (isOpen) {

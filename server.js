@@ -2370,12 +2370,19 @@ app.post('/api/messages', (req, res) => {
   });
 
   // Background Push Alert for chat message or voice note
+  const isGroup = finalRecipientId === 'all';
+  const chatTargetForReceiver = isGroup ? 'all' : newMsg.senderId;
+
   sendPushToUser(finalRecipientId, {
-    title: `💬 رسالة من (${newMsg.senderName})`,
+    title: isGroup ? `💬 رسالة في الصندوق من (${newMsg.senderName})` : `💬 رسالة خاصة من (${newMsg.senderName})`,
     body: newMsg.text || (newMsg.type === 'voice' ? '🎙️ أرسل رسالة وبصمة صوتية' : 'رسالة جديدة'),
     type: 'MESSAGE',
-    url: '/'
-  });
+    url: '/',
+    senderId: newMsg.senderId,
+    senderName: newMsg.senderName,
+    recipientId: finalRecipientId,
+    chatRecipientId: chatTargetForReceiver
+  }, newMsg.senderId);
 
   res.json({
     success: true,
@@ -2591,8 +2598,8 @@ app.get('/api/intercom/active-for/:userId', (req, res) => {
 
 // ================= 10. Web Push Background Notifications (Android & iPhone PWA) =================
 
-// Helper to send Web Push Notification to a user or all users
-function sendPushToUser(userId, payload) {
+// Helper to send Web Push Notification to a user or all users (with optional excludeUserId)
+function sendPushToUser(userId, payload, excludeUserId = null) {
   try {
     const db = readDB();
     if (!db.pushSubscriptions || db.pushSubscriptions.length === 0) return;
@@ -2612,9 +2619,27 @@ function sendPushToUser(userId, payload) {
       if (b.phone) targetIds.push(String(b.phone));
     }
 
-    const targets = userId === 'all'
+    let targets = userId === 'all'
       ? db.pushSubscriptions
       : db.pushSubscriptions.filter((s) => targetIds.includes(s.userId));
+
+    if (excludeUserId) {
+      const cleanExcludeId = String(excludeUserId).replace(/[\s\-\+]/g, '');
+      const excludeBrother = (db.brothers || []).find(
+        (br) => br.id === excludeUserId ||
+          String(br.accountNumber) === excludeUserId ||
+          String(br.bankAccountNumber) === excludeUserId ||
+          (br.phone && String(br.phone).replace(/[\s\-\+]/g, '') === cleanExcludeId)
+      );
+      const excludeList = [String(excludeUserId), cleanExcludeId];
+      if (excludeBrother) {
+        if (excludeBrother.id) excludeList.push(String(excludeBrother.id));
+        if (excludeBrother.accountNumber) excludeList.push(String(excludeBrother.accountNumber));
+        if (excludeBrother.bankAccountNumber) excludeList.push(String(excludeBrother.bankAccountNumber));
+        if (excludeBrother.phone) excludeList.push(String(excludeBrother.phone));
+      }
+      targets = targets.filter((s) => !excludeList.includes(String(s.userId)));
+    }
 
     targets.forEach((subObj) => {
       if (subObj.subscription && subObj.subscription.endpoint) {

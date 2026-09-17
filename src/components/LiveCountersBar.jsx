@@ -15,10 +15,11 @@ import {
   Send,
   UserCheck,
   Edit2,
-  Check
+  Check,
+  MessageSquare
 } from 'lucide-react';
 
-export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals }) => {
+export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals, onOpenChat }) => {
   const {
     sendingCard,
     monthlyFundTotal,
@@ -255,6 +256,7 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
               {notifications.map((n) => {
                 const isMoneyReq = n.title?.includes('طلب أموال') || n.message?.includes('طلب الأخ');
                 const isGuestReq = n.title?.includes('ضيف') || n.message?.includes('الضيف');
+                const isChatMsg = n.type === 'MESSAGE' || Boolean(n.chatRecipientId) || n.title?.includes('رسالة');
 
                 return (
                   <div
@@ -298,6 +300,19 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
                       >
                         <UserCheck className="w-3.5 h-3.5" />
                         <span>مراجعة وقبول الضيف بكلمة المرور 🔑</span>
+                      </button>
+                    )}
+
+                    {isChatMsg && onOpenChat && (
+                      <button
+                        onClick={() => {
+                          setIsNotifsOpen(false);
+                          onOpenChat(n.chatRecipientId || (n.recipientId === 'all' ? 'all' : (n.senderId || 'all')));
+                        }}
+                        className="w-full py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5 active:scale-98 cursor-pointer"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>فتح المحادثة والرد 💬</span>
                       </button>
                     )}
                   </div>
