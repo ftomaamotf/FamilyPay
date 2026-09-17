@@ -198,26 +198,21 @@ const readDB = () => {
       parsed.deletionLogs = [];
     }
 
-    // Protection: Ensure core family brothers are initialized only if not deleted intentionally
-    if (Array.isArray(parsed.brothers)) {
+    // Protection: Initialize default brothers ONLY if DB is completely empty; NEVER re-inject deleted brothers
+    if (!Array.isArray(parsed.brothers) || parsed.brothers.length === 0) {
+      parsed.brothers = INITIAL_DB.brothers;
+    } else {
       parsed.brothers.forEach((b) => {
         if (b.name === 'مستخدم مسجل') b.name = 'علي عجمي';
       });
-      INITIAL_DB.brothers.forEach((coreB) => {
-        const isDeleted = (parsed.deletedBrotherIds || []).some(
-          (delId) => String(delId) === String(coreB.id) || String(delId) === String(coreB.accountNumber) || delId === coreB.name
-        );
-        if (isDeleted) return;
-
-        const found = parsed.brothers.find(
-          (b) => b.id === coreB.id || String(b.accountNumber) === String(coreB.accountNumber) || b.name === coreB.name
-        );
-        if (!found) {
-          parsed.brothers.push(coreB);
-        }
-      });
-    } else {
-      parsed.brothers = INITIAL_DB.brothers;
+      if (parsed.deletedBrotherIds.length > 0) {
+        parsed.brothers = parsed.brothers.filter((b) => {
+          const isDeleted = parsed.deletedBrotherIds.some(
+            (delId) => String(delId) === String(b.id) || String(delId) === String(b.accountNumber)
+          );
+          return !isDeleted;
+        });
+      }
     }
 
     return parsed;
@@ -1409,6 +1404,7 @@ const handleDeleteBrotherAccount = (req, res) => {
 
   const cleanPass = String(inputPassword || '').trim();
   const isPassMatch = (admin && cleanPass === String(admin.password).trim()) ||
+                      (db.security && cleanPass === String(db.security.fundPin).trim()) ||
                       cleanPass === '1988' ||
                       cleanPass === '9988';
 
