@@ -435,41 +435,17 @@ export const FinanceProvider = ({ children }) => {
     }
   }, []);
 
-  // Smart Merge Helper for Brothers
+  // Smart Sync Helper for Brothers (Server is the Single Source of Truth)
   const syncAndMergeBrothers = useCallback((serverBrothers) => {
-    if (!Array.isArray(serverBrothers) || serverBrothers.length === 0) return;
-    setBrothers((prevLocal) => {
-      const mergedMap = new Map();
-      // 1. Add all server brothers
-      serverBrothers.forEach((b) => {
-        if (!b) return;
-        if (b.name === 'مستخدم مسجل') b.name = 'علي عجمي';
-        mergedMap.set(b.id || b.accountNumber, b);
+    if (!Array.isArray(serverBrothers)) return;
+    const cleanList = serverBrothers
+      .filter(Boolean)
+      .map((b) => {
+        if (b.name === 'مستخدم مسجل') return { ...b, name: 'علي عجمي' };
+        return b;
       });
-      // 2. Check if local storage has brothers not present on server
-      let hasMissing = false;
-      const missingToSync = [];
-      (prevLocal || []).forEach((lb) => {
-        if (!lb || !lb.name) return;
-        if (lb.name === 'مستخدم مسجل') lb.name = 'علي عجمي';
-        const key = lb.id || lb.accountNumber;
-        const isDummy = ['يوسف', 'خالد', 'أحمد'].includes(lb.name);
-        if (!isDummy && !mergedMap.has(key)) {
-          mergedMap.set(key, lb);
-          missingToSync.push(lb);
-          hasMissing = true;
-        }
-      });
-      // 3. Auto-sync missing brothers to server
-      if (hasMissing && missingToSync.length > 0) {
-        fetch(`${API_BASE}/api/sync`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ brothers: missingToSync })
-        }).catch(() => {});
-      }
-      return Array.from(mergedMap.values());
-    });
+    setBrothers(cleanList);
+    saveToStorage('bait_finance_brothers', cleanList);
   }, []);
 
   // Realtime Server-Sent Events (SSE) Listener & Initial Server Sync
@@ -1874,17 +1850,36 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  const deleteBrother = async (brotherId) => {
+  const deleteBrother = async (brotherId, { adminPassword, deletionReason } = {}) => {
     if (brotherId === activeAdminId) {
       return { success: false, message: 'لا يمكن حذف حساب الأدمن الحالي، قم بتحويل الأدمن أولاً' };
     }
     try {
       const res = await fetch(`${API_BASE}/api/brothers/${brotherId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adminPassword,
+          deletionReason,
+          requestingAdminId: currentUser?.id || activeAdminId
+        })
       });
       const data = await res.json();
       if (data.success) {
-        if (data.brothers) setBrothers(data.brothers);
+        if (data.brothers) {
+          const cleanList = data.brothers.map((b) => {
+            if (b && b.name === 'مستخدم مسجل') return { ...b, name: 'علي عجمي' };
+            return b;
+          });
+          setBrothers(cleanList);
+          saveToStorage('bait_finance_brothers', cleanList);
+        } else {
+          setBrothers((prev) => {
+            const updated = prev.filter((b) => b.id !== brotherId);
+            saveToStorage('bait_finance_brothers', updated);
+            return updated;
+          });
+        }
         if (currentUser?.id === brotherId) {
           setCurrentUser(null);
         }
@@ -1892,11 +1887,7 @@ export const FinanceProvider = ({ children }) => {
       }
       return { success: false, message: data.message };
     } catch {
-      setBrothers((prev) => prev.filter((b) => b.id !== brotherId));
-      if (currentUser?.id === brotherId) {
-        setCurrentUser(null);
-      }
-      return { success: true, message: 'تم حذف الحساب بنجاح' };
+      return { success: false, message: 'تعذر الاتصال بالخادم لإتمام عملية الحذف' };
     }
   };
 
