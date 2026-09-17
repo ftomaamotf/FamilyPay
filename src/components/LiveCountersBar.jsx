@@ -73,103 +73,119 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
   return (
     <div className="relative">
       
-      {/* 4 Realtime Ticker Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* 🔴 المستطيل الشبيه لمربع الدوائر لتصفح المربعات أسفل البطاقة بسلاسة 🔴 */}
+      <div className="bg-gradient-to-b from-slate-900/95 to-slate-950/95 p-4 sm:p-5 rounded-3xl border border-slate-800 shadow-xl space-y-3" dir="rtl">
         
-        {/* Card 1: Sending Card Balance */}
-        <div
-          onClick={() => isCurrentAdmin && handleOpenEditBalance()}
-          className={`bg-white dark:bg-slate-800 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm relative overflow-hidden transition-all ${
-            isCurrentAdmin ? 'cursor-pointer hover:border-emerald-500 hover:shadow-md active:scale-98 group' : ''
-          }`}
-          title={isCurrentAdmin ? 'اضغط هنا لتعديل رصيد بطاقة الإرسال مباشرة ✏️' : ''}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-              <span>رصيد بطاقة الإرسال</span>
-              {isCurrentAdmin && (
-                <span className="p-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-600 opacity-80 group-hover:opacity-100 flex items-center gap-0.5 text-[9px] font-extrabold px-1">
-                  <Edit2 className="w-2.5 h-2.5" />
-                  <span>تعديل</span>
-                </span>
-              )}
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
-              <CreditCard className="w-3.5 h-3.5" />
-            </div>
-          </div>
-          <div className="mt-2">
-            <div className="text-base sm:text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
-              {canSeeBalance ? formatMoney(sendingCard.balance, currency) : '••••••'}
-            </div>
-            <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-              {canSeeBalance ? (isCurrentAdmin ? 'اضغط لتعديل الرصيد ✏️' : 'محدث لحظياً') : 'مخفي بقرار الأدمن 🔒'}
-            </span>
-          </div>
+        {/* شريط عنوان المستطيل - شبيه لمربع الدوائر */}
+        <div className="flex items-center justify-between pb-2.5 border-b border-slate-800/80 px-1">
+          <span className="text-xs font-black text-emerald-400 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>مؤشرات وإحصائيات الصندوق والحسابات 📊</span>
+          </span>
+          <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1 bg-slate-800/60 px-2.5 py-0.5 rounded-full border border-slate-700/50">
+            <span>تصفح سلس</span>
+            <span className="text-emerald-400 font-mono">⟷</span>
+          </span>
         </div>
 
-        {/* Card 2: Total Spent This Month */}
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">ما تم صرفه هذا الشهر</span>
-            <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center">
-              <TrendingDown className="w-3.5 h-3.5" />
+        {/* شريط المربعات المتصفح بسلاسة (سحب أفقي سلس على الموبايل وتوزيع متناسق على الشاشات الكبيرة) */}
+        <div className="flex flex-row items-stretch gap-3 sm:gap-4 overflow-x-auto p-1 pb-2 scrollbar-thin scrollbar-thumb-slate-700 scroll-smooth snap-x">
+          
+          {/* Card 1: Sending Card Balance */}
+          <div
+            onClick={() => isCurrentAdmin && handleOpenEditBalance()}
+            className={`w-[230px] sm:w-[250px] lg:flex-1 shrink-0 snap-start bg-slate-800/90 dark:bg-slate-800/90 hover:bg-slate-800 p-4 rounded-2xl border border-emerald-500/30 hover:border-emerald-400 shadow-md relative overflow-hidden transition-all duration-200 flex flex-col justify-between ${
+              isCurrentAdmin ? 'cursor-pointer hover:shadow-lg active:scale-98 group' : ''
+            }`}
+            title={isCurrentAdmin ? 'اضغط هنا لتعديل رصيد بطاقة الإرسال مباشرة ✏️' : ''}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1">
+                <span>رصيد بطاقة الإرسال</span>
+                {isCurrentAdmin && (
+                  <span className="p-0.5 rounded bg-emerald-500/20 text-emerald-300 opacity-90 group-hover:opacity-100 flex items-center gap-0.5 text-[9px] font-extrabold px-1 border border-emerald-500/30">
+                    <Edit2 className="w-2.5 h-2.5" />
+                    <span>تعديل</span>
+                  </span>
+                )}
+              </span>
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shrink-0">
+                <CreditCard className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="text-base sm:text-xl font-black text-emerald-400 font-mono">
+                {canSeeBalance ? formatMoney(sendingCard.balance, currency) : '••••••'}
+              </div>
+              <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5 mt-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                {canSeeBalance ? (isCurrentAdmin ? 'اضغط لتعديل الرصيد ✏️' : 'محدث لحظياً') : 'مخفي بقرار الأدمن 🔒'}
+              </span>
             </div>
           </div>
-          <div className="mt-2">
-            <div className="text-base sm:text-xl font-black text-rose-600 dark:text-rose-400">
-              {formatMoney(totalSpentThisMonth, currency)}
+
+          {/* Card 2: Total Spent This Month */}
+          <div className="w-[230px] sm:w-[250px] lg:flex-1 shrink-0 snap-start bg-slate-800/90 dark:bg-slate-800/90 hover:bg-slate-800 p-4 rounded-2xl border border-slate-700/80 hover:border-rose-500/40 shadow-md relative overflow-hidden transition-all duration-200 flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-300">ما تم صرفه هذا الشهر</span>
+              <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30 shrink-0">
+                <TrendingDown className="w-4 h-4" />
+              </div>
             </div>
-            <span className="text-[10px] text-slate-400 font-medium">إجمالي تحويلات المستخدمين</span>
+            <div className="mt-3">
+              <div className="text-base sm:text-xl font-black text-rose-400 font-mono">
+                {formatMoney(totalSpentThisMonth, currency)}
+              </div>
+              <span className="text-[10px] text-slate-400 font-medium block mt-1">إجمالي تحويلات المستخدمين</span>
+            </div>
           </div>
+
+          {/* Card 3: Remaining Monthly Budget */}
+          <div className="w-[230px] sm:w-[250px] lg:flex-1 shrink-0 snap-start bg-slate-800/90 dark:bg-slate-800/90 hover:bg-slate-800 p-4 rounded-2xl border border-slate-700/80 hover:border-blue-500/40 shadow-md relative overflow-hidden transition-all duration-200 flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-300">المتبقي من ميزانية الشهر</span>
+              <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30 shrink-0">
+                <Wallet className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="text-base sm:text-xl font-black text-blue-400 font-mono">
+                {formatMoney(remainingMonthlyFund, currency)}
+              </div>
+              <span className="text-[10px] text-slate-400 font-medium block mt-1">من سقف {formatMoney(monthlyFundTotal, currency)}</span>
+            </div>
+          </div>
+
+          {/* Card 4: Notification Alerts Counter */}
+          <button
+            onClick={handleToggleNotifs}
+            className="w-[230px] sm:w-[250px] lg:flex-1 shrink-0 snap-start bg-slate-800/90 dark:bg-slate-800/90 hover:bg-slate-800 p-4 rounded-2xl border border-slate-700/80 hover:border-purple-500/40 shadow-md relative text-right transition-all duration-200 hover:border-emerald-400 active:scale-98 flex flex-col justify-between cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-300">إشعارات وتنبيهات المستخدمين</span>
+              <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30 relative shrink-0">
+                <Bell className="w-4 h-4" />
+                {unreadNotifsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[9px] font-extrabold flex items-center justify-center animate-bounce">
+                    {unreadNotifsCount}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="text-base sm:text-xl font-black text-purple-400 flex items-center gap-1.5">
+                <span>{notifications.length} إشعار</span>
+                {unreadNotifsCount > 0 && (
+                  <span className="text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1.5 py-0.2 rounded-md font-bold">
+                    {unreadNotifsCount} جديد
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] text-slate-400 font-medium block mt-1">اضغط لعرض سجل التنبيهات</span>
+            </div>
+          </button>
+
         </div>
-
-        {/* Card 3: Remaining Monthly Budget */}
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">المتبقي من ميزانية الشهر</span>
-            <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center">
-              <Wallet className="w-3.5 h-3.5" />
-            </div>
-          </div>
-          <div className="mt-2">
-            <div className="text-base sm:text-xl font-black text-blue-600 dark:text-blue-400">
-              {formatMoney(remainingMonthlyFund, currency)}
-            </div>
-            <span className="text-[10px] text-slate-400 font-medium">من سقف {formatMoney(monthlyFundTotal, currency)}</span>
-          </div>
-        </div>
-
-        {/* Card 4: Notification Alerts Counter */}
-        <button
-          onClick={handleToggleNotifs}
-          className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm relative text-right transition hover:border-emerald-400 active:scale-98"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">إشعارات وتنبيهات المستخدمين</span>
-            <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center relative">
-              <Bell className="w-3.5 h-3.5" />
-              {unreadNotifsCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[9px] font-extrabold flex items-center justify-center animate-bounce">
-                  {unreadNotifsCount}
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="mt-2">
-            <div className="text-base sm:text-xl font-black text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
-              <span>{notifications.length} إشعار</span>
-              {unreadNotifsCount > 0 && (
-                <span className="text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.2 rounded font-bold">
-                  {unreadNotifsCount} جديد
-                </span>
-              )}
-            </div>
-            <span className="text-[10px] text-slate-400 font-medium">اضغط لعرض سجل التنبيهات</span>
-          </div>
-        </button>
-
       </div>
 
       {/* Notifications Drawer / Popover */}

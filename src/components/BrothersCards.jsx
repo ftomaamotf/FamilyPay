@@ -1017,7 +1017,7 @@ export const BrothersCards = ({
               </span>
             </div>
 
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-2.5 max-h-[340px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scroll-smooth">
               {selectedBrother.approvedFields?.map((f, index) => {
                 const calculatedSpent = dynamicFieldSpent(f.id, f.name);
                 const pending = fundRequests?.find((r) =>
