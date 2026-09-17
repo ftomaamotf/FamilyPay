@@ -13,12 +13,16 @@ import {
   Sparkles,
   Lock,
   Eye,
-  EyeOff
+  EyeOff,
+  MessageCircle
 } from 'lucide-react';
 
 export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, initialFieldId = null }) => {
-  const { currentUser, brothers, submitMoneyRequest, settings, generalExpensesName } = useFinance();
+  const { currentUser, brothers, submitMoneyRequest, settings, generalExpensesName, activeAdminId } = useFinance();
   const currency = settings.currencySymbol;
+
+  const activeAdmin = brothers.find((b) => b.id === activeAdminId) || brothers.find((b) => b.isAdmin) || brothers[0];
+  const adminPhone = activeAdmin?.phone || '07727959161';
 
   const [selectedRequesterId, setSelectedRequesterId] = useState(initialBrotherId || currentUser?.id || '');
   const currentBrother = brothers.find((b) => b.id === selectedRequesterId) || brothers.find((b) => b.id === (initialBrotherId || currentUser?.id)) || currentUser;
@@ -31,6 +35,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [submittedData, setSubmittedData] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -44,6 +49,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       setCommodityName('');
       setErrorMsg('');
       setSuccessMsg('');
+      setSubmittedData(null);
     }
   }, [isOpen, initialBrotherId, initialFieldId]);
 
@@ -58,6 +64,93 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
   const isAmountValid = Number(amount) > 0;
   const isCommodityValid = Boolean(commodityName.trim()) || Boolean(fieldId) || isForGeneralExpenses;
   const canSubmit = isReasonValid && isAmountValid && isCommodityValid && !loading;
+
+  const formatWhatsAppMessage = (numAmount, commodity, noteReason) => {
+    const requesterName = currentBrother?.name || currentUser?.name || 'مستخدم';
+    const targetAccount = isForGeneralExpenses
+      ? (generalExpensesName || 'مصاريف عامة مشتركة للصندوق 📦')
+      : (currentBrother?.bankAccountNumber || currentUser?.bankAccountNumber || 'غير محدد');
+    const finalCommodity = commodity || commodityName.trim() || selectedField?.name || (isForGeneralExpenses ? (generalExpensesName || 'مصاريف عامة') : 'مصروف عام');
+    const finalReason = noteReason || reason.trim() || 'لا توجد ملاحظات إضافية';
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('ar-IQ') + ' (' + now.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }) + ')';
+
+    return `📌 *طلب صرف أموال جديد من الصندوق المالي* 📥
+━━━━━━━━━━━━━━━━━
+👤 *مقدم الطلب:* ${requesterName}
+💳 *الحساب المصرفي المستلم:* ${targetAccount}
+💰 *المبلغ المطلوب:* ${Number(numAmount || amount).toLocaleString()} ${currency}
+📦 *الغرض / السلعة:* ${finalCommodity}
+📝 *ملاحظات وسبب الصرف:* ${finalReason}
+📅 *التاريخ والوقت:* ${dateStr}
+━━━━━━━━━━━━━━━━━
+يرجى التكرم بالاطلاع والموافقة على الصرف والتحويل، بارك الله بكم 🌹`;
+  };
+
+  const getWhatsAppLink = (numAmount, commodity, noteReason) => {
+    const text = formatWhatsAppMessage(numAmount, commodity, noteReason);
+    const cleanPhone = String(adminPhone).replace(/[\s\-\+]/g, '').replace(/^0/, '964');
+    return cleanPhone
+      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`
+      : `https://wa.me/?text=${encodeURIComponent(text)}`;
+  };
+
+  const handleSendViaWhatsApp = async () => {
+    const numAmount = Number(amount);
+    if (!numAmount || numAmount <= 0) {
+      setErrorMsg('يرجى كتابة مبلغ صحيح أكبر من الصفر');
+      return;
+    }
+    if (!commodityName.trim() && !fieldId && !isForGeneralExpenses) {
+      setErrorMsg('يرجى كتابة اسم السلعة المطلوبة');
+      return;
+    }
+    if (!reason.trim() || reason.trim().length < 2) {
+      setErrorMsg('⚠️ يرجى كتابة ملاحظات وتفاصيل إضافية عن سبب الصرف (إجباري لتفعيل إرسال الطلب)');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg('');
+
+    const finalCommodity = commodityName.trim() || selectedField?.name || (isForGeneralExpenses ? (generalExpensesName || 'مصاريف عامة') : 'مصروف عام');
+    const finalReason = reason.trim();
+
+    try {
+      await submitMoneyRequest({
+        brotherId: currentBrother?.id || currentUser?.id,
+        brotherName: currentBrother?.name || currentUser?.name,
+        brotherAccountNumber: currentBrother?.accountNumber || currentUser?.accountNumber,
+        accountNumber: currentBrother?.accountNumber || currentUser?.accountNumber,
+        phone: currentBrother?.phone || currentUser?.phone,
+        bankAccountNumber: isForGeneralExpenses ? '' : (currentBrother?.bankAccountNumber || currentUser?.bankAccountNumber || ''),
+        isGeneralExpense: Boolean(isForGeneralExpenses),
+        targetType: isForGeneralExpenses ? 'general_expenses' : 'personal',
+        targetName: isForGeneralExpenses ? (generalExpensesName || 'مصاريف عامة') : (currentBrother?.name || currentUser?.name),
+        amount: numAmount,
+        fieldId: commodityName.trim() ? null : (fieldId || null),
+        commodityName: finalCommodity,
+        reason: finalReason
+      });
+    } catch (err) {
+      console.warn('System submit warning:', err);
+    }
+
+    setLoading(false);
+
+    const waUrl = getWhatsAppLink(numAmount, finalCommodity, finalReason);
+    window.open(waUrl, '_blank');
+
+    setSubmittedData({
+      amount: numAmount,
+      commodity: finalCommodity,
+      reason: finalReason
+    });
+    setSuccessMsg('✅ تم تسجيل الطلب في النظام وفتح واتساب لإرسال الرسالة للأدمن!');
+    setAmount('');
+    setReason('');
+    setCommodityName('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -80,6 +173,7 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
     setSuccessMsg('');
 
     const finalCommodity = commodityName.trim() || selectedField?.name || (isForGeneralExpenses ? (generalExpensesName || 'مصاريف عامة') : 'مصروف عام');
+    const finalReason = reason.trim();
 
     const res = await submitMoneyRequest({
       brotherId: currentBrother?.id || currentUser?.id,
@@ -94,19 +188,21 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
       amount: numAmount,
       fieldId: commodityName.trim() ? null : (fieldId || null),
       commodityName: finalCommodity,
-      reason: reason.trim()
+      reason: finalReason
     });
 
     setLoading(false);
 
     if (res.success) {
-      setSuccessMsg(res.message || 'تم إرسال طلبك بنجاح للأدمن');
+      setSubmittedData({
+        amount: numAmount,
+        commodity: finalCommodity,
+        reason: finalReason
+      });
+      setSuccessMsg(res.message || 'تم إرسال وتسجيل طلبك بنجاح للأدمن');
       setAmount('');
       setReason('');
       setCommodityName('');
-      setTimeout(() => {
-        onClose();
-      }, 1800);
     } else {
       setErrorMsg(res.message || 'حدث خطأ أثناء إرسال الطلب');
     }
@@ -303,44 +399,106 @@ export const RequestMoneyModal = ({ isOpen, onClose, initialBrotherId = null, in
             </div>
           )}
 
-          {successMsg && (
-            <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-center flex items-center justify-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>{successMsg}</span>
+          {/* Post-submission WhatsApp & System Card */}
+          {submittedData && (
+            <div className="p-4 rounded-3xl bg-emerald-50 dark:bg-emerald-950/60 border-2 border-emerald-400 text-center space-y-3 animate-fadeIn">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center mx-auto shadow-md">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="font-black text-sm text-emerald-800 dark:text-emerald-200">
+                  تم تسجيل طلبك بنجاح في النظام!
+                </h4>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                  يمكنك أيضاً إرسال تفاصيل طلبك مباشرة عبر واتساب للأدمن كخيار إضافي:
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-1">
+                <a
+                  href={getWhatsAppLink(submittedData.amount, submittedData.commodity, submittedData.reason)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition active:scale-95"
+                >
+                  <MessageCircle className="w-4 h-4 text-white" />
+                  <span>إرسال تفاصيل الطلب إلى واتساب الأدمن الآن 💬</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl transition cursor-pointer"
+                >
+                  إغلاق النافذة ✖️
+                </button>
+              </div>
             </div>
           )}
 
-          {/* Submit Action */}
-          <div className="pt-2">
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              className={`w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition shadow-lg ${
-                canSubmit
-                  ? 'bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-teal-600/30 cursor-pointer active:scale-95'
-                  : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-300 dark:border-slate-600 shadow-none'
-              }`}
-            >
-              {loading ? (
-                <span>جاري إرسال الطلب...</span>
-              ) : !isReasonValid ? (
-                <>
-                  <Lock className="w-4 h-4 text-slate-400" />
-                  <span>اكتب سبب الصرف لتفعيل الإرسال 🔒</span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4 -rotate-45" />
-                  <span>{isForGeneralExpenses ? 'إرسال طلب مصاريف عامة 📦' : 'إرسال طلب الأموال للأدمن 📤'}</span>
-                </>
-              )}
-            </button>
-            {!isReasonValid && (
-              <p className="text-center text-[10px] text-rose-500 dark:text-rose-400 font-bold mt-1.5 animate-pulse">
-                ⚠️ يرجى كتابة سبب وتفاصيل الصرف في الحقل أعلاه لتفعيل الزر.
-              </p>
-            )}
-          </div>
+          {!submittedData && (
+            <>
+              {/* Submit Actions */}
+              <div className="pt-2 space-y-2.5">
+                {/* Primary Option: In-App Submit */}
+                <button
+                  type="submit"
+                  disabled={!canSubmit}
+                  className={`w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition shadow-lg ${
+                    canSubmit
+                      ? 'bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-teal-600/30 cursor-pointer active:scale-95'
+                      : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-300 dark:border-slate-600 shadow-none'
+                  }`}
+                >
+                  {loading ? (
+                    <span>جاري إرسال الطلب...</span>
+                  ) : !isReasonValid ? (
+                    <>
+                      <Lock className="w-4 h-4 text-slate-400" />
+                      <span>اكتب سبب الصرف لتفعيل الإرسال 🔒</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 -rotate-45" />
+                      <span>{isForGeneralExpenses ? 'إرسال طلب مصاريف عامة للنظام 📦' : 'إرسال طلب الأموال للأدمن في النظام 📤'}</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Second Option: Direct WhatsApp Send */}
+                <button
+                  type="button"
+                  onClick={handleSendViaWhatsApp}
+                  disabled={!canSubmit}
+                  className={`w-full py-3.5 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition border shadow-md ${
+                    canSubmit
+                      ? 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 hover:from-emerald-700 hover:to-green-700 text-white border-green-500 shadow-green-600/25 cursor-pointer active:scale-95'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border-slate-200 dark:border-slate-700 shadow-none'
+                  }`}
+                >
+                  <MessageCircle className="w-4 h-4 text-white" />
+                  <span>إرسال الطلب عبر واتساب للأدمن (خيار ثاني) 💬</span>
+                </button>
+
+                {/* Target Admin WhatsApp info */}
+                <div className="flex items-center justify-between px-2.5 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 font-bold bg-emerald-50/60 dark:bg-slate-850 rounded-xl border border-emerald-200/60 dark:border-slate-700/60">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>مستلم رسالة الواتساب:</span>
+                  </span>
+                  <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono">
+                    {activeAdmin?.name || 'الأدمن'} ({adminPhone})
+                  </span>
+                </div>
+
+                {!isReasonValid && (
+                  <p className="text-center text-[10px] text-rose-500 dark:text-rose-400 font-bold mt-1 animate-pulse">
+                    ⚠️ يرجى كتابة سبب وتفاصيل الصرف في الحقل أعلاه لتفعيل خيارات الإرسال.
+                  </p>
+                )}
+              </div>
+            </>
+          )}
 
         </form>
 
