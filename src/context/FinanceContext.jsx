@@ -490,6 +490,11 @@ export const FinanceProvider = ({ children }) => {
             setIsBalanceHiddenByAdmin(data.state.security.isBalanceHiddenByAdmin);
           }
           if (data.state.activeAdminId) setActiveAdminId(data.state.activeAdminId);
+          if (data.state.monthlyFundAmount !== undefined) {
+            const amt = Number(data.state.monthlyFundAmount);
+            setMonthlyFundTotal(amt);
+            saveToStorage('bait_finance_monthly_fund_total', amt);
+          }
         }
       })
       .catch((e) => console.log('Offline/local state fallback'));
@@ -502,6 +507,14 @@ export const FinanceProvider = ({ children }) => {
         try {
           const payload = JSON.parse(e.data);
           console.log('SSE Realtime Event:', payload);
+
+          if (payload.type === 'MONTHLY_FUND_AMOUNT_UPDATED') {
+            if (payload.data?.monthlyFundAmount !== undefined) {
+              const amt = Number(payload.data.monthlyFundAmount);
+              setMonthlyFundTotal(amt);
+              saveToStorage('bait_finance_monthly_fund_total', amt);
+            }
+          }
 
           if (payload.type === 'NEW_MONEY_REQUEST') {
             const { request, fundRequests: newReqs, notification } = payload.data;
@@ -792,7 +805,7 @@ export const FinanceProvider = ({ children }) => {
   }, [bankCards]);
 
   // Monthly Spending & Total Fund Metrics
-  const monthlyFundTotal = 30000;
+  const [monthlyFundTotal, setMonthlyFundTotal] = useState(() => loadFromStorage('bait_finance_monthly_fund_total', 1000000));
   const currentMonthTransfers = useMemo(() => {
     const now = new Date();
     const currYear = Number(settings.selectedYear);
@@ -1711,6 +1724,28 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
+  // 5.9.1 Update Monthly Fund Budget Cap
+  const updateMonthlyFundTotal = async (amount) => {
+    const num = Number(amount);
+    if (isNaN(num) || num < 0) return { success: false, message: 'يرجى إدخال مبلغ صحيح لسقف الميزانية' };
+    setMonthlyFundTotal(num);
+    saveToStorage('bait_finance_monthly_fund_total', num);
+    try {
+      const res = await fetch(`${API_BASE}/api/fund/monthly-amount`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: num, requestingBrotherId: currentUser?.id })
+      });
+      const data = await res.json();
+      if (data.success && data.monthlyFundAmount !== undefined) {
+        setMonthlyFundTotal(data.monthlyFundAmount);
+      }
+      return data;
+    } catch {
+      return { success: true, message: 'تم تحديث سقف الميزانية بنجاح محلياً' };
+    }
+  };
+
   // 6. Set Active Sending Card
   const setActiveSendingCard = async (cardId) => {
     try {
@@ -2343,6 +2378,7 @@ export const FinanceProvider = ({ children }) => {
         setActiveSendingCard,
         updateSendingCardBalance,
         updateCardBalance: updateSendingCardBalance,
+        updateMonthlyFundTotal,
         addBrother,
         updateBrother,
         deleteBrother,

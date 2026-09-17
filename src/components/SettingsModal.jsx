@@ -61,10 +61,41 @@ export const SettingsModal = ({
     toggleAdminBalanceVisibility,
     isPushSubscribed,
     subscribePushNotifications,
-    sendTestPush
+    sendTestPush,
+    monthlyFundTotal,
+    updateMonthlyFundTotal
   } = useFinance();
 
   const [activeTab, setActiveTab] = useState('cards'); // 'cards' | 'permissions' | 'security' | 'general'
+
+  // Budget Cap State
+  const [settingsBudgetInput, setSettingsBudgetInput] = useState(() => String(monthlyFundTotal || 1000000));
+  const [settingsBudgetLoading, setSettingsBudgetLoading] = useState(false);
+  const [settingsBudgetMsg, setSettingsBudgetMsg] = useState('');
+
+  React.useEffect(() => {
+    if (monthlyFundTotal !== undefined) {
+      setSettingsBudgetInput(String(monthlyFundTotal));
+    }
+  }, [monthlyFundTotal]);
+
+  const handleBudgetCapSubmit = async (e) => {
+    e.preventDefault();
+    if (settingsBudgetInput === '' || isNaN(Number(settingsBudgetInput)) || Number(settingsBudgetInput) < 0) {
+      setSettingsBudgetMsg('يرجى إدخال مبلغ صحيح لسقف الميزانية');
+      return;
+    }
+    setSettingsBudgetLoading(true);
+    setSettingsBudgetMsg('');
+    const res = await updateMonthlyFundTotal(Number(settingsBudgetInput));
+    setSettingsBudgetLoading(false);
+    if (res && res.message) {
+      setSettingsBudgetMsg(res.message);
+    } else {
+      setSettingsBudgetMsg('✅ تم تحديث سقف الميزانية بنجاح');
+    }
+    setTimeout(() => setSettingsBudgetMsg(''), 4000);
+  };
 
   // User Password Management State (تغيير كلمة المرور للمستخدم والأدمن)
   const [myNewPassword, setMyNewPassword] = useState('');
@@ -734,6 +765,46 @@ export const SettingsModal = ({
                   {pinChangeMsg && (
                     <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">
                       {pinChangeMsg}
+                    </p>
+                  )}
+                </form>
+              )}
+
+              {/* 5. Edit Monthly Budget Cap Form */}
+              {isCurrentAdminUser && (
+                <form onSubmit={handleBudgetCapSubmit} className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="w-4 h-4 text-blue-500" />
+                    <h4 className="font-black text-slate-900 dark:text-white">
+                      سقف ميزانية الصندوق الشهرية 📊
+                    </h4>
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    الحد الأقصى لسقف المصروفات المسموح بها شهرياً في الصندوق المشترك ({settings.currencySymbol})
+                  </p>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={settingsBudgetInput}
+                      onChange={(e) => setSettingsBudgetInput(e.target.value)}
+                      placeholder="أدخل سقف الميزانية..."
+                      className="flex-1 px-3.5 py-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-black text-blue-600 dark:text-blue-400 outline-none focus:border-blue-500 text-left"
+                      dir="ltr"
+                    />
+                    <button
+                      type="submit"
+                      disabled={settingsBudgetLoading}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-2xl shadow-sm transition active:scale-95 disabled:opacity-50"
+                    >
+                      {settingsBudgetLoading ? 'جاري الحفظ...' : 'حفظ السقف 💾'}
+                    </button>
+                  </div>
+                  {settingsBudgetMsg && (
+                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+                      {settingsBudgetMsg}
                     </p>
                   )}
                 </form>

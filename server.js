@@ -1017,6 +1017,36 @@ app.post('/api/general-expenses/name', (req, res) => {
   });
 });
 
+// 4.0.0.1 Fund Budget Cap: Update Monthly Fund Amount / Budget Limit
+app.post('/api/fund/monthly-amount', (req, res) => {
+  const { amount, requestingBrotherId } = req.body;
+  const numAmount = Number(amount);
+  if (isNaN(numAmount) || numAmount < 0) {
+    return res.status(400).json({ success: false, message: 'يرجى إدخال مبلغ صحيح لسقف الميزانية' });
+  }
+  const db = readDB();
+  const requester = db.brothers.find((b) => b.id === requestingBrotherId);
+  const isAdmin = (req.user && (req.user.isAdmin || req.user.id === db.activeAdminId)) ||
+                  !requestingBrotherId ||
+                  (requester && (requester.id === db.activeAdminId || requester.isAdmin));
+  if (!isAdmin) {
+    return res.status(403).json({ success: false, message: '⚠️ هذا الخيار متاح حصرياً للأدمن للتحكم في سقف الميزانية' });
+  }
+
+  db.monthlyFundAmount = numAmount;
+  saveDB(db);
+
+  broadcastEvent('MONTHLY_FUND_AMOUNT_UPDATED', {
+    monthlyFundAmount: db.monthlyFundAmount
+  });
+
+  res.json({
+    success: true,
+    monthlyFundAmount: db.monthlyFundAmount,
+    message: `✅ تم تحديث سقف الميزانية الشهرية إلى (${db.monthlyFundAmount.toLocaleString()} ${db.currency?.symbol || 'د.ع'}) بنجاح`
+  });
+});
+
 // 4.0.1 Bank Cards: Update Balance directly for Sending Card or any Card
 app.put('/api/cards/:cardId/balance', (req, res) => {
   const { cardId } = req.params;

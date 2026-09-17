@@ -31,13 +31,18 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
     isBalanceHiddenByAdmin,
     currentUser,
     activeAdminId,
-    updateSendingCardBalance
+    updateSendingCardBalance,
+    updateMonthlyFundTotal
   } = useFinance();
 
   const [isNotifsOpen, setIsNotifsOpen] = useState(false);
   const [isEditBalanceOpen, setIsEditBalanceOpen] = useState(false);
   const [newBalanceInput, setNewBalanceInput] = useState('');
   const [isUpdatingBalance, setIsUpdatingBalance] = useState(false);
+
+  const [isEditBudgetOpen, setIsEditBudgetOpen] = useState(false);
+  const [newBudgetInput, setNewBudgetInput] = useState('');
+  const [isUpdatingBudget, setIsUpdatingBudget] = useState(false);
 
   const currency = settings.currencySymbol;
   const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
@@ -68,6 +73,26 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
       alert(res.message);
     }
     setIsEditBalanceOpen(false);
+  };
+
+  const handleOpenEditBudget = () => {
+    setNewBudgetInput(String(monthlyFundTotal || ''));
+    setIsEditBudgetOpen(true);
+  };
+
+  const handleSaveBudget = async (e) => {
+    e.preventDefault();
+    if (newBudgetInput === '' || isNaN(Number(newBudgetInput)) || Number(newBudgetInput) < 0) {
+      alert('يرجى إدخال مبلغ سقف ميزانية صحيح');
+      return;
+    }
+    setIsUpdatingBudget(true);
+    const res = await updateMonthlyFundTotal(Number(newBudgetInput));
+    setIsUpdatingBudget(false);
+    if (res && res.message) {
+      alert(res.message);
+    }
+    setIsEditBudgetOpen(false);
   };
 
   return (
@@ -141,9 +166,23 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
           </div>
 
           {/* Card 3: Remaining Monthly Budget */}
-          <div className="w-[185px] sm:w-[210px] lg:flex-1 shrink-0 snap-start bg-slate-800/80 hover:bg-slate-800 p-2.5 sm:p-3 rounded-xl border border-slate-700/80 hover:border-blue-500/40 shadow-sm relative overflow-hidden transition-all duration-200 flex flex-col justify-between">
+          <div
+            onClick={() => isCurrentAdmin && handleOpenEditBudget()}
+            className={`w-[185px] sm:w-[210px] lg:flex-1 shrink-0 snap-start bg-slate-800/80 hover:bg-slate-800 p-2.5 sm:p-3 rounded-xl border border-slate-700/80 hover:border-blue-500/40 shadow-sm relative overflow-hidden transition-all duration-200 flex flex-col justify-between ${
+              isCurrentAdmin ? 'cursor-pointer hover:shadow-md active:scale-98 group' : ''
+            }`}
+            title={isCurrentAdmin ? 'اضغط هنا لتعديل سقف مبلغ الميزانية الشهرية مباشرة ✏️' : ''}
+          >
             <div className="flex items-center justify-between">
-              <span className="text-[10.5px] font-bold text-slate-300">المتبقي من الميزانية</span>
+              <span className="text-[10.5px] font-bold text-slate-300 flex items-center gap-1">
+                <span>المتبقي من الميزانية</span>
+                {isCurrentAdmin && (
+                  <span className="p-0.5 rounded bg-blue-500/20 text-blue-300 opacity-90 group-hover:opacity-100 flex items-center gap-0.5 text-[8.5px] font-extrabold px-1 border border-blue-500/30">
+                    <Edit2 className="w-2 h-2" />
+                    <span>تعديل</span>
+                  </span>
+                )}
+              </span>
               <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30 shrink-0">
                 <Wallet className="w-3.5 h-3.5" />
               </div>
@@ -152,7 +191,14 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
               <div className="text-sm sm:text-base font-black text-blue-400 font-mono">
                 {formatMoney(remainingMonthlyFund, currency)}
               </div>
-              <span className="text-[9px] text-slate-400 font-medium block mt-0.5 truncate">من سقف {formatMoney(monthlyFundTotal, currency)}</span>
+              <span className="text-[9px] text-slate-400 font-medium flex items-center gap-1 mt-0.5">
+                <span className="truncate">من سقف {formatMoney(monthlyFundTotal, currency)}</span>
+                {isCurrentAdmin && (
+                  <span className="text-[8.5px] text-blue-400 font-bold bg-blue-500/10 px-1 rounded border border-blue-500/20 shrink-0">
+                    تعديل السقف ✏️
+                  </span>
+                )}
+              </span>
             </div>
           </div>
 
@@ -335,6 +381,89 @@ export const LiveCountersBar = ({ onOpenPendingRequests, onOpenGuestApprovals })
                 <button
                   type="button"
                   onClick={() => setIsEditBalanceOpen(false)}
+                  className="px-5 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-2xl transition"
+                >
+                  إلغاء
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* Edit Monthly Budget Cap Modal (تعديل سقف مبلغ الميزانية الشهرية للأدمن) */}
+      {isEditBudgetOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn" dir="rtl">
+          <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl border-2 border-blue-500/40 space-y-5 animate-scaleUp">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-blue-500/15 text-blue-500 flex items-center justify-center">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-800 dark:text-white">
+                    تعديل سقف مبلغ الميزانية
+                  </h3>
+                  <p className="text-xs text-slate-400 font-bold">
+                    ميزانية الصندوق الشهرية الإجمالية
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditBudgetOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSaveBudget} className="space-y-4">
+              
+              <div>
+                <label className="block text-xs font-black text-slate-700 dark:text-slate-300 mb-1.5">
+                  سقف الميزانية الشهري الجديد ({currency}):
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={newBudgetInput}
+                    onChange={(e) => setNewBudgetInput(e.target.value)}
+                    placeholder="أدخل سقف الميزانية الجديد..."
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-lg font-black font-mono text-blue-600 dark:text-blue-400 outline-none focus:ring-2 focus:ring-blue-500 text-left"
+                    dir="ltr"
+                    required
+                    autoFocus
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
+                    {currency}
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-400 mt-1 block">
+                  سيتم تحديث سقف الميزانية وإعادة احتساب المتبقي وتعميم التحديث لحظياً على جميع الأجهزة.
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={isUpdatingBudget}
+                  className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{isUpdatingBudget ? 'جاري الحفظ والتحديث...' : 'حفظ سقف الميزانية الجديد 💾'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditBudgetOpen(false)}
                   className="px-5 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-2xl transition"
                 >
                   إلغاء
