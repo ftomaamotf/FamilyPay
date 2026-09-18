@@ -19,7 +19,7 @@ import {
   Copy
 } from 'lucide-react';
 
-export const PendingRequestsModal = ({ isOpen, onClose }) => {
+export const PendingRequestsModal = ({ isOpen, onClose, initialRequestId = null }) => {
   const {
     fundRequests,
     approveMoneyRequest,
@@ -37,6 +37,21 @@ export const PendingRequestsModal = ({ isOpen, onClose }) => {
   const [msg, setMsg] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [copiedBankToast, setCopiedBankToast] = useState('');
+
+  React.useEffect(() => {
+    if (isOpen && initialRequestId && Array.isArray(fundRequests)) {
+      const match = fundRequests.find((r) => r.id === initialRequestId && r.status === 'pending');
+      if (match) {
+        setSelectedReq(match);
+        setActionType('approve');
+        setTargetFieldId(match.fieldId || '');
+      }
+    } else if (!isOpen) {
+      setSelectedReq(null);
+      setActionType(null);
+      setMsg('');
+    }
+  }, [isOpen, initialRequestId, fundRequests]);
 
   const copyBankNumber = (accNumber) => {
     if (!accNumber) return;

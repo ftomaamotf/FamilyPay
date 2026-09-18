@@ -510,13 +510,15 @@ export const FinanceProvider = ({ children }) => {
                 try {
                   const bNotif = new Notification(notification.title || '📥 طلب أموال جديد', {
                     body: notification.message,
-                    icon: '/favicon.svg',
+                    icon: '/icon-192.png',
                     tag: 'money-req-' + (request?.id || Date.now())
                   });
                   bNotif.onclick = () => {
                     window.focus();
                     bNotif.close();
-                    window.dispatchEvent(new CustomEvent('familypay:open-money-requests'));
+                    window.dispatchEvent(new CustomEvent('familypay:open-money-requests', {
+                      detail: { requestId: request?.id }
+                    }));
                   };
                 } catch (err) {
                   console.log('Browser notification note:', err);

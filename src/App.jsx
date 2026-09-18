@@ -110,6 +110,7 @@ function MainApp() {
 
   const [requestMoneyModalOpen, setRequestMoneyModalOpen] = useState(false);
   const [pendingRequestsModalOpen, setPendingRequestsModalOpen] = useState(false);
+  const [pendingRequestIdToSelect, setPendingRequestIdToSelect] = useState(null);
   const [guestApprovalsOpen, setGuestApprovalsOpen] = useState(false);
 
   const [adminModalOpen, setAdminModalOpen] = useState(false);
@@ -141,8 +142,12 @@ function MainApp() {
     window.addEventListener('familypay:open-chat', handleOpenChatEvent);
 
     // 2. Custom event from in-app browser notification click (Money Requests -> Go to Dashboard)
-    const handleOpenMoneyRequestsEvent = () => {
+    const handleOpenMoneyRequestsEvent = (e) => {
+      setChatModalOpen(false);
       setActiveTab('dashboard');
+      if (e?.detail?.requestId) {
+        setPendingRequestIdToSelect(e.detail.requestId);
+      }
       setPendingRequestsModalOpen(true);
     };
     window.addEventListener('familypay:open-money-requests', handleOpenMoneyRequestsEvent);
@@ -151,12 +156,18 @@ function MainApp() {
     const handleSwMessage = (event) => {
       const msg = event.data;
       if (msg?.type === 'NOTIFICATION_OPENED' && msg.data) {
-        if (msg.data.openChat || msg.data.type === 'MESSAGE' || msg.action === 'open_chat') {
+        // Priority 1: Money Requests (Always opens dashboard pending requests modal)
+        if (msg.data.openPendingRequests || msg.data.type === 'REQUEST' || msg.data.type === 'NEW_MONEY_REQUEST' || msg.action === 'open_requests') {
+          setChatModalOpen(false);
+          setActiveTab('dashboard');
+          if (msg.data.requestId) {
+            setPendingRequestIdToSelect(msg.data.requestId);
+          }
+          setPendingRequestsModalOpen(true);
+        } else if (msg.data.openChat || msg.data.type === 'MESSAGE' || msg.action === 'open_chat') {
+          setPendingRequestsModalOpen(false);
           const targetId = msg.data.chatRecipientId || (msg.data.recipientId === 'all' ? 'all' : (msg.data.senderId || 'all'));
           handleOpenChat(targetId);
-        } else if (msg.data.openPendingRequests || msg.data.type === 'REQUEST' || msg.data.type === 'NEW_MONEY_REQUEST' || msg.action === 'open_requests') {
-          setActiveTab('dashboard');
-          setPendingRequestsModalOpen(true);
         }
       }
     };
@@ -164,15 +175,19 @@ function MainApp() {
       navigator.serviceWorker.addEventListener('message', handleSwMessage);
     }
 
-    // 4. Cold Start / Direct URL Query Params (?openChat=1 or ?openPendingRequests=1)
+    // 4. Cold Start / Direct URL Query Params (?openPendingRequests=1 or ?openChat=1)
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('openChat') === '1' || urlParams.get('notifType') === 'MESSAGE') {
+      if (urlParams.get('openPendingRequests') === '1' || urlParams.get('notifType') === 'REQUEST' || urlParams.get('notifType') === 'NEW_MONEY_REQUEST') {
+        setChatModalOpen(false);
+        setActiveTab('dashboard');
+        const reqId = urlParams.get('requestId');
+        if (reqId) setPendingRequestIdToSelect(reqId);
+        setPendingRequestsModalOpen(true);
+      } else if (urlParams.get('openChat') === '1' || urlParams.get('notifType') === 'MESSAGE') {
+        setPendingRequestsModalOpen(false);
         const targetId = urlParams.get('recipientId') || urlParams.get('senderId') || 'all';
         handleOpenChat(targetId);
-      } else if (urlParams.get('openPendingRequests') === '1' || urlParams.get('notifType') === 'REQUEST' || urlParams.get('notifType') === 'NEW_MONEY_REQUEST') {
-        setActiveTab('dashboard');
-        setPendingRequestsModalOpen(true);
       }
 
       // Clean query parameters from address bar without reloading
@@ -434,7 +449,11 @@ function MainApp() {
 
       <PendingRequestsModal
         isOpen={pendingRequestsModalOpen}
-        onClose={() => setPendingRequestsModalOpen(false)}
+        onClose={() => {
+          setPendingRequestsModalOpen(false);
+          setPendingRequestIdToSelect(null);
+        }}
+        initialRequestId={pendingRequestIdToSelect}
       />
 
       <AdminTransferModal

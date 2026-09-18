@@ -2361,11 +2361,15 @@ app.post('/api/requests', (req, res) => {
   });
 
   // Background Push Alert to Admin
-  sendPushToUser(db.activeAdminId, {
+  sendPushToUser('admin', {
     title: `📥 طلب أموال جديد: ${numAmount} ${db.currency.symbol}`,
     body: notif.message,
     type: 'REQUEST',
-    url: '/'
+    requestId: newRequest.id,
+    brotherId: newRequest.brotherId,
+    brotherName: newRequest.brotherName,
+    amount: newRequest.amount,
+    url: `/?openPendingRequests=1&requestId=${encodeURIComponent(newRequest.id)}&tab=dashboard`
   });
 
   res.json({

@@ -17,9 +17,9 @@ export const NotificationToast = ({ onOpenPendingRequests, onOpenGuestApprovals,
 
   if (!activeAlert) return null;
 
-  const isMoneyRequest = activeAlert.title?.includes('طلب أموال') || activeAlert.message?.includes('طلب الأخ');
-  const isGuestRequest = activeAlert.title?.includes('ضيف') || activeAlert.message?.includes('الضيف');
-  const isChatMessage = activeAlert.type === 'MESSAGE' || Boolean(activeAlert.chatRecipientId) || activeAlert.title?.includes('رسالة');
+  const isMoneyRequest = activeAlert.title?.includes('طلب أموال') || activeAlert.title?.includes('طلب مال') || activeAlert.message?.includes('طلب الأخ') || activeAlert.type === 'REQUEST' || activeAlert.type === 'NEW_MONEY_REQUEST';
+  const isGuestRequest = !isMoneyRequest && (activeAlert.title?.includes('ضيف') || activeAlert.message?.includes('الضيف'));
+  const isChatMessage = !isMoneyRequest && !isGuestRequest && (activeAlert.type === 'MESSAGE' || Boolean(activeAlert.chatRecipientId) || activeAlert.title?.includes('رسالة'));
 
   const handleOpenChatAction = () => {
     const targetId = activeAlert.chatRecipientId || (activeAlert.recipientId === 'all' ? 'all' : (activeAlert.senderId || 'all'));
@@ -28,11 +28,11 @@ export const NotificationToast = ({ onOpenPendingRequests, onOpenGuestApprovals,
   };
 
   const handleToastClick = () => {
-    if (isChatMessage) {
-      handleOpenChatAction();
-    } else if (isMoneyRequest) {
+    if (isMoneyRequest) {
       setActiveAlert(null);
       if (onOpenPendingRequests) onOpenPendingRequests();
+    } else if (isChatMessage) {
+      handleOpenChatAction();
     } else if (isGuestRequest) {
       setActiveAlert(null);
       if (onOpenGuestApprovals) onOpenGuestApprovals();
