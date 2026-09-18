@@ -1062,7 +1062,13 @@ export const BrothersCards = ({
                   (r.brotherId === selectedBrother.id || r.brotherName === selectedBrother.name) &&
                   (r.fieldId === f.id || (r.fieldName && f.name && (r.fieldName.includes(f.name) || f.name.includes(r.fieldName))))
                 );
-                const priceAmount = Math.max(f.spent || 0, calculatedSpent, pending?.amount || f.limit || 0);
+                // Real spent: transfers calculated spent > explicit field spent > pending request amount > 0.
+                // NEVER fallback to f.limit which caused arbitrary budget ceilings to display as prices!
+                const priceAmount = calculatedSpent > 0
+                  ? calculatedSpent
+                  : (f.spent || 0) > 0
+                  ? f.spent
+                  : (pending?.amount || 0);
                 const isPending = calculatedSpent === 0 && (f.spent || 0) === 0 && Boolean(pending);
 
                 // Calculate EXACT count: (Completed transfers) + (Active pending requests)
@@ -1086,7 +1092,7 @@ export const BrothersCards = ({
                 }).length;
 
                 const totalEvents = timesTransferred + timesPending;
-                const effectiveCount = totalEvents > 0 ? totalEvents : 1;
+                const effectiveCount = totalEvents;
 
                 return (
                   <div

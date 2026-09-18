@@ -86,12 +86,7 @@ const INITIAL_DB = {
       bankName: 'ماستر كي / Qi Card',
       avatarColor: '#6366f1',
       isAdmin: true,
-      approvedFields: [
-        { id: 'f-4', name: 'بنزين ومواصلات ⛽', limit: 150000, spent: 49999 },
-        { id: 'f-5', name: 'حليب للأطفال 🥛', limit: 150000, spent: 0 },
-        { id: 'f-6', name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
-        { id: 'f-1787246913231-83', name: 'صيدلية وأطباء 🩺', limit: 100000, spent: 0 }
-      ]
+      approvedFields: []
     },
     {
       id: 'b-1787243535948',
@@ -104,12 +99,7 @@ const INITIAL_DB = {
       bankName: 'ماستر كي / Qi Card',
       avatarColor: '#10b981',
       isAdmin: false,
-      approvedFields: [
-        { id: 'f-1787243536212-2', name: 'بنزين ومواصلات ⛽', limit: 150000, spent: 0 },
-        { id: 'f-1787243536212-3', name: 'حليب ومواد غذائية 🥛', limit: 200000, spent: 0 },
-        { id: 'f-1787503326641-740', name: 'بنزين وسفر ⛽', limit: 500000, spent: 50000 },
-        { id: 'f-1787541751196-523', name: 'حليب للأطفال 🥛', limit: 500000, spent: 1000 }
-      ]
+      approvedFields: []
     },
     {
       id: 'b-1',
@@ -122,12 +112,7 @@ const INITIAL_DB = {
       bankName: 'ماستر كي / Qi Card',
       avatarColor: '#10b981',
       isAdmin: false,
-      approvedFields: [
-        { id: 'f-1', name: 'حليب للأطفال 🥛', limit: 200000, spent: 9000 },
-        { id: 'f-2', name: 'فواتير وانترنت ⚡', limit: 100000, spent: 0 },
-        { id: 'f-3', name: 'صيانة منزلية 🔧', limit: 100000, spent: 0 },
-        { id: 'f-1787246876444-537', name: 'أطباء وصيدلية 🩺', limit: 100000, spent: 0 }
-      ]
+      approvedFields: []
     },
     {
       id: 'b-3',
@@ -140,11 +125,7 @@ const INITIAL_DB = {
       bankName: 'ماستر كي / Qi Card',
       avatarColor: '#f59e0b',
       isAdmin: false,
-      approvedFields: [
-        { id: 'f-1787503326652-513', name: 'حليب وحفاضات أطفال 🍼', limit: 500000, spent: 25000 },
-        { id: 'f-1787503326651-1', name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
-        { id: 'f-1787503326651-2', name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
-      ]
+      approvedFields: []
     },
     {
       id: 'b-5',
@@ -157,12 +138,7 @@ const INITIAL_DB = {
       bankName: 'ماستر كي / Qi Card',
       avatarColor: '#3b82f6',
       isAdmin: false,
-      approvedFields: [
-        { id: 'f-501', name: 'مصاريف عامة 🛒', limit: 200000, spent: 0 },
-        { id: 'f-502', name: 'بنزين ومواصلات ⛽', limit: 150000, spent: 0 },
-        { id: 'f-503', name: 'حليب ومواد غذائية 🥛', limit: 200000, spent: 0 },
-        { id: 'f-504', name: 'صيدلية وأطباء 🩺', limit: 100000, spent: 0 }
-      ]
+      approvedFields: []
     }
   ],
   transfers: [],
@@ -690,10 +666,7 @@ app.post('/api/brothers/register-qr', (req, res) => {
       password: String(password).trim(),
       avatarColor,
       isAdmin: true,
-      approvedFields: [
-        { id: `f-${Date.now()}-1`, name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
-        { id: `f-${Date.now()}-2`, name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
-      ]
+      approvedFields: []
     };
 
     if (!db.activeAdminId || isFirstUser) {
@@ -844,10 +817,7 @@ app.post('/api/brothers/approve-guest', (req, res) => {
     password: joinReq.password,
     avatarColor,
     isAdmin: false,
-    approvedFields: [
-      { id: `f-${Date.now()}-1`, name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
-      { id: `f-${Date.now()}-2`, name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
-    ]
+    approvedFields: []
   };
 
   db.brothers.push(newBrother);
@@ -1527,6 +1497,11 @@ app.post('/api/brothers/:brotherId/reset-circle', (req, res) => {
     db.transfers = db.transfers.filter((t) => !generalTransfers.includes(t));
     deletedTransfersCount = beforeCount - db.transfers.length;
 
+    // Also cancel/clean any pending requests for general expenses
+    if (Array.isArray(db.fundRequests)) {
+      db.fundRequests = db.fundRequests.filter((r) => !r.isGeneralExpense && r.targetType !== 'general_expenses');
+    }
+
     if (refundToSendingCard && amountReset > 0) {
       const card = db.bankCards.find((c) => c.isSendingCard) || db.bankCards[0];
       if (card) {
@@ -1560,11 +1535,16 @@ app.post('/api/brothers/:brotherId/reset-circle', (req, res) => {
     db.transfers = db.transfers.filter((t) => !brotherTransfers.includes(t));
     deletedTransfersCount = beforeCount - db.transfers.length;
 
-    // Reset all spent values on brother's approvedFields
-    if (Array.isArray(brother.approvedFields)) {
-      brother.approvedFields.forEach((f) => {
-        f.spent = 0;
-      });
+    // Completely clear brother's approvedFields (حذف كافة السلع من بطاقة المستخدم نهائياً)
+    brother.approvedFields = [];
+
+    // Also cancel/clean any pending fund requests for this brother
+    if (Array.isArray(db.fundRequests)) {
+      db.fundRequests = db.fundRequests.filter((r) =>
+        r.brotherId !== brother.id &&
+        (!brother.accountNumber || String(r.brotherAccountNumber) !== String(brother.accountNumber)) &&
+        (!brother.bankAccountNumber || String(r.bankAccountNumber) !== String(brother.bankAccountNumber))
+      );
     }
 
     if (refundToSendingCard && amountReset > 0) {
@@ -1601,6 +1581,7 @@ app.post('/api/brothers/:brotherId/reset-circle', (req, res) => {
     brothers: db.brothers,
     transfers: db.transfers,
     bankCards: db.bankCards,
+    fundRequests: db.fundRequests,
     circleResetLogs: db.circleResetLogs
   });
 
@@ -1609,8 +1590,8 @@ app.post('/api/brothers/:brotherId/reset-circle', (req, res) => {
   // 5. Send Background Push Alert
   if (brotherId !== 'b-general') {
     sendPushToUser(brotherId, {
-      title: '🔄 تصفير مبالغ الحساب',
-      body: `قام الأدمن بتصفير مبالغ حسابك بقيمة (${amountReset} ${currSymbol}). السبب: ${cleanReason}`,
+      title: '🔄 تصفير مبالغ وسلع الحساب',
+      body: `قام الأدمن بتصفير مبالغ وسلع حسابك بالكامل بقيمة (${amountReset} ${currSymbol}). السبب: ${cleanReason}`,
       type: 'RESET',
       url: '/'
     });
@@ -1624,10 +1605,11 @@ app.post('/api/brothers/:brotherId/reset-circle', (req, res) => {
   }
   res.json({
     success: true,
-    message: `تم تصفير مبالغ دائرة (${targetName}) بنجاح بقيمة (${amountReset} ${currSymbol}) وتمت إعادة ضبط الحساب لـ 0.`,
+    message: `تم تصفير وحذف مبالغ وسلع دائرة (${targetName}) بنجاح بقيمة (${amountReset} ${currSymbol}) وتمت إعادة ضبط الحساب لـ 0.`,
     brothers: db.brothers,
     transfers: db.transfers,
     bankCards: db.bankCards,
+    fundRequests: db.fundRequests,
     amountReset,
     circleResetLogs: db.circleResetLogs
   });
@@ -1804,7 +1786,7 @@ app.post('/api/brothers/:brotherId/fields/:fieldId/adjust-price', (req, res) => 
   });
 
   const transfersTotal = matchingTransfers.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-  const currentPrice = transfersTotal > 0 ? transfersTotal : Number(field.spent || field.limit || 0);
+  const currentPrice = transfersTotal > 0 ? transfersTotal : Number(field.spent || 0);
 
   const diff = numNewPrice - currentPrice;
   if (diff === 0) {

@@ -171,12 +171,7 @@ export const FinanceProvider = ({ children }) => {
         bankName: 'ماستر كي / Qi Card',
         avatarColor: '#6366f1',
         isAdmin: true,
-        approvedFields: [
-          { id: 'f-4', name: 'بنزين ومواصلات ⛽', limit: 150000, spent: 49999 },
-          { id: 'f-1787246913231-83', name: 'صيدلية وأطباء 🩺', limit: 100000, spent: 8000 },
-          { id: 'f-5', name: 'حليب للأطفال 🥛', limit: 150000, spent: 1000 },
-          { id: 'f-6', name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 }
-        ]
+        approvedFields: []
       },
       {
         id: 'b-1787243535948',
@@ -189,16 +184,7 @@ export const FinanceProvider = ({ children }) => {
         bankName: 'ماستر كي / Qi Card',
         avatarColor: '#10b981',
         isAdmin: false,
-        approvedFields: [
-          { id: 'f-1787503326641-740', name: 'بنزين وسفر ⛽', limit: 500000, spent: 50000 },
-          { id: 'f-1787761604619-123', name: 'بنزين', limit: 15000, spent: 10000 },
-          { id: 'f-1787243536212-2', name: 'بنزين ومواصلات ⛽', limit: 150000, spent: 14000 },
-          { id: 'f-1787541751196-523', name: 'حليب للأطفال 🥛', limit: 500000, spent: 2000 },
-          { id: 'f-1787502055641-f', name: 'صيانة وتصليح 🔧', limit: 100000, spent: 4000 },
-          { id: 'f-1787501941685-f', name: 'أدوية وصيدلية 💊', limit: 100000, spent: 10000 },
-          { id: 'f-1787243536212-1', name: 'مصروف عام', limit: 100000, spent: 8000 },
-          { id: 'f-1787243536212-3', name: 'حليب ومواد غذائية 🥛', limit: 200000, spent: 0 }
-        ]
+        approvedFields: []
       },
       {
         id: 'b-1',
@@ -211,12 +197,7 @@ export const FinanceProvider = ({ children }) => {
         bankName: 'ماستر كي / Qi Card',
         avatarColor: '#10b981',
         isAdmin: false,
-        approvedFields: [
-          { id: 'f-1', name: 'حليب للأطفال 🥛', limit: 200000, spent: 9000 },
-          { id: 'f-2', name: 'فواتير وانترنت ⚡', limit: 100000, spent: 0 },
-          { id: 'f-3', name: 'صيانة منزلية 🔧', limit: 100000, spent: 0 },
-          { id: 'f-1787246876444-537', name: 'أطباء وصيدلية 🩺', limit: 100000, spent: 0 }
-        ]
+        approvedFields: []
       },
       {
         id: 'b-3',
@@ -229,11 +210,7 @@ export const FinanceProvider = ({ children }) => {
         bankName: 'ماستر كي / Qi Card',
         avatarColor: '#f59e0b',
         isAdmin: false,
-        approvedFields: [
-          { id: 'f-1787503326652-513', name: 'حليب وحفاضات أطفال 🍼', limit: 500000, spent: 25000 },
-          { id: 'f-1787503326651-1', name: 'مصاريف عامة 🛒', limit: 100000, spent: 0 },
-          { id: 'f-1787503326651-2', name: 'بنزين ومواصلات ⛽', limit: 100000, spent: 0 }
-        ]
+        approvedFields: []
       },
       {
         id: 'b-5',
@@ -246,12 +223,7 @@ export const FinanceProvider = ({ children }) => {
         bankName: 'ماستر كي / Qi Card',
         avatarColor: '#3b82f6',
         isAdmin: false,
-        approvedFields: [
-          { id: 'f-501', name: 'مصاريف عامة 🛒', limit: 200000, spent: 0 },
-          { id: 'f-502', name: 'بنزين ومواصلات ⛽', limit: 150000, spent: 0 },
-          { id: 'f-503', name: 'حليب ومواد غذائية 🥛', limit: 200000, spent: 0 },
-          { id: 'f-504', name: 'صيدلية وأطباء 🩺', limit: 100000, spent: 0 }
-        ]
+        approvedFields: []
       }
     ]);
     return (raw || []).filter((b) => b && b.name);
@@ -1825,10 +1797,7 @@ export const FinanceProvider = ({ children }) => {
         password: brotherData.password ? String(brotherData.password).trim() : '123',
         avatarColor: brotherData.avatarColor || '#10b981',
         isAdmin: false,
-        approvedFields: brotherData.approvedFields || [
-          { id: 'f-' + Date.now() + '-1', name: 'حليب ومواد غذائية 🥛', limit: 1000, spent: 0 },
-          { id: 'f-' + Date.now() + '-2', name: 'بنزين ومواصلات ⛽', limit: 800, spent: 0 }
-        ]
+        approvedFields: brotherData.approvedFields || []
       };
       setBrothers((prev) => [...prev, newB]);
       return { success: true, message: `تمت إضافة الأخ ${newB.name} بنجاح` };
@@ -1934,6 +1903,9 @@ export const FinanceProvider = ({ children }) => {
           setBankCards(data.bankCards);
           saveToStorage('bait_finance_cards', data.bankCards);
         }
+        if (data.fundRequests) {
+          setFundRequests(data.fundRequests);
+        }
         playChimeSound();
         return { success: true, message: data.message };
       }
@@ -1962,6 +1934,7 @@ export const FinanceProvider = ({ children }) => {
           saveToStorage('bait_finance_transfers', updated);
           return updated;
         });
+        setFundRequests((prev) => prev.filter((r) => !r.isGeneralExpense && r.targetType !== 'general_expenses'));
       } else if (targetBrother) {
         const isTransferForTarget = (t) => {
           if (t.recipientId && String(t.recipientId) === String(targetBrother.id)) return true;
@@ -1978,16 +1951,22 @@ export const FinanceProvider = ({ children }) => {
           return updated;
         });
 
+        // Completely clear brother's approvedFields (حذف كافة السلع من بطاقة المستخدم نهائياً)
         setBrothers((prev) => {
           const updated = prev.map((b) => {
-            if (b.id === brotherId && Array.isArray(b.approvedFields)) {
-              return { ...b, approvedFields: b.approvedFields.map((f) => ({ ...f, spent: 0 })) };
+            if (b.id === brotherId) {
+              return { ...b, approvedFields: [] };
             }
             return b;
           });
           saveToStorage('bait_finance_brothers', updated);
           return updated;
         });
+
+        // Also clean pending requests for this brother
+        setFundRequests((prev) =>
+          prev.filter((r) => r.brotherId !== brotherId && r.brotherName !== targetBrother.name)
+        );
       }
 
       if (refundToSendingCard && removedTransfers.length > 0) {

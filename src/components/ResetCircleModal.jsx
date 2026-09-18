@@ -156,7 +156,7 @@ export const ResetCircleModal = ({
             <div className="space-y-0.5 text-[11px] leading-relaxed">
               <strong className="block font-black">إجراء أمني خاص بالأدمن 👑:</strong>
               <p className="text-amber-800 dark:text-amber-300">
-                تصفير الدائرة سيقوم بمسح كافة المبالغ المصروفة والتحويلات المسجلة لهذا الحساب وإعادة العداد إلى <strong>0 {currency}</strong>.
+                تصفير الدائرة سيقوم بمسح وحذف كافة السلع والمبالغ والتحويلات المسجلة لهذا الحساب نهائياً وإعادة العداد إلى <strong>0 {currency}</strong>.
               </p>
             </div>
           </div>
