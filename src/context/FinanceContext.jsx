@@ -95,7 +95,10 @@ export const FinanceProvider = ({ children }) => {
         saveToStorage('bait_finance_fund_requests', cleanReqs);
         if (data.state.brothers) setBrothers(data.state.brothers);
         if (data.state.bankCards) setBankCards(data.state.bankCards);
-        if (data.state.transfers) setTransfers(data.state.transfers);
+        if (Array.isArray(data.state.transfers)) {
+          setTransfers(data.state.transfers);
+          saveToStorage('bait_finance_transfers', data.state.transfers);
+        }
         if (data.state.generalExpensesName) {
           setGeneralExpensesName(data.state.generalExpensesName);
           saveToStorage('bait_finance_general_expenses_name', data.state.generalExpensesName);
@@ -128,6 +131,21 @@ export const FinanceProvider = ({ children }) => {
       };
     }
   };
+
+  // One-time cache purge for stale legacy mock transfers and old mock fields
+  if (typeof window !== 'undefined' && !localStorage.getItem('bait_finance_purge_legacy_mock_v1')) {
+    try {
+      localStorage.removeItem('bait_finance_transfers');
+      const storedBros = loadFromStorage('bait_finance_brothers', []);
+      if (Array.isArray(storedBros) && storedBros.length > 0) {
+        const cleanedBros = storedBros.map((b) => ({ ...b, approvedFields: [] }));
+        saveToStorage('bait_finance_brothers', cleanedBros);
+      }
+      localStorage.setItem('bait_finance_purge_legacy_mock_v1', 'true');
+    } catch {
+      // ignore
+    }
+  }
 
   // Bank Cards State
   const [bankCards, setBankCards] = useState(() =>
@@ -445,8 +463,10 @@ export const FinanceProvider = ({ children }) => {
       .then((data) => {
         if (data.success && data.state) {
           if (data.state.brothers) syncAndMergeBrothers(data.state.brothers);
-          if (data.state.bankCards) setBankCards(data.state.bankCards);
-          if (data.state.transfers) setTransfers(data.state.transfers);
+          if (Array.isArray(data.state.transfers)) {
+            setTransfers(data.state.transfers);
+            saveToStorage('bait_finance_transfers', data.state.transfers);
+          }
           if (data.state.messages) setMessages(data.state.messages);
           if (data.state.security?.fundPin) setFundPin(data.state.security.fundPin);
           if (data.state.security?.transferPermissions) setTransferPermissions(data.state.security.transferPermissions);
@@ -530,16 +550,21 @@ export const FinanceProvider = ({ children }) => {
           }
 
           if (payload.type === 'NEW_TRANSFER') {
-            const { transfer, transaction, notification, bankCards: newCards, brothers: newBrothers, transfers: allTransfers, transactions: allTransactions } = payload.data;
+            const { transfer, notification, bankCards: newCards, brothers: newBrothers, transfers: allTransfers } = payload.data;
             
             if (newCards) setBankCards(newCards);
-            if (newBrothers) setBrothers(newBrothers);
+            if (newBrothers) syncAndMergeBrothers(newBrothers);
             
-            if (allTransfers) setTransfers(allTransfers);
-            else if (transfer) setTransfers((prev) => [transfer, ...prev.filter((t) => t.id !== transfer.id)]);
-
-            if (allTransactions) setTransactions(allTransactions);
-            else if (transaction) setTransactions((prev) => [transaction, ...prev.filter((t) => t.id !== transaction.id)]);
+            if (Array.isArray(allTransfers)) {
+              setTransfers(allTransfers);
+              saveToStorage('bait_finance_transfers', allTransfers);
+            } else if (transfer) {
+              setTransfers((prev) => {
+                const updated = [transfer, ...prev.filter((t) => t.id !== transfer.id)];
+                saveToStorage('bait_finance_transfers', updated);
+                return updated;
+              });
+            }
             
             if (notification) {
               setNotifications((prev) => [notification, ...prev]);
@@ -596,7 +621,10 @@ export const FinanceProvider = ({ children }) => {
 
           if (payload.type === 'BROTHERS_UPDATED' || payload.type === 'STATE_UPDATED') {
             if (payload.data.brothers) syncAndMergeBrothers(payload.data.brothers);
-            if (payload.data.transfers) setTransfers(payload.data.transfers);
+            if (Array.isArray(payload.data.transfers)) {
+              setTransfers(payload.data.transfers);
+              saveToStorage('bait_finance_transfers', payload.data.transfers);
+            }
             if (payload.data.bankCards) setBankCards(payload.data.bankCards);
             if (payload.data.fundRequests) setFundRequests(payload.data.fundRequests);
           }
@@ -1565,11 +1593,6 @@ export const FinanceProvider = ({ children }) => {
           setTransfers(data.transfers);
         } else if (data.transfer) {
           setTransfers((prev) => [data.transfer, ...prev.filter((t) => t.id !== data.transfer.id)]);
-        }
-        if (data.transactions) {
-          setTransactions(data.transactions);
-        } else if (data.transaction) {
-          setTransactions((prev) => [data.transaction, ...prev.filter((t) => t.id !== data.transaction.id)]);
         }
         if (data.bankCards) setBankCards(data.bankCards);
         if (data.brothers) setBrothers(data.brothers);
