@@ -43,7 +43,8 @@ export const Navbar = ({
     guestRequests,
     messages = [],
     isPushSubscribed,
-    subscribePushNotifications
+    subscribePushNotifications,
+    sendTestPush
   } = useFinance();
 
   const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
@@ -110,24 +111,33 @@ export const Navbar = ({
           {/* User Profile & Actions */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             
-            {/* Background Call Notifications Activator */}
+            {/* Background Notifications Activator & Tester */}
             <button
               onClick={async () => {
-                const res = await subscribePushNotifications();
-                if (res && res.message) {
-                  alert(res.message);
+                if (!isPushSubscribed) {
+                  const res = await subscribePushNotifications(currentUser?.id);
+                  if (res && res.message) {
+                    alert(res.message);
+                  }
+                } else {
+                  const res = await sendTestPush();
+                  alert(res?.message || 'تم إرسال إشعار تجريبي فوري لهاتفك مع هزاز 📳');
                 }
               }}
-              title="تفعيل رنين وإشعارات المكالمات عند غلق التطبيق في الأندرويد والآيفون"
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-black shadow-xs transition active:scale-95 border ${
+              title={
                 isPushSubscribed
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
+                  ? 'إشعارات الهاتف عند إغلاق التطبيق مفعلة بنجاح 🔔 (اضغط لتجربة إرسال إشعار فوري لهاتفك)'
+                  : 'اضغط هنا لتفعيل إشعارات الهاتف عند إغلاق التطبيق في الأندرويد والآيفون'
+              }
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-black shadow-xs transition active:scale-95 border cursor-pointer ${
+                isPushSubscribed
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
                   : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border-amber-500/40 animate-pulse'
               }`}
             >
               <Bell className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">
-                {isPushSubscribed ? 'رنين المكالمات مفعل 🔔' : 'تفعيل رنين المكالمات 📳'}
+                {isPushSubscribed ? 'الإشعارات مفعلة 🔔' : 'تفعيل الإشعارات 📳'}
               </span>
             </button>
 

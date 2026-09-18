@@ -60,10 +60,10 @@ const PushNotificationBanner = () => {
         </div>
         <div>
           <span className="font-black text-xs sm:text-sm text-white block">
-            تفعيل تنبيهات ورنين الهاتف عند إغلاق التطبيق 📳
+            تفعيل إشعارات الهاتف عند إغلاق التطبيق 🔔
           </span>
           <span className="text-[11px] text-teal-200/80 block">
-            اضغط زر السماح لتصلك رنات المكالمات وصرف الأموال عند إغلاق التطبيق (يمكنك التحكم بها لاحقاً من الإعدادات ⚙️).
+            لتصلك رسائل المحادثة والبصمات الصوتية وطلبات وصرف الأموال بينك وبين الأدمن فوراً حتى عند إغلاق البرنامج في هاتفك!
           </span>
         </div>
       </div>
@@ -75,9 +75,9 @@ const PushNotificationBanner = () => {
             handleDismiss();
             if (res && res.message) alert(res.message);
           }}
-          className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 font-black text-xs rounded-2xl shadow-lg transition active:scale-95 shrink-0 flex items-center justify-center gap-1.5"
+          className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 font-black text-xs rounded-2xl shadow-lg transition active:scale-95 shrink-0 flex items-center justify-center gap-1.5 cursor-pointer"
         >
-          <span>تفعيل والسماح بالإشعارات 📲</span>
+          <span>تفعيل والسماح بالإشعارات الفورية 📲</span>
         </button>
         <button
           type="button"

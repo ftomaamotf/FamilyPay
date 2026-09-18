@@ -23,12 +23,14 @@ self.addEventListener('push', (event) => {
   const isCall = data.type === 'INCOMING_CALL' || title.includes('مكالمة');
   const isMessage = data.type === 'MESSAGE' || title.includes('رسالة') || title.includes('بصمة') || Boolean(data.chatRecipientId);
   const isMoneyRequest = data.type === 'REQUEST' || data.type === 'NEW_MONEY_REQUEST' || title.includes('طلب أموال');
+  const isTransfer = data.type === 'TRANSFER' || title.includes('تحويل');
+  const isCircleReset = data.type === 'RESET' || title.includes('تصفير');
   const chatRecipientId = data.chatRecipientId || (data.recipientId === 'all' ? 'all' : (data.senderId || 'all'));
 
   const options = {
-    body: data.body || (isCall ? 'يرن عليك الآن.. اضغط للرد الفوري والتحدث 📲' : (isMessage ? 'رسالة جديدة.. اضغط لفتح المحادثة والرد 💬' : (isMoneyRequest ? 'طلب أموال جديد.. اضغط للمراجعة والصرف في الرئيسية 💸' : 'اضغط هنا لفتح البرنامج ومتابعة التفاصيل فوراً 📱'))),
-    icon: '/favicon.svg',
-    badge: '/favicon.svg',
+    body: data.body || (isCall ? 'يرن عليك الآن.. اضغط للرد الفوري والتحدث 📲' : (isMessage ? 'رسالة جديدة.. اضغط لفتح المحادثة والرد 💬' : (isMoneyRequest ? 'طلب أموال جديد.. اضغط للمراجعة والصرف في الرئيسية 💸' : (isTransfer ? 'إشعار تحويل مالي جديد 💰' : 'اضغط هنا لفتح البرنامج ومتابعة التفاصيل فوراً 📱')))),
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
     // Rich repeating alert vibration pattern until opened
     vibrate: isCall
       ? [1000, 500, 1000, 500, 1000, 500, 1000, 500, 1000, 500, 1000]

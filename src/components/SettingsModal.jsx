@@ -996,11 +996,11 @@ export const SettingsModal = ({
                   <div className="flex items-center gap-2">
                     <Bell className="w-4 h-4 text-emerald-500" />
                     <div>
-                      <h4 className="font-black text-slate-900 dark:text-white">
-                        إشعارات ورنين الهاتف في الخلفية 📳
+                      <h4 className="font-black text-slate-800 dark:text-slate-100 text-xs sm:text-sm">
+                        إشعارات الهاتف عند إغلاق التطبيق 📳
                       </h4>
                       <p className="text-[11px] text-slate-400">
-                        استقبال رنات المكالمات والتحويلات والرسائل عند إغلاق التطبيق
+                        استقبال إشعارات المراسلة، البصمات الصوتية، وطلبات وصرف الأموال عند إغلاق التطبيق
                       </p>
                     </div>
                   </div>
@@ -1021,7 +1021,7 @@ export const SettingsModal = ({
                         const res = await subscribePushNotifications(currentUser?.id);
                         if (res?.message) alert(res.message);
                       }}
-                      className="w-full py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 font-black text-xs rounded-2xl shadow-md transition active:scale-95 flex items-center justify-center gap-2"
+                      className="w-full py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 font-black text-xs rounded-2xl shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Bell className="w-4 h-4" />
                       <span>تشغيل وتفعيل إشعارات الخلفية 📲</span>
@@ -1032,12 +1032,12 @@ export const SettingsModal = ({
                         type="button"
                         onClick={async () => {
                           const res = await sendTestPush();
-                          alert(res?.message || 'تم إرسال إشعار تجريبي فوري مع هزاز 📳');
+                          alert(res?.message || 'تم إرسال إشعار تجريبي فوري لهاتفك مع هزاز 📳! يمكنك الخروج من التطبيق لملاحظته في شريط التنبيهات');
                         }}
-                        className="w-full sm:flex-1 py-2.5 bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-400/40 font-black text-xs rounded-2xl shadow-sm transition active:scale-95 flex items-center justify-center gap-2"
+                        className="w-full sm:flex-1 py-2.5 bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-400/40 font-black text-xs rounded-2xl shadow-sm transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <Smartphone className="w-4 h-4" />
-                        <span>تجربة إرسال إشعار فوري مع هزاز 🧪</span>
+                        <span>تجربة إرسال إشعار فوري لهاتفي 🧪</span>
                       </button>
                       <button
                         type="button"

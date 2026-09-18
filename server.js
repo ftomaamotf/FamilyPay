@@ -1605,6 +1605,23 @@ app.post('/api/brothers/:brotherId/reset-circle', (req, res) => {
   });
 
   const currSymbol = db.currency?.symbol || 'د.ع';
+
+  // 5. Send Background Push Alert
+  if (brotherId !== 'b-general') {
+    sendPushToUser(brotherId, {
+      title: '🔄 تصفير مبالغ الحساب',
+      body: `قام الأدمن بتصفير مبالغ حسابك بقيمة (${amountReset} ${currSymbol}). السبب: ${cleanReason}`,
+      type: 'RESET',
+      url: '/'
+    });
+  } else {
+    sendPushToUser('all', {
+      title: '🔄 تصفير المصاريف العامة',
+      body: `تم تصفير مبالغ المصاريف العامة المشتركة بقيمة (${amountReset} ${currSymbol}). السبب: ${cleanReason}`,
+      type: 'RESET',
+      url: '/'
+    }, requestingAdminId || db.activeAdminId);
+  }
   res.json({
     success: true,
     message: `تم تصفير مبالغ دائرة (${targetName}) بنجاح بقيمة (${amountReset} ${currSymbol}) وتمت إعادة ضبط الحساب لـ 0.`,
@@ -1714,6 +1731,14 @@ app.put('/api/brothers/:brotherId/fields', (req, res) => {
     transfers: db.transfers,
     bankCards: db.bankCards,
     fundRequests: db.fundRequests
+  });
+
+  // Background Push Alert to the brother
+  sendPushToUser(brotherId, {
+    title: '📦 تحديث قائمة السلع والبنود',
+    body: `قام الأدمن بتحديث قائمة السلع والبنود المعتمدة لحسابك.`,
+    type: 'GENERAL',
+    url: '/'
   });
 
   const message = deletedFields.length > 0 && totalDeductedAmount > 0
@@ -2552,6 +2577,14 @@ app.post('/api/requests/:requestId/reject', (req, res) => {
     notification: notif
   });
 
+  // Background Push Alert to brother that request is rejected
+  sendPushToUser(reqItem.brotherId, {
+    title: `❌ اعتذار عن طلب الأموال`,
+    body: notif.message,
+    type: 'REQUEST',
+    url: '/'
+  });
+
   res.json({
     success: true,
     message: 'تم تسجيل رفض الطلب وإشعار الأخ بذلك',
@@ -2835,8 +2868,20 @@ function sendPushToUser(userId, payload, excludeUserId = null) {
     const db = readDB();
     if (!db.pushSubscriptions || db.pushSubscriptions.length === 0) return;
 
-    let targetIds = [userId];
+    let targetIds = [String(userId)];
     const cleanId = String(userId).replace(/[\s\-\+]/g, '');
+
+    // If targeting admin, resolve active admin and all brother admins
+    if (userId === 'admin' || userId === db.activeAdminId) {
+      if (db.activeAdminId) targetIds.push(String(db.activeAdminId));
+      targetIds.push('admin');
+      (db.brothers || []).filter((b) => b.isAdmin).forEach((b) => {
+        if (b.id) targetIds.push(String(b.id));
+        if (b.accountNumber) targetIds.push(String(b.accountNumber));
+        if (b.phone) targetIds.push(String(b.phone));
+      });
+    }
+
     const b = (db.brothers || []).find(
       (br) => br.id === userId ||
         String(br.accountNumber) === userId ||
@@ -2848,11 +2893,12 @@ function sendPushToUser(userId, payload, excludeUserId = null) {
       if (b.accountNumber) targetIds.push(String(b.accountNumber));
       if (b.bankAccountNumber) targetIds.push(String(b.bankAccountNumber));
       if (b.phone) targetIds.push(String(b.phone));
+      if (b.id === db.activeAdminId || b.isAdmin) targetIds.push('admin');
     }
 
     let targets = userId === 'all'
       ? db.pushSubscriptions
-      : db.pushSubscriptions.filter((s) => targetIds.includes(s.userId));
+      : db.pushSubscriptions.filter((s) => targetIds.includes(String(s.userId)));
 
     if (excludeUserId) {
       const cleanExcludeId = String(excludeUserId).replace(/[\s\-\+]/g, '');
@@ -2872,9 +2918,14 @@ function sendPushToUser(userId, payload, excludeUserId = null) {
       targets = targets.filter((s) => !excludeList.includes(String(s.userId)));
     }
 
+    const pushOptions = {
+      TTL: 86400, // 24 hours
+      urgency: 'high' // Highest priority to wake up phone in background
+    };
+
     targets.forEach((subObj) => {
       if (subObj.subscription && subObj.subscription.endpoint) {
-        webpush.sendNotification(subObj.subscription, JSON.stringify(payload))
+        webpush.sendNotification(subObj.subscription, JSON.stringify(payload), pushOptions)
           .catch((err) => {
             console.log(`Push notify note (status: ${err.statusCode}) for user ${subObj.userId}`);
             if (err.statusCode === 410 || err.statusCode === 404) {

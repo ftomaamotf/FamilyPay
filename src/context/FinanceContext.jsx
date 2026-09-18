@@ -2328,11 +2328,11 @@ export const FinanceProvider = ({ children }) => {
     );
   };
 
-  // 12. Web Push Notification Support (Android & iPhone background calls)
+  // 12. Web Push Notification Support (Android & iPhone background alerts)
   const [isPushSupported, setIsPushSupported] = useState(false);
   const [isPushSubscribed, setIsPushSubscribed] = useState(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
-      return Notification.permission === 'granted' || localStorage.getItem('familypay_push_subscribed') === 'true';
+      return localStorage.getItem('familypay_push_subscribed') === 'true';
     }
     return false;
   });
@@ -2350,10 +2350,10 @@ export const FinanceProvider = ({ children }) => {
 
   const subscribePushNotifications = async (targetUserId) => {
     const uid = targetUserId || currentUser?.id;
-    if (!uid) return { success: false, message: 'يجب تسجيل الدخول أولاً' };
+    if (!uid) return { success: false, message: 'يجب تسجيل الدخول أو اختيار الحساب أولاً' };
 
     if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
-      return { success: false, message: 'المتصفح لا يدعم خدمة الإشعارات الخلفية المباشرة' };
+      return { success: false, message: 'جهازك أو المتصفح الحالي لا يدعم خدمة الإشعارات الخلفية المباشرة' };
     }
 
     try {
@@ -2390,7 +2390,8 @@ export const FinanceProvider = ({ children }) => {
         });
         setIsPushSubscribed(true);
         localStorage.setItem('familypay_push_subscribed', 'true');
-        return { success: true, message: '✅ تم تفعيل رنين وإشعارات الهاتف عند غلق البرنامج بنجاح وبشكل دائم!' };
+        playChimeSound();
+        return { success: true, message: '✅ تم تفعيل إشعارات الهاتف عند إغلاق البرنامج بنجاح وبشكل دائم!' };
       }
     } catch (err) {
       console.log('Push subscription error:', err);
@@ -2404,7 +2405,7 @@ export const FinanceProvider = ({ children }) => {
       if (typeof window !== 'undefined' && window.navigator?.vibrate) {
         window.navigator.vibrate([1000, 300, 1000, 300, 1000]);
       }
-      playIntercomRingtone();
+      playChimeSound();
       const res = await fetch(`${API_BASE}/api/push/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2417,18 +2418,31 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // Persistent background push checking on boot
+  // Persistent background push checking and auto-subscribing on boot
   useEffect(() => {
     const checkAndRestoreSubscription = async () => {
       if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
         setIsPushSupported(true);
         try {
-          if ('Notification' in window && Notification.permission === 'granted') {
-            setIsPushSubscribed(true);
-            localStorage.setItem('familypay_push_subscribed', 'true');
-          }
           const reg = await navigator.serviceWorker.ready;
-          const sub = await reg.pushManager.getSubscription();
+          let sub = await reg.pushManager.getSubscription();
+
+          // Auto-subscribe if notification permission is already granted but no push subscription token exists
+          if (!sub && 'Notification' in window && Notification.permission === 'granted' && currentUser?.id) {
+            try {
+              const vapidRes = await fetch(`${API_BASE}/api/push/vapid-public-key`);
+              const vapidData = await vapidRes.json();
+              const publicKey = vapidData.publicKey || 'BNcaM3lxrHfnfl6H_OPgCYmMbNZBQAtRznWfN246zGEZ5Zlm_20zOf4Rb5fSBgO4W0MUHps_YPpzINH_qRyUMns';
+
+              sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(publicKey)
+              });
+            } catch (errSub) {
+              console.log('Auto-subscription attempt note:', errSub);
+            }
+          }
+
           if (sub) {
             setIsPushSubscribed(true);
             localStorage.setItem('familypay_push_subscribed', 'true');
@@ -2443,6 +2457,9 @@ export const FinanceProvider = ({ children }) => {
                 })
               }).catch(() => {});
             }
+          } else {
+            setIsPushSubscribed(false);
+            localStorage.removeItem('familypay_push_subscribed');
           }
         } catch (e) {
           console.log('Error verifying background push subscription:', e);
