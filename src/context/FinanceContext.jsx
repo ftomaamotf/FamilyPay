@@ -10,6 +10,11 @@ import {
 } from '../utils/defaultData';
 import { STORAGE_KEYS, loadFromStorage, saveToStorage, exportAllDataBackup, readBackupFile } from '../utils/storage';
 import { toEnglishDigits, toArabicDigits } from '../utils/formatters';
+import {
+  NOTIFICATION_TONES,
+  MESSAGE_TONES,
+  playNotificationTone
+} from '../utils/notificationSounds';
 
 const FinanceContext = createContext(null);
 
@@ -327,43 +332,58 @@ export const FinanceProvider = ({ children }) => {
     else document.documentElement.classList.remove('dark');
   }, [settings.darkMode]);
 
-  // Distinct Message Notification Sound (Double-Tone Crisp Chime)
-  const playMessageNotificationSound = useCallback(() => {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const now = ctx.currentTime;
+  // Customizable Notification & Message Sounds State (Per-user personalized storage)
+  const [soundSettings, setSoundSettings] = useState(() => {
+    const userKey = currentUser?.id ? `bait_finance_sound_settings_${currentUser.id}` : 'bait_finance_sound_settings_default';
+    return loadFromStorage(userKey, {
+      notificationTone: 'chime-classic',
+      messageTone: 'msg-smart',
+      vibrationEnabled: true,
+      volume: 1
+    });
+  });
 
-      // Note 1 (High bell)
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(659.25, now); // E5
-      gain1.gain.setValueAtTime(0.28, now);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
-      osc1.connect(gain1);
-      gain1.connect(ctx.destination);
-      osc1.start(now);
-      osc1.stop(now + 0.16);
-
-      // Note 2 (Higher bell)
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(880, now + 0.08); // A5
-      gain2.gain.setValueAtTime(0.35, now + 0.08);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-      osc2.start(now + 0.08);
-      osc2.stop(now + 0.32);
-
-      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-        window.navigator.vibrate([300, 150, 300]);
-      }
-    } catch (e) {
-      console.log('Message sound error:', e);
+  // Automatically switch sound settings when currentUser changes
+  useEffect(() => {
+    const userKey = currentUser?.id ? `bait_finance_sound_settings_${currentUser.id}` : 'bait_finance_sound_settings_default';
+    const saved = loadFromStorage(userKey, null);
+    if (saved) {
+      setSoundSettings(saved);
+    } else {
+      setSoundSettings({
+        notificationTone: 'chime-classic',
+        messageTone: 'msg-smart',
+        vibrationEnabled: true,
+        volume: 1
+      });
     }
-  }, []);
+  }, [currentUser?.id]);
+
+  const updateSoundSettings = useCallback((newSettings) => {
+    setSoundSettings((prev) => {
+      const updated = { ...prev, ...newSettings };
+      const userKey = currentUser?.id ? `bait_finance_sound_settings_${currentUser.id}` : 'bait_finance_sound_settings_default';
+      saveToStorage(userKey, updated);
+      return updated;
+    });
+  }, [currentUser?.id]);
+
+  // Preview any tone on demand
+  const previewTone = useCallback((toneId, customVol) => {
+    playNotificationTone(toneId, {
+      volume: customVol !== undefined ? customVol : (soundSettings.volume ?? 1),
+      vibrate: soundSettings.vibrationEnabled ?? true
+    });
+  }, [soundSettings]);
+
+  // Distinct Message Notification Sound (Using user's customized chat tone)
+  const playMessageNotificationSound = useCallback((overrideToneId) => {
+    const toneToPlay = overrideToneId || soundSettings.messageTone || 'msg-smart';
+    playNotificationTone(toneToPlay, {
+      volume: soundSettings.volume ?? 1,
+      vibrate: soundSettings.vibrationEnabled ?? true
+    });
+  }, [soundSettings]);
 
   // Intercom Walkie-Talkie Ringtone (Loud Radio Ring & Strong Vibration)
   const playIntercomRingtone = useCallback(() => {
@@ -418,29 +438,14 @@ export const FinanceProvider = ({ children }) => {
     }
   }, []);
 
-  // Audio Chime Player for transfers & alerts with Strong Vibration
-  const playChimeSound = useCallback(() => {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); // A5
-      gain.gain.setValueAtTime(0.35, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.4);
-
-      if (typeof window !== 'undefined' && window.navigator?.vibrate) {
-        window.navigator.vibrate([600, 200, 600, 200, 600]);
-      }
-    } catch (e) {
-      console.log('Chime sound error:', e);
-    }
-  }, []);
+  // Audio Chime Player for transfers & alerts (Using user's customized notification tone)
+  const playChimeSound = useCallback((overrideToneId) => {
+    const toneToPlay = overrideToneId || soundSettings.notificationTone || 'chime-classic';
+    playNotificationTone(toneToPlay, {
+      volume: soundSettings.volume ?? 1,
+      vibrate: soundSettings.vibrationEnabled ?? true
+    });
+  }, [soundSettings]);
 
   // Smart Sync Helper for Brothers (Server is the Single Source of Truth)
   const syncAndMergeBrothers = useCallback((serverBrothers) => {
@@ -2582,6 +2587,11 @@ export const FinanceProvider = ({ children }) => {
         deleteArchiveProtected,
         markAllNotifsAsRead,
         playChimeSound,
+        soundSettings,
+        updateSoundSettings,
+        previewTone,
+        NOTIFICATION_TONES,
+        MESSAGE_TONES,
         messages,
         sendMessage,
         deleteMessage,

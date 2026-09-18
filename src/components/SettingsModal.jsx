@@ -30,7 +30,13 @@ import {
   Bell,
   Smartphone,
   Share2,
-  Wallet
+  Wallet,
+  Volume2,
+  VolumeX,
+  Music,
+  Play,
+  Square,
+  BellRing
 } from 'lucide-react';
 
 export const SettingsModal = ({
@@ -64,10 +70,38 @@ export const SettingsModal = ({
     subscribePushNotifications,
     sendTestPush,
     monthlyFundTotal,
-    updateMonthlyFundTotal
+    updateMonthlyFundTotal,
+    soundSettings,
+    updateSoundSettings,
+    previewTone,
+    NOTIFICATION_TONES,
+    MESSAGE_TONES,
+    playChimeSound
   } = useFinance();
 
-  const [activeTab, setActiveTab] = useState('cards'); // 'cards' | 'permissions' | 'security' | 'general'
+  const [activeTab, setActiveTab] = useState('cards'); // 'cards' | 'security' | 'permissions' | 'sounds' | 'general'
+
+  // Notification & Message Sound Preview State
+  const [playingToneId, setPlayingToneId] = useState(null);
+  const [testNotifToast, setTestNotifToast] = useState('');
+  const previewTimerRef = React.useRef(null);
+
+  const handlePreview = (toneId, durationMs = 500) => {
+    if (previewTimerRef.current) {
+      clearTimeout(previewTimerRef.current);
+    }
+    setPlayingToneId(toneId);
+    previewTone(toneId);
+    previewTimerRef.current = setTimeout(() => {
+      setPlayingToneId(null);
+    }, durationMs);
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
+    };
+  }, []);
 
   // Budget Cap State
   const [settingsBudgetInput, setSettingsBudgetInput] = useState(() => String(monthlyFundTotal || 1000000));
@@ -451,6 +485,18 @@ export const SettingsModal = ({
           >
             <Crown className="w-4 h-4 text-amber-500" />
             <span>الأدمن والصلاحيات</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('sounds')}
+            className={`pb-3 px-2.5 border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
+              activeTab === 'sounds'
+                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400 font-black'
+                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <BellRing className="w-4 h-4 text-rose-500" />
+            <span>نغمات الإشعارات 🔔🎵</span>
           </button>
 
           <button
@@ -986,6 +1032,286 @@ export const SettingsModal = ({
             </div>
           )}
 
+          {/* TAB 4: SOUNDS & RINGTONES (نغمات الإشعارات والأصوات) */}
+          {activeTab === 'sounds' && (
+            <div className="space-y-6 animate-fadeIn">
+              {/* Header Info Banner: Shows current user's profile info */}
+              <div className="p-4 rounded-3xl bg-gradient-to-r from-emerald-900/60 via-slate-800 to-teal-900/60 border border-emerald-500/30 text-white shadow-lg space-y-2">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 flex items-center justify-center shadow-inner">
+                      <BellRing className="w-5 h-5 animate-bounce" />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-sm text-white flex items-center gap-2">
+                        <span>تخصيص نغمات الإشعارات والرسائل 🎵</span>
+                      </h4>
+                      <p className="text-[11px] text-emerald-200/90">
+                        اختر النغمة التي تعجبك وقم بتجربتها فوراً قبل اعتمادها
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5">
+                    <span>حسابك:</span>
+                    <span className="font-black text-white underline decoration-emerald-400">{currentUser?.name || 'المستخدم'}</span>
+                  </span>
+                </div>
+
+                <div className="bg-slate-950/40 p-2.5 rounded-2xl border border-white/5 text-[11px] text-slate-300 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>تُحفظ نغمتك المختارة لجهازك وحسابك بشكل مستقل، دون التأثير على خيارات بقية الإخوة.</span>
+                </div>
+              </div>
+
+              {/* 1. General Notifications & Transfers Ringtone (نغمة الإشعارات والتحويلات المالية) */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold">
+                      🔔
+                    </div>
+                    <div>
+                      <h4 className="font-black text-slate-900 dark:text-white text-xs sm:text-sm">
+                        نغمة الإشعارات والتحويلات المالية 💸
+                      </h4>
+                      <p className="text-[11px] text-slate-400">
+                        تُعزف عند استقبال تحويل مالي، قبول أو رفض طلب، تصفير، وتنبيهات الصندوق
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                    {(NOTIFICATION_TONES || []).length} نغمات متاحة
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {(NOTIFICATION_TONES || []).map((tone) => {
+                    const isSelected = (soundSettings?.notificationTone || 'chime-classic') === tone.id;
+                    const isPlaying = playingToneId === tone.id;
+
+                    return (
+                      <div
+                        key={tone.id}
+                        onClick={() => updateSoundSettings({ notificationTone: tone.id })}
+                        className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                          isSelected
+                            ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-500 shadow-md shadow-emerald-500/10'
+                            : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          {/* Tone Emoji Icon */}
+                          <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0 transition-transform ${
+                            isSelected
+                              ? 'bg-emerald-500/20 border border-emerald-500/30 scale-105'
+                              : 'bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600'
+                          }`}>
+                            {tone.icon}
+                          </div>
+
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className={`font-black text-xs sm:text-sm truncate ${
+                                isSelected ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-800 dark:text-slate-100'
+                              }`}>
+                                {tone.name}
+                              </span>
+                              {isSelected && (
+                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-500 text-slate-950">
+                                  المختارة ✓
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5 line-clamp-1">
+                              {tone.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Preview Audio Play Button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePreview(tone.id, tone.durationMs);
+                          }}
+                          title="استماع وتجربة النغمة"
+                          className={`px-3 py-2 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5 transition active:scale-90 cursor-pointer ${
+                            isPlaying
+                              ? 'bg-emerald-500 text-slate-950 font-black shadow-md animate-pulse'
+                              : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-emerald-500 hover:text-slate-950'
+                          }`}
+                        >
+                          {isPlaying ? (
+                            <>
+                              <Square className="w-3 h-3 fill-current" />
+                              <span className="text-[11px]">يعزف 🎵</span>
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-3 h-3 fill-current" />
+                              <span className="text-[11px]">استماع</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 2. Chat & Voice Messages Ringtone (نغمة رسائل المحادثة والبصمات الصوتية) */}
+              <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-xl bg-teal-500/10 text-teal-500 flex items-center justify-center font-bold">
+                      💬
+                    </div>
+                    <div>
+                      <h4 className="font-black text-slate-900 dark:text-white text-xs sm:text-sm">
+                        نغمة رسائل المحادثة والشات 📩
+                      </h4>
+                      <p className="text-[11px] text-slate-400">
+                        تُعزف عند وصول رسالة جديدة أو بصمة صوتية في المحادثات المشتركة والخاصة
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                    {(MESSAGE_TONES || []).length} نغمات متاحة
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {(MESSAGE_TONES || []).map((tone) => {
+                    const isSelected = (soundSettings?.messageTone || 'msg-smart') === tone.id;
+                    const isPlaying = playingToneId === tone.id;
+
+                    return (
+                      <div
+                        key={tone.id}
+                        onClick={() => updateSoundSettings({ messageTone: tone.id })}
+                        className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                          isSelected
+                            ? 'bg-teal-50/80 dark:bg-teal-950/40 border-teal-500 shadow-md shadow-teal-500/10'
+                            : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0 transition-transform ${
+                            isSelected
+                              ? 'bg-teal-500/20 border border-teal-500/30 scale-105'
+                              : 'bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600'
+                          }`}>
+                            {tone.icon}
+                          </div>
+
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className={`font-black text-xs sm:text-sm truncate ${
+                                isSelected ? 'text-teal-700 dark:text-teal-300' : 'text-slate-800 dark:text-slate-100'
+                              }`}>
+                                {tone.name}
+                              </span>
+                              {isSelected && (
+                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-teal-500 text-slate-950">
+                                  المختارة ✓
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5 line-clamp-1">
+                              {tone.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePreview(tone.id, tone.durationMs);
+                          }}
+                          title="استماع وتجربة النغمة"
+                          className={`px-3 py-2 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5 transition active:scale-90 cursor-pointer ${
+                            isPlaying
+                              ? 'bg-teal-500 text-slate-950 font-black shadow-md animate-pulse'
+                              : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-teal-500 hover:text-slate-950'
+                          }`}
+                        >
+                          {isPlaying ? (
+                            <>
+                              <Square className="w-3 h-3 fill-current" />
+                              <span className="text-[11px]">يعزف 🎵</span>
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-3 h-3 fill-current" />
+                              <span className="text-[11px]">استماع</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 3. Sound Control & Vibration (الاهتزاز ومستوى الصوت) */}
+              <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center font-bold">
+                      📳
+                    </div>
+                    <div>
+                      <h4 className="font-black text-slate-900 dark:text-white text-xs sm:text-sm">
+                        الاهتزاز مع النغمة (Vibration)
+                      </h4>
+                      <p className="text-[11px] text-slate-400">
+                        تشغيل هزاز الهاتف بالتزامن مع النغمة عند ورود التنبيهات
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => updateSoundSettings({ vibrationEnabled: !soundSettings?.vibrationEnabled })}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                      soundSettings?.vibrationEnabled !== false
+                        ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                    }`}
+                  >
+                    <span>{soundSettings?.vibrationEnabled !== false ? 'مفعل 📳' : 'معطل 🔕'}</span>
+                  </button>
+                </div>
+
+                {/* Live Test Alert Button */}
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-700/60">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playChimeSound();
+                      setTestNotifToast('🔔 تجربة نغمة الإشعارات بنجاح!');
+                      setTimeout(() => setTestNotifToast(''), 3000);
+                    }}
+                    className="w-full py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/20 transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Volume2 className="w-4 h-4" />
+                    <span>تجربة النغمة والاهتزاز الآن 🧪🔊</span>
+                  </button>
+
+                  {testNotifToast && (
+                    <p className="mt-2 text-center text-xs font-black text-emerald-600 dark:text-emerald-400 animate-fadeIn">
+                      {testNotifToast}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          )}
+
           {/* TAB 4: GENERAL & BACKUP (النسخ والمظهر) */}
           {activeTab === 'general' && (
             <div className="space-y-5">
@@ -1051,6 +1377,18 @@ export const SettingsModal = ({
                       </button>
                     </>
                   )}
+                </div>
+
+                {/* Shortcut to Notification Sounds Tab */}
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-700/60">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('sounds')}
+                    className="w-full py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-400/30 font-black text-xs rounded-2xl transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <BellRing className="w-4 h-4 text-rose-500" />
+                    <span>تخصيص وتغيير نغمات الإشعارات والأصوات 🎵</span>
+                  </button>
                 </div>
               </div>
 
