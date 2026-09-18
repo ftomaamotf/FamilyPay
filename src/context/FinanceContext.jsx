@@ -224,6 +224,19 @@ export const FinanceProvider = ({ children }) => {
         avatarColor: '#3b82f6',
         isAdmin: false,
         approvedFields: []
+      },
+      {
+        id: 'b-1789661984838',
+        name: 'حسن عجمي',
+        email: 'hasan.ajmi@familyfund.iq',
+        accountNumber: '1999',
+        phone: '07700763782',
+        bankAccountNumber: '7114206456',
+        password: '123',
+        bankName: 'ماستر كي / Qi Card',
+        avatarColor: '#8b5cf6',
+        isAdmin: false,
+        approvedFields: []
       }
     ]);
     return (raw || []).filter((b) => b && b.name);
