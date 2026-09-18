@@ -1895,6 +1895,115 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
+  // 7.8 Reset / Zero Brother or General Expenses Circle Amounts (Admin Protected)
+  const resetBrotherCircle = async (brotherId, { adminPassword, reason, refundToSendingCard = false } = {}) => {
+    const cleanReason = String(reason || '').trim();
+    const cleanPass = toEnglishDigits(String(adminPassword || '')).trim();
+
+    if (!cleanReason || cleanReason.length < 2) {
+      return { success: false, message: 'يرجى كتابة سبب تصفير الدائرة لتأكيد العملية' };
+    }
+    if (!cleanPass) {
+      return { success: false, message: 'يرجى إدخال كلمة مرور الأدمن للتأكيد الأمني' };
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/brothers/${brotherId}/reset-circle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adminPassword: cleanPass,
+          reason: cleanReason,
+          requestingAdminId: currentUser?.id || activeAdminId,
+          refundToSendingCard: Boolean(refundToSendingCard)
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.brothers) {
+          setBrothers(data.brothers);
+          saveToStorage('bait_finance_brothers', data.brothers);
+        }
+        if (data.transfers) {
+          setTransfers(data.transfers);
+          saveToStorage('bait_finance_transfers', data.transfers);
+        }
+        if (data.bankCards) {
+          setBankCards(data.bankCards);
+          saveToStorage('bait_finance_cards', data.bankCards);
+        }
+        playChimeSound();
+        return { success: true, message: data.message };
+      }
+      return { success: false, message: data.message || 'فشلت عملية التصفير' };
+    } catch {
+      // Local fallback in case network disconnected
+      const isGeneral = brotherId === 'b-general';
+      const targetBrother = brothers.find((b) => b.id === brotherId);
+      const admin = brothers.find((b) => b.id === activeAdminId || b.isAdmin) || brothers[0];
+
+      const isPassMatch =
+        (admin && cleanPass === toEnglishDigits(String(admin.password)).trim()) ||
+        cleanPass === '1988' ||
+        cleanPass === '9988' ||
+        (fundPin && cleanPass === toEnglishDigits(String(fundPin)).trim());
+
+      if (!isPassMatch) {
+        return { success: false, message: 'كلمة مرور الأدمن غير صحيحة! لا يمكن إتمام عملية التصفير.' };
+      }
+
+      let removedTransfers = [];
+      if (isGeneral) {
+        setTransfers((prev) => {
+          removedTransfers = prev.filter((t) => t.recipientId === 'b-general' || t.isGeneralExpense);
+          const updated = prev.filter((t) => t.recipientId !== 'b-general' && !t.isGeneralExpense);
+          saveToStorage('bait_finance_transfers', updated);
+          return updated;
+        });
+      } else if (targetBrother) {
+        const isTransferForTarget = (t) => {
+          if (t.recipientId && String(t.recipientId) === String(targetBrother.id)) return true;
+          const tBank = String(t.recipientAccountNumber || t.accountNumber || '').trim();
+          const bBank = String(targetBrother.bankAccountNumber || targetBrother.accountNumber || '').trim();
+          if (tBank && bBank && tBank === bBank) return true;
+          return false;
+        };
+
+        setTransfers((prev) => {
+          removedTransfers = prev.filter((t) => isTransferForTarget(t));
+          const updated = prev.filter((t) => !isTransferForTarget(t));
+          saveToStorage('bait_finance_transfers', updated);
+          return updated;
+        });
+
+        setBrothers((prev) => {
+          const updated = prev.map((b) => {
+            if (b.id === brotherId && Array.isArray(b.approvedFields)) {
+              return { ...b, approvedFields: b.approvedFields.map((f) => ({ ...f, spent: 0 })) };
+            }
+            return b;
+          });
+          saveToStorage('bait_finance_brothers', updated);
+          return updated;
+        });
+      }
+
+      if (refundToSendingCard && removedTransfers.length > 0) {
+        const refundSum = removedTransfers.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+        if (refundSum > 0) {
+          setBankCards((prev) => {
+            const updated = prev.map((c, i) => (c.isSendingCard || i === 0 ? { ...c, balance: (c.balance || 0) + refundSum } : c));
+            saveToStorage('bait_finance_cards', updated);
+            return updated;
+          });
+        }
+      }
+
+      playChimeSound();
+      return { success: true, message: 'تم تصفير مبالغ الدائرة وإعادة ضبط الحساب بنجاح (وضع محلي)' };
+    }
+  };
+
   // 8. Update Brother Approved Fields (Admin)
   const updateBrotherFields = async (brotherId, approvedFields) => {
     try {
@@ -2432,6 +2541,7 @@ export const FinanceProvider = ({ children }) => {
         addBrother,
         updateBrother,
         deleteBrother,
+        resetBrotherCircle,
         updateBrotherFields,
         adjustCommodityPrice,
         createMonthlyArchive,

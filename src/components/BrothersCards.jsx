@@ -22,10 +22,12 @@ import {
   Radio,
   MessageCircle,
   X,
-  Search
+  Search,
+  RotateCcw
 } from 'lucide-react';
 import { EditTransferModal } from './EditTransferModal';
 import { AdjustCommodityPriceModal } from './AdjustCommodityPriceModal';
+import { ResetCircleModal } from './ResetCircleModal';
 
 // 🌈 Curated Vibrant Color Themes for Distinct Brother Circles
 export const CIRCLE_COLOR_PALETTES = [
@@ -210,6 +212,27 @@ export const BrothersCards = ({
   const [editingTransfer, setEditingTransfer] = useState(null);
   const [inspectedCommodity, setInspectedCommodity] = useState(null);
   const [adjustingCommodity, setAdjustingCommodity] = useState(null);
+  const [resetModalData, setResetModalData] = useState({
+    isOpen: false,
+    targetBrother: null,
+    currentAmount: 0
+  });
+
+  const handleOpenResetModal = (targetBrother, currentAmount) => {
+    setResetModalData({
+      isOpen: true,
+      targetBrother,
+      currentAmount: Number(currentAmount) || 0
+    });
+  };
+
+  const handleCloseResetModal = () => {
+    setResetModalData({
+      isOpen: false,
+      targetBrother: null,
+      currentAmount: 0
+    });
+  };
   const [circleSearchNum, setCircleSearchNum] = useState('');
   const [genNameInput, setGenNameInput] = useState('');
   const [genNameMsg, setGenNameMsg] = useState('');
@@ -499,17 +522,24 @@ export const BrothersCards = ({
                 <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-amber-300 group-hover:text-amber-200">
                   {generalExpensesName || 'مصاريف عامة'}
                 </span>
+              </button>
 
-                {/* Total Spent Pill Badge under the circle */}
-                <div
-                  className={`mt-1 px-3 py-1 rounded-full text-[11px] font-black font-mono shadow-sm flex items-center gap-1 transition-all ${
-                    selectedBrotherId === 'b-general'
-                      ? 'bg-amber-400 text-slate-950 font-bold scale-105 shadow-md shadow-amber-500/30'
-                      : 'bg-slate-800 text-amber-400 border border-slate-700 group-hover:bg-slate-700'
-                  }`}
-                >
-                  <span>{formatMoney(totalGeneralExpensesSpent, currency)}</span>
-                </div>
+              {/* Total Spent Pill Badge under the circle - Clickable to Reset / Zero */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenResetModal({ id: 'b-general', name: generalExpensesName || 'مصاريف عامة', isGeneral: true }, totalGeneralExpensesSpent);
+                }}
+                title="اضغط لتصفير / حذف مبالغ المصاريف العامة"
+                className={`mt-1 px-3 py-1 rounded-full text-[11px] font-black font-mono shadow-sm flex items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer ${
+                  selectedBrotherId === 'b-general'
+                    ? 'bg-amber-400 text-slate-950 font-bold scale-105 shadow-md shadow-amber-500/30'
+                    : 'bg-slate-800 text-amber-400 border border-slate-700 hover:bg-slate-700'
+                }`}
+              >
+                <RotateCcw className="w-2.5 h-2.5 opacity-75" />
+                <span>{formatMoney(totalGeneralExpensesSpent, currency)}</span>
               </button>
             </div>
 
@@ -538,7 +568,7 @@ export const BrothersCards = ({
                     onTouchStart={() => handleTouchStart(b)}
                     onTouchEnd={handleTouchEnd}
                     title={`اضغط لتحديد [${idx + 1}] ${b.name} • اضغط مطولاً لنسخ رقم الحساب`}
-                    className={`flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full ${
+                    className={`flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full cursor-pointer ${
                       isSelected ? 'scale-105' : 'opacity-85 hover:opacity-100 hover:scale-102'
                     }`}
                   >
@@ -594,19 +624,26 @@ export const BrothersCards = ({
                     >
                       {b.name}
                     </span>
+                  </button>
 
-                    {/* Total Spent Pill Badge with Individual Theme */}
-                    <div
-                      className={`mt-1 px-3 py-1 rounded-full text-[11px] font-black font-mono shadow-sm flex items-center gap-1 transition-all ${
-                        isCopied
-                          ? 'bg-emerald-400 text-slate-950 font-bold scale-105'
-                          : isSelected
-                          ? `${palette.badge} scale-105 shadow-md`
-                          : `${palette.badgeInactive} group-hover:bg-slate-700`
-                      }`}
-                    >
-                      <span>{isCopied ? 'تم نسخ الحساب!' : formatMoney(totalReceived, currency)}</span>
-                    </div>
+                  {/* Total Spent Pill Badge with Individual Theme - Clickable to Reset */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenResetModal(b, totalReceived);
+                    }}
+                    title={`اضغط لتصفير / حذف مبالغ ${b.name}`}
+                    className={`mt-1 px-3 py-1 rounded-full text-[11px] font-black font-mono shadow-sm flex items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer ${
+                      isCopied
+                        ? 'bg-emerald-400 text-slate-950 font-bold scale-105'
+                        : isSelected
+                        ? `${palette.badge} scale-105 shadow-md`
+                        : `${palette.badgeInactive} group-hover:bg-slate-700`
+                    }`}
+                  >
+                    <RotateCcw className="w-2.5 h-2.5 opacity-75" />
+                    <span>{isCopied ? 'تم نسخ الحساب!' : formatMoney(totalReceived, currency)}</span>
                   </button>
                 </div>
               );
@@ -1369,6 +1406,16 @@ export const BrothersCards = ({
           brother={adjustingCommodity.brother}
           field={adjustingCommodity.field}
           currentPrice={adjustingCommodity.currentPrice}
+        />
+      )}
+
+      {/* Admin Reset Circle Modal (تصفير / حذف مبالغ الدوائر) */}
+      {resetModalData.isOpen && (
+        <ResetCircleModal
+          isOpen={resetModalData.isOpen}
+          onClose={handleCloseResetModal}
+          targetBrother={resetModalData.targetBrother}
+          currentAmount={resetModalData.currentAmount}
         />
       )}
 
