@@ -70,26 +70,28 @@ export const AddEditBrotherModal = ({ isOpen, onClose, brotherToEdit = null }) =
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim() || !accountNumber.trim()) {
-      setErrorMsg('يرجى إدخال الاسم ورقم الحساب للدخول');
-      return;
-    }
-    if (!phone.trim()) {
-      setErrorMsg('يرجى إدخال رقم الهاتف لاستعادة الرمز السري عند نسيانه');
+    if (!name.trim()) {
+      setErrorMsg('يرجى إدخال اسم المستخدم / صاحب الحساب');
       return;
     }
 
     setLoading(true);
     setErrorMsg('');
 
+    const cleanAcc = accountNumber.trim() ? toEnglishDigits(accountNumber).trim() : String(1000 + brothers.length + 1);
+    const cleanPhone = phone.trim() ? toEnglishDigits(phone).trim() : '';
+    const cleanBankAcc = bankAccountNumber.trim() ? toEnglishDigits(bankAccountNumber).trim() : cleanAcc;
+    const cleanBankName = bankName.trim() || 'ماستر كي / Qi Card';
+    const cleanPass = password.trim() ? toEnglishDigits(password).trim() : '123';
+
     if (isEditing) {
       const res = await updateBrother(brotherToEdit.id, {
         name: name.trim(),
-        accountNumber: toEnglishDigits(accountNumber).trim(),
-        phone: toEnglishDigits(phone).trim(),
-        bankAccountNumber: toEnglishDigits(bankAccountNumber).trim() || toEnglishDigits(accountNumber).trim(),
-        bankName: bankName.trim(),
-        password: toEnglishDigits(password).trim(),
+        accountNumber: cleanAcc,
+        phone: cleanPhone,
+        bankAccountNumber: cleanBankAcc,
+        bankName: cleanBankName,
+        password: cleanPass,
         avatarColor
       });
       setLoading(false);
@@ -102,11 +104,11 @@ export const AddEditBrotherModal = ({ isOpen, onClose, brotherToEdit = null }) =
     } else {
       const res = await addBrother({
         name: name.trim(),
-        accountNumber: toEnglishDigits(accountNumber).trim(),
-        phone: toEnglishDigits(phone).trim(),
-        bankAccountNumber: toEnglishDigits(bankAccountNumber).trim() || toEnglishDigits(accountNumber).trim(),
-        bankName: bankName.trim(),
-        password: toEnglishDigits(password).trim(),
+        accountNumber: cleanAcc,
+        phone: cleanPhone,
+        bankAccountNumber: cleanBankAcc,
+        bankName: cleanBankName,
+        password: cleanPass,
         avatarColor,
         requestingBrotherId: currentUser?.id
       });
@@ -197,7 +199,7 @@ export const AddEditBrotherModal = ({ isOpen, onClose, brotherToEdit = null }) =
               <p className={`text-xs ${showDeleteConfirm ? 'text-rose-300' : 'text-emerald-200'}`}>
                 {showDeleteConfirm
                   ? 'يتطلب إدخال سبب الحذف وكلمة مرور الأدمن'
-                  : 'مع رقم الهاتف لاستعادة الرمز السري'}
+                  : 'إضافة فورية بالاسم فقط (الهاتف والبطاقة اختياري)'}
               </p>
             </div>
           </div>
@@ -319,28 +321,32 @@ export const AddEditBrotherModal = ({ isOpen, onClose, brotherToEdit = null }) =
             {/* 2. Login Account Number & Password */}
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-                  <Hash className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>رقم الحساب للدخول *</span>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <Hash className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>رقم الحساب</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal">(تلقائي)</span>
                 </label>
                 <input
                   type="text"
-                  required
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value)}
-                  placeholder="مثال: 1001"
+                  placeholder="مثال: 1007"
                   className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-800 dark:text-white text-center outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-                  <Lock className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>الرمز السري للدخول</span>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <Lock className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>الرمز السري</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal">(123)</span>
                 </label>
                 <input
                   type="password"
-                  required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="الافتراضي: 123"
@@ -354,16 +360,15 @@ export const AddEditBrotherModal = ({ isOpen, onClose, brotherToEdit = null }) =
               <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
                 <span className="flex items-center gap-1">
                   <Phone className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>رقم الهاتف المعتمد *</span>
+                  <span>رقم الهاتف المعتمد</span>
                 </span>
-                <span className="text-[10px] text-emerald-600 font-semibold">(مطلوب لاستعادة الرمز السري)</span>
+                <span className="text-[10px] text-slate-400 font-medium">(اختياري)</span>
               </label>
               <input
                 type="tel"
-                required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="0770xxxxxxx أو 0780xxxxxxx"
+                placeholder="0770xxxxxxx أو اتركه فارغاً"
                 dir="ltr"
                 className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-800 dark:text-white text-left outline-none focus:ring-2 focus:ring-emerald-500"
               />
@@ -371,15 +376,18 @@ export const AddEditBrotherModal = ({ isOpen, onClose, brotherToEdit = null }) =
 
             {/* 4. Bank Account Number */}
             <div>
-              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-                <CreditCard className="w-3.5 h-3.5 text-emerald-600" />
-                <span>رقم الحساب المصرفي / البطاقة للتحويل:</span>
+              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <CreditCard className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>رقم بطاقة ماستر كي / الحساب المصرفي:</span>
+                </span>
+                <span className="text-[10px] text-slate-400 font-medium">(اختياري)</span>
               </label>
               <input
                 type="text"
                 value={bankAccountNumber}
                 onChange={(e) => setBankAccountNumber(e.target.value)}
-                placeholder="مثال: 9256869125 أو رقم بطاقة ماستر"
+                placeholder="رقم بطاقة الماستر أو اتركه فارغاً"
                 dir="ltr"
                 className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-slate-800 dark:text-white text-left outline-none focus:ring-2 focus:ring-emerald-500"
               />
@@ -387,9 +395,12 @@ export const AddEditBrotherModal = ({ isOpen, onClose, brotherToEdit = null }) =
 
             {/* 5. Bank Name */}
             <div>
-              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-                <Building2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span>اسم المصرف / جهة البطاقة:</span>
+              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <Building2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>اسم المصرف / جهة البطاقة:</span>
+                </span>
+                <span className="text-[10px] text-slate-400 font-medium">(اختياري)</span>
               </label>
               <input
                 type="text"

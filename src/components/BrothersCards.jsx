@@ -23,7 +23,8 @@ import {
   MessageCircle,
   X,
   Search,
-  RotateCcw
+  RotateCcw,
+  ArrowRight
 } from 'lucide-react';
 import { EditTransferModal } from './EditTransferModal';
 import { AdjustCommodityPriceModal } from './AdjustCommodityPriceModal';
@@ -293,15 +294,6 @@ export const BrothersCards = ({
   const isCurrentAdmin = currentUser?.id === activeAdminId || currentUser?.isAdmin;
   const canSend = canCurrentUserSend ? canCurrentUserSend() : isCurrentAdmin;
 
-  // Set default selected brother to current logged in user, or active Admin
-  React.useEffect(() => {
-    if (!selectedBrotherId && brothers.length > 0) {
-      const defaultId = currentUser?.id && brothers.some(b => b.id === currentUser.id)
-        ? currentUser.id
-        : (activeAdminId || brothers[0].id);
-      setSelectedBrotherId(defaultId);
-    }
-  }, [brothers, currentUser, activeAdminId]);
 
   // Strict Transfer Matching for Brother (Prevents brother transfers from contaminating other circles)
   const isTransferStrictlyForBrother = (t, b) => {
@@ -421,7 +413,8 @@ export const BrothersCards = ({
       return 0;
     });
 
-  const selectedBrother = brothers.find((b) => b.id === selectedBrotherId) || brothers[0];
+  const selectedBrother = selectedBrotherId ? brothers.find((b) => b.id === selectedBrotherId) : null;
+  const isCardOpen = selectedBrotherId === 'b-general' || Boolean(selectedBrother);
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -434,31 +427,43 @@ export const BrothersCards = ({
         </div>
       )}
 
-      {/* 🔴 2-COLUMN LAYOUT: Vertical Circles Hub on the Right + Details on the Left 🔴 */}
-      <div className="flex flex-col lg:flex-row gap-6 items-start pt-2" dir="rtl">
+      {!isCardOpen ? (
+        /* 🌟 CIRCLES HUB VIEW (عرض دوائر الصندوق والمستخدمين - ولا تظهر بطاقاتهم) 🌟 */
+        <div className="bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/95 p-5 sm:p-7 rounded-3xl border border-slate-800 shadow-2xl space-y-6 animate-fadeIn" dir="rtl">
+          
+          {/* Header Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+            <div>
+              <h3 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-emerald-400" />
+                <span>دوائر الصندوق والمستخدمين</span>
+              </h3>
+              <p className="text-xs text-slate-400 font-bold mt-1">
+                اضغط على أي دائرة لعرض بطاقتها ومصروفاتها بالتفصيل • ضغطة مطولة = نسخ رقم الحساب 📋
+              </p>
+            </div>
 
-        {/* 1. RIGHT SIDEBAR: Vertical Circles Hub (شريط الدوائر العمودي على جهة اليمين) */}
-        <div className="w-full lg:w-56 xl:w-64 shrink-0 bg-gradient-to-b from-slate-900/95 to-slate-950/95 p-4 rounded-3xl border border-slate-800 shadow-xl space-y-3">
-          <div className="text-center pb-2 border-b border-slate-800/80">
-            <span className="text-xs font-black text-emerald-400 flex items-center justify-center gap-1">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>دوائر المستخدمين والأدمن</span>
-            </span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">
-              ضغطة مطولة = نسخ الحساب 📋
-            </span>
+            {/* Quick Add User Button */}
+            {onOpenAddBrother && (
+              <button
+                type="button"
+                onClick={onOpenAddBrother}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-emerald-600/30 transition active:scale-95 cursor-pointer shrink-0 self-start sm:self-auto"
+                title={isCurrentAdmin ? "إضافة مستخدم جديد بالاسم فقط وبدون هاتف أو ماستر" : "إرسال طلب إضافة مستخدم جديد إلى الأدمن"}
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>{isCurrentAdmin ? "➕ إضافة مستخدم جديد" : "➕ طلب إضافة مستخدم"}</span>
+              </button>
+            )}
           </div>
 
-          {/* Vertical Stack of Interactive Circles */}
-          <div className="flex flex-row lg:flex-col items-center justify-start gap-4 sm:gap-5 overflow-x-auto lg:overflow-y-auto max-h-[620px] p-2 scrollbar-thin scrollbar-thumb-slate-700">
+          {/* Interactive Circles Grid */}
+          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-5 sm:gap-6 justify-items-center items-start p-2">
             
-            {/* 🔍 1. SEARCH CIRCLE AT THE VERY START (دائرة البحث عن أرقام ومستخدمين في بداية الدوائر) */}
-            <div className="flex flex-col items-center shrink-0 w-auto lg:w-full">
+            {/* 🔍 1. SEARCH CIRCLE */}
+            <div className="flex flex-col items-center shrink-0 w-full">
               <div className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full">
-                
-                {/* Outer Circular Ring with Cyan Glowing Theme */}
                 <div className="relative p-1 rounded-full ring-2 ring-cyan-400 group-hover:ring-cyan-300 ring-offset-2 ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-cyan-500/25">
-                  {/* The Inner Search Avatar Circle */}
                   <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex flex-col items-center justify-center bg-gradient-to-tr from-cyan-900 via-blue-900 to-indigo-950 text-white shadow-inner relative overflow-hidden border-2 border-cyan-400/40">
                     <div className="relative w-full h-full flex flex-col items-center justify-center p-1">
                       <input
@@ -479,67 +484,46 @@ export const BrothersCards = ({
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/20 pointer-events-none" />
                   </div>
-
-                  {/* Search Icon Badge on top */}
-                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-cyan-400 flex items-center justify-center shadow-md border border-cyan-400 text-[10px]">
-                    <Search className="w-3 h-3 text-cyan-300" />
+                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-cyan-300 flex items-center justify-center shadow-md border border-cyan-400 text-[10px]">
+                    🔍
                   </div>
                 </div>
-
-                {/* Circle Name Label */}
                 <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-cyan-300 group-hover:text-cyan-200">
-                  بحث بالرقم 🔍
+                  بحث برقم
                 </span>
-
-                {/* Launch Search Button (في نفس مكان السعر أسفل الدوائر) */}
                 <button
                   type="button"
                   onClick={handleLaunchCircleSearch}
-                  title="بحث عن المستخدم والانتقال إليه"
-                  className="mt-1 px-3 py-1 rounded-full text-[11px] font-black font-mono shadow-md bg-gradient-to-r from-cyan-400 via-teal-400 to-cyan-300 hover:from-cyan-300 hover:to-teal-300 text-slate-950 flex items-center justify-center gap-1 transition active:scale-95 border border-cyan-200 cursor-pointer"
+                  title="البحث والانتقال الفوري للمستخدم"
+                  className="mt-1 px-3 py-1 rounded-full text-[11px] font-black bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-sm flex items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer"
                 >
                   <Search className="w-3 h-3 text-slate-950" />
                   <span>بحث</span>
                 </button>
-
               </div>
             </div>
 
-            {/* 📦 1.5 GENERAL EXPENSES CIRCLE (دائرة مصاريف عامة بعد دائرة البحث مباشرة) */}
-            <div className="flex flex-col items-center shrink-0 w-auto lg:w-full">
+            {/* 📦 2. GENERAL EXPENSES CIRCLE */}
+            <div className="flex flex-col items-center shrink-0 w-full">
               <button
                 type="button"
                 onClick={() => setSelectedBrotherId('b-general')}
                 title={`اضغط لعرض ${generalExpensesName || 'المصاريف العامة'} وسجل المصروفات المشتركة`}
-                className={`flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full cursor-pointer ${
-                  selectedBrotherId === 'b-general' ? 'scale-105' : 'opacity-85 hover:opacity-100 hover:scale-102'
-                }`}
+                className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full cursor-pointer opacity-90 hover:opacity-100 hover:scale-105"
               >
-                {/* Outer Circular Ring with Amber / Orange Radiant Theme */}
-                <div
-                  className={`relative p-1 rounded-full ring-2 ring-amber-500 group-hover:ring-amber-400 ring-offset-2 ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-amber-500/25 ${
-                    selectedBrotherId === 'b-general' ? 'ring-4 ring-amber-400 shadow-amber-500/40' : ''
-                  }`}
-                >
-                  {/* The Inner Avatar Circle */}
+                <div className="relative p-1 rounded-full ring-2 ring-amber-500 group-hover:ring-amber-400 ring-offset-2 ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-amber-500/25">
                   <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex flex-col items-center justify-center bg-gradient-to-tr from-amber-600 via-orange-500 to-amber-400 text-slate-950 shadow-inner relative overflow-hidden">
                     <span className="text-2xl sm:text-3xl drop-shadow select-none">📦</span>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/30 pointer-events-none" />
                   </div>
-
-                  {/* Top Badge */}
                   <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-amber-400 flex items-center justify-center shadow-md border border-amber-400 text-[10px] font-bold">
                     🌐
                   </div>
                 </div>
-
-                {/* Circle Name Label */}
                 <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-amber-300 group-hover:text-amber-200">
                   {generalExpensesName || 'مصاريف عامة'}
                 </span>
               </button>
-
-              {/* Total Spent Pill Badge under the circle - Clickable to Reset / Zero */}
               <button
                 type="button"
                 onClick={(e) => {
@@ -547,34 +531,24 @@ export const BrothersCards = ({
                   handleOpenResetModal({ id: 'b-general', name: generalExpensesName || 'مصاريف عامة', isGeneral: true }, totalGeneralExpensesSpent);
                 }}
                 title="اضغط لتصفير / حذف مبالغ المصاريف العامة"
-                className={`mt-1 px-3 py-1 rounded-full text-[11px] font-black font-mono shadow-sm flex items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer ${
-                  selectedBrotherId === 'b-general'
-                    ? 'bg-amber-400 text-slate-950 font-bold scale-105 shadow-md shadow-amber-500/30'
-                    : 'bg-slate-800 text-amber-400 border border-slate-700 hover:bg-slate-700'
-                }`}
+                className="mt-1 px-3 py-1 rounded-full text-[11px] font-black font-mono shadow-sm flex items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer bg-slate-800 text-amber-400 border border-slate-700 hover:bg-slate-700"
               >
                 <RotateCcw className="w-2.5 h-2.5 opacity-75" />
                 <span>{formatMoney(totalGeneralExpensesSpent, currency)}</span>
               </button>
             </div>
 
-            {/* 👥 2. USER CIRCLES WITH NUMBER IN CENTER (دوائر المستخدمين مع الرقم في الوسط) */}
+            {/* 👥 3. USER CIRCLES */}
             {sortedBrothers.map((b, idx) => {
               const isSenderAdmin = b.id === activeAdminId;
               const isMe = b.id === currentUser?.id;
-              const isSelected = b.id === selectedBrotherId;
               const isCopied = copiedId === b.id;
               const palette = getCirclePalette(b, idx, sortedBrothers);
-
-              // Total spent for this brother (strictly isolated to transfers where this brother is the recipient)
               const brotherTransfers = transfers.filter((t) => isTransferStrictlyForBrother(t, b));
               const totalReceived = brotherTransfers.reduce((acc, t) => acc + (t.amount || 0), 0);
 
               return (
-                <div
-                  key={b.id}
-                  className="flex flex-col items-center shrink-0 w-auto lg:w-full"
-                >
+                <div key={b.id} className="flex flex-col items-center shrink-0 w-full">
                   <button
                     onClick={() => setSelectedBrotherId(b.id)}
                     onMouseDown={() => handleTouchStart(b)}
@@ -582,25 +556,15 @@ export const BrothersCards = ({
                     onMouseLeave={handleTouchEnd}
                     onTouchStart={() => handleTouchStart(b)}
                     onTouchEnd={handleTouchEnd}
-                    title={`اضغط لتحديد [${idx + 1}] ${b.name} • اضغط مطولاً لنسخ رقم الحساب`}
-                    className={`flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full cursor-pointer ${
-                      isSelected ? 'scale-105' : 'opacity-85 hover:opacity-100 hover:scale-102'
-                    }`}
+                    title={`اضغط لعرض بطاقة [${idx + 1}] ${b.name} • ضغطة مطولة لنسخ رقم الحساب`}
+                    className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full cursor-pointer opacity-90 hover:opacity-100 hover:scale-105"
                   >
-                    {/* Outer Circular Ring with unique palette */}
-                    <div
-                      className={`relative p-1 rounded-full transition-all duration-300 ${
-                        isCopied
-                          ? 'ring-4 ring-emerald-400 scale-110 shadow-xl shadow-emerald-400/50'
-                          : isSelected
-                          ? `ring-4 ${palette.ring} ring-offset-4 ring-offset-slate-950 shadow-lg ${palette.shadow}`
-                          : `ring-2 ring-slate-700/80 group-hover:${palette.ring}`
-                      }`}
-                    >
-                      {/* The Inner Avatar Circle with Number in Center */}
-                      <div
-                        className={`w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center text-white font-black shadow-inner relative overflow-hidden bg-gradient-to-tr ${palette.gradient}`}
-                      >
+                    <div className={`relative p-1 rounded-full transition-all duration-300 ${
+                      isCopied
+                        ? 'ring-4 ring-emerald-400 scale-110 shadow-xl shadow-emerald-400/50'
+                        : `ring-2 ring-slate-700/80 group-hover:${palette.ring}`
+                    }`}>
+                      <div className={`w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center text-white font-black shadow-inner relative overflow-hidden bg-gradient-to-tr ${palette.gradient}`}>
                         {isCopied ? (
                           <Check className="w-8 h-8 text-white animate-pulse" />
                         ) : (
@@ -608,12 +572,9 @@ export const BrothersCards = ({
                             {idx + 1}
                           </span>
                         )}
-
-                        {/* Gradient Overlay for luxury effect */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/20 pointer-events-none" />
                       </div>
 
-                      {/* Admin Crown Badge */}
                       {isSenderAdmin && (
                         <div
                           title="الأدمن الرئيسي"
@@ -623,7 +584,6 @@ export const BrothersCards = ({
                         </div>
                       )}
 
-                      {/* 'You' Badge */}
                       {isMe && !isSenderAdmin && (
                         <div className={`absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full ${palette.badge} text-[9px] font-black shadow border border-slate-950 z-10`}>
                           أنت
@@ -631,17 +591,11 @@ export const BrothersCards = ({
                       )}
                     </div>
 
-                    {/* Brother Name with Theme Color */}
-                    <span
-                      className={`mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center ${
-                        isSelected ? palette.text : 'text-slate-200 group-hover:text-white'
-                      }`}
-                    >
+                    <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-slate-200 group-hover:text-white">
                       {b.name}
                     </span>
                   </button>
 
-                  {/* Total Spent Pill Badge with Individual Theme - Clickable to Reset */}
                   <button
                     type="button"
                     onClick={(e) => {
@@ -652,8 +606,6 @@ export const BrothersCards = ({
                     className={`mt-1 px-3 py-1 rounded-full text-[11px] font-black font-mono shadow-sm flex items-center gap-1 transition-all hover:scale-105 active:scale-95 cursor-pointer ${
                       isCopied
                         ? 'bg-emerald-400 text-slate-950 font-bold scale-105'
-                        : isSelected
-                        ? `${palette.badge} scale-105 shadow-md`
                         : `${palette.badgeInactive} group-hover:bg-slate-700`
                     }`}
                   >
@@ -664,35 +616,55 @@ export const BrothersCards = ({
               );
             })}
 
-            {/* Join via Barcode / QR Code Circular Button (ظاهر على الكمبيوتر وجميع الهواتف) */}
+            {/* ➕ 4. ADD USER CIRCLE (إضافة مستخدم جديد في الصندوق بالاسم فقط وبدون هاتف أو ماستر) */}
+            {onOpenAddBrother && (
+              <div className="flex flex-col items-center shrink-0 w-full">
+                <button
+                  type="button"
+                  onClick={onOpenAddBrother}
+                  title={isCurrentAdmin ? "إضافة مستخدم جديد بالاسم فقط وبدون هاتف أو ماستر" : "إرسال طلب إضافة مستخدم جديد إلى الأدمن"}
+                  className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full cursor-pointer opacity-90 hover:opacity-100 hover:scale-105 active:scale-95"
+                >
+                  <div className="relative p-1 rounded-full ring-2 ring-emerald-500/80 group-hover:ring-emerald-400 group-hover:ring-offset-2 group-hover:ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-emerald-500/20">
+                    <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center bg-gradient-to-tr from-emerald-600 via-teal-600 to-emerald-400 text-white shadow-inner relative overflow-hidden">
+                      <UserPlus className="w-8 h-8 sm:w-9 sm:h-9 stroke-[2.2] drop-shadow" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/30 pointer-events-none" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-emerald-300 flex items-center justify-center shadow-md border border-emerald-400 text-[10px]">
+                      ✨
+                    </div>
+                  </div>
+                  <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-emerald-300 group-hover:text-emerald-200">
+                    إضافة مستخدم
+                  </span>
+                  <div className="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all">
+                    <span>{isCurrentAdmin ? "إضافة سريعة ➕" : "طلب إضافة ➕"}</span>
+                  </div>
+                </button>
+              </div>
+            )}
+
+            {/* 📷 5. QR CODE CIRCLE */}
             {onOpenJoinQr && (
-              <div className="flex flex-col items-center shrink-0 w-auto lg:w-full">
+              <div className="flex flex-col items-center shrink-0 w-full">
                 <button
                   type="button"
                   onClick={onOpenJoinQr}
                   title="عرض رمز QR لإضافة وانضمام مستخدم جديد عبر كاميرا الهاتف"
-                  className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full opacity-90 hover:opacity-100 hover:scale-105 active:scale-95"
+                  className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full cursor-pointer opacity-90 hover:opacity-100 hover:scale-105 active:scale-95"
                 >
-                  {/* Outer Circular Ring */}
                   <div className="relative p-1 rounded-full ring-2 ring-amber-500/80 group-hover:ring-amber-400 group-hover:ring-offset-2 group-hover:ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-amber-500/20">
-                    {/* The Inner QR Avatar Circle */}
                     <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 text-slate-950 shadow-inner relative overflow-hidden">
                       <QrCode className="w-8 h-8 sm:w-9 sm:h-9 stroke-[2.2] drop-shadow" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/30 pointer-events-none" />
                     </div>
-
-                    {/* Camera Badge on top */}
                     <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-amber-400 flex items-center justify-center shadow-md border border-amber-400 text-[10px]">
                       📷
                     </div>
                   </div>
-
-                  {/* Circle Name Label */}
                   <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-amber-300 group-hover:text-amber-200">
                     باركود إضافة
                   </span>
-
-                  {/* Action Pill Badge */}
                   <div className="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 group-hover:bg-amber-500 group-hover:text-slate-950 transition-all">
                     <span>مسح QR ⚡</span>
                   </div>
@@ -700,71 +672,27 @@ export const BrothersCards = ({
               </div>
             )}
 
-            {/* Send Money Circular Button (دائرة إرسال وتحويل أموال في قائمة الدوائر) */}
-            {canCurrentUserSend && canCurrentUserSend() && onOpenTransferModal && (
-              <div className="flex flex-col items-center shrink-0 w-auto lg:w-full">
-                <button
-                  type="button"
-                  onClick={() => onOpenTransferModal(selectedBrother)}
-                  title="إرسال وتحويل أموال إلى المستخدم المحدد"
-                  className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full opacity-90 hover:opacity-100 hover:scale-105 active:scale-95"
-                >
-                  {/* Outer Circular Ring */}
-                  <div className="relative p-1 rounded-full ring-2 ring-emerald-500/80 group-hover:ring-emerald-400 group-hover:ring-offset-2 group-hover:ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-emerald-500/20">
-                    {/* The Inner Circle */}
-                    <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center bg-gradient-to-tr from-emerald-600 via-teal-600 to-emerald-400 text-white shadow-inner relative overflow-hidden">
-                      <Send className="w-8 h-8 sm:w-9 sm:h-9 stroke-[2.2] -rotate-45 drop-shadow" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/30 pointer-events-none" />
-                    </div>
-
-                    {/* Money Badge on top */}
-                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-emerald-300 flex items-center justify-center shadow-md border border-emerald-400 text-[10px]">
-                      💸
-                    </div>
-                  </div>
-
-                  {/* Circle Name Label */}
-                  <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-emerald-300 group-hover:text-emerald-200">
-                    إرسال أموال
-                  </span>
-
-                  {/* Action Pill Badge */}
-                  <div className="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all">
-                    <span>تحويل مالي 💸</span>
-                  </div>
-                </button>
-              </div>
-            )}
-
-            {/* Request Money Circular Button (دائرة طلب أموال من الصندوق - حصراً في قائمة الدوائر) */}
+            {/* 💰 6. REQUEST MONEY CIRCLE */}
             {onOpenRequestMoney && (
-              <div className="flex flex-col items-center shrink-0 w-auto lg:w-full">
+              <div className="flex flex-col items-center shrink-0 w-full">
                 <button
                   type="button"
-                  onClick={() => onOpenRequestMoney(selectedBrother || currentUser)}
+                  onClick={() => onOpenRequestMoney(currentUser)}
                   title="تقديم طلب أموال ومصروف من الصندوق"
-                  className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full opacity-90 hover:opacity-100 hover:scale-105 active:scale-95"
+                  className="flex flex-col items-center group transition-all duration-200 outline-none select-none relative w-full cursor-pointer opacity-90 hover:opacity-100 hover:scale-105 active:scale-95"
                 >
-                  {/* Outer Circular Ring */}
                   <div className="relative p-1 rounded-full ring-2 ring-teal-500/80 group-hover:ring-teal-400 group-hover:ring-offset-2 group-hover:ring-offset-slate-950 transition-all duration-300 shadow-lg shadow-teal-500/20">
-                    {/* The Inner Circle */}
                     <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center bg-gradient-to-tr from-teal-700 via-emerald-600 to-teal-400 text-white shadow-inner relative overflow-hidden">
                       <Inbox className="w-8 h-8 sm:w-9 sm:h-9 stroke-[2.2] drop-shadow" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/30 pointer-events-none" />
                     </div>
-
-                    {/* Money Icon Badge on top */}
                     <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-950 text-teal-300 flex items-center justify-center shadow-md border border-teal-400 text-[10px]">
                       💰
                     </div>
                   </div>
-
-                  {/* Circle Name Label */}
                   <span className="mt-2 text-xs sm:text-sm font-black truncate max-w-[120px] text-center text-teal-300 group-hover:text-teal-200">
                     طلب أموال
                   </span>
-
-                  {/* Action Pill Badge */}
                   <div className="mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-500/20 text-teal-300 border border-teal-500/40 group-hover:bg-teal-500 group-hover:text-slate-950 transition-all">
                     <span>طلب سلفة 📥</span>
                   </div>
@@ -772,23 +700,33 @@ export const BrothersCards = ({
               </div>
             )}
 
-            {/* Manual Add User Button (متاح للجميع: يرسل طلب اعتماد للأدمن إذا كان مستخدماً عادياً) */}
-            {onOpenAddBrother && (
-              <button
-                type="button"
-                onClick={onOpenAddBrother}
-                className="w-full py-2 px-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-dashed border-emerald-500/30 hover:border-emerald-400 rounded-2xl text-[11px] font-black flex items-center justify-center gap-1 transition active:scale-95 mt-1 shadow-sm shrink-0"
-                title={isCurrentAdmin ? "إضافة مستخدم جديد مباشرة إلى الدوائر" : "إرسال طلب إضافة مستخدم جديد إلى الأدمن"}
-              >
-                <UserPlus className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{isCurrentAdmin ? "إضافة يدوية ✍️" : "طلب إضافة مستخدم ✍️"}</span>
-              </button>
-            )}
           </div>
-        </div>
 
-        {/* 2. LEFT AREA: The Expanded Details Card for Selected Brother OR General Expenses */}
-        <div className="flex-1 w-full min-w-0">
+        </div>
+      ) : (
+        /* 📄 CARD VIEW: Renders ONLY the Card, and Completely Removes Circles from Above it! 📄 */
+        <div className="w-full space-y-4 animate-fadeIn" dir="rtl">
+          
+          {/* Top Return Navigation Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl backdrop-blur-md">
+            <button
+              type="button"
+              onClick={() => setSelectedBrotherId(null)}
+              className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-emerald-600/25 transition active:scale-95 cursor-pointer w-fit"
+            >
+              <ArrowRight className="w-4 h-4" />
+              <span>⬅️ العودة إلى دوائر الصندوق والمستخدمين</span>
+            </button>
+
+            <div className="flex items-center gap-2 text-xs font-bold">
+              <span className="text-slate-400 hidden sm:inline">البطاقة المعروضة:</span>
+              <span className="px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                {selectedBrotherId === 'b-general' ? (generalExpensesName || 'مصاريف عامة') : selectedBrother?.name}
+              </span>
+            </div>
+          </div>
+
+          <div className="w-full min-w-0">
           {selectedBrotherId === 'b-general' ? (
             /* 📦 SPECIAL EXPANDED CARD FOR GENERAL EXPENSES (بطاقة المصاريف العامة للصندوق) */
             <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-800 border-2 border-amber-500/50 shadow-2xl space-y-6 animate-fadeIn">
@@ -1447,7 +1385,9 @@ export const BrothersCards = ({
         </div>
       ); })())}
 
-      </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Transfer / Spent Amount Modal */}
       <EditTransferModal
@@ -1639,7 +1579,5 @@ export const BrothersCards = ({
       )}
 
     </div>
-
-  </div>
-);
+  );
 };
