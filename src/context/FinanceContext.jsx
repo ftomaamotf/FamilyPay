@@ -137,20 +137,6 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // One-time cache purge for stale legacy mock transfers and old mock fields
-  if (typeof window !== 'undefined' && !localStorage.getItem('bait_finance_purge_legacy_mock_v1')) {
-    try {
-      localStorage.removeItem('bait_finance_transfers');
-      const storedBros = loadFromStorage('bait_finance_brothers', []);
-      if (Array.isArray(storedBros) && storedBros.length > 0) {
-        const cleanedBros = storedBros.map((b) => ({ ...b, approvedFields: [] }));
-        saveToStorage('bait_finance_brothers', cleanedBros);
-      }
-      localStorage.setItem('bait_finance_purge_legacy_mock_v1', 'true');
-    } catch {
-      // ignore
-    }
-  }
 
   // Bank Cards State
   const [bankCards, setBankCards] = useState(() =>
