@@ -358,6 +358,11 @@ function MainApp() {
               onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
               onOpenRequestMoney={(brother, field) => handleOpenRequestMoney(brother, field)}
               onOpenChat={handleOpenChat}
+              onOpenPendingRequests={(reqId) => {
+                setActiveTab('dashboard');
+                if (reqId) setPendingRequestIdToSelect(reqId);
+                setPendingRequestsModalOpen(true);
+              }}
             />
 
             {/* Live Counters & Summary Stats Bar (تم النقل أسفل بطاقة المستخدم) */}
@@ -385,6 +390,11 @@ function MainApp() {
             onOpenGuestApprovals={() => setGuestApprovalsOpen(true)}
             onOpenRequestMoney={(brother, field) => handleOpenRequestMoney(brother, field)}
             onOpenChat={handleOpenChat}
+            onOpenPendingRequests={(reqId) => {
+              setActiveTab('dashboard');
+              if (reqId) setPendingRequestIdToSelect(reqId);
+              setPendingRequestsModalOpen(true);
+            }}
           />
         )}
 

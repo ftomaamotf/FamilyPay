@@ -187,6 +187,7 @@ export const BrothersCards = ({
   onOpenWhatsAppInvite,
   onOpenJoinQr,
   onOpenRequestMoney,
+  onOpenPendingRequests,
   onOpenChat
 }) => {
   const {
@@ -199,7 +200,7 @@ export const BrothersCards = ({
     canCurrentUserSend,
     updateBrotherFields,
     deleteBrother,
-
+    deleteTransfer,
     generalExpensesName,
     updateGeneralExpensesName,
     totalGeneralExpensesSpent
@@ -209,6 +210,7 @@ export const BrothersCards = ({
   const [sortBy, setSortBy] = useState('admin_first'); // 'admin_first', 'alphabetical', 'highest_spent', 'lowest_spent'
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBrotherId, setSelectedBrotherId] = useState(null);
+  const [brotherViewTab, setBrotherViewTab] = useState('transfers'); // 'transfers' (default - same as general expenses) | 'commodities'
   const [editingTransfer, setEditingTransfer] = useState(null);
   const [inspectedCommodity, setInspectedCommodity] = useState(null);
   const [adjustingCommodity, setAdjustingCommodity] = useState(null);
@@ -320,6 +322,19 @@ export const BrothersCards = ({
     if (tNorm && bNorm && tNorm === bNorm) {
       return true;
     }
+    return false;
+  };
+
+  // Strict Request Matching for Brother
+  const isRequestForBrother = (r, b) => {
+    if (!r || !b) return false;
+    if (r.brotherId && b.id && String(r.brotherId) === String(b.id)) return true;
+    const rBank = String(r.bankAccountNumber || r.brotherAccountNumber || '').trim();
+    const bBank = String(b.bankAccountNumber || b.accountNumber || '').trim();
+    if (rBank && bBank && rBank === bBank) return true;
+    const rNorm = normalizeArabicText(r.brotherName);
+    const bNorm = normalizeArabicText(b.name);
+    if (rNorm && bNorm && rNorm === bNorm) return true;
     return false;
   };
 
@@ -980,6 +995,10 @@ export const BrothersCards = ({
           ) : (
             selectedBrother && (() => {
               const selectedPalette = getCirclePalette(selectedBrother, 0, sortedBrothers);
+              const brotherTransfers = transfers.filter((t) => isTransferStrictlyForBrother(t, selectedBrother));
+              const totalBrotherSpent = brotherTransfers.reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
+              const pendingBrotherReqs = (fundRequests || []).filter((r) => r.status === 'pending' && isRequestForBrother(r, selectedBrother));
+
               return (
                 <div className={`p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-800 border-2 ${selectedPalette.border} shadow-2xl space-y-6 animate-fadeIn`}>
                 
@@ -1030,178 +1049,372 @@ export const BrothersCards = ({
                   </div>
                 </div>
 
-                {/* Admin Quick Edit & Sliders Icons */}
-                {isCurrentAdmin && (
-                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                {/* Header Action Buttons (تحويل مالي مباشر + تعديل البيانات) */}
+                <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+                  {canCurrentUserSend && canCurrentUserSend() && onOpenTransferModal && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenTransferModal(selectedBrother)}
+                      className="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl transition flex items-center gap-1.5 text-xs font-bold shadow-md active:scale-95 cursor-pointer"
+                      title={`تحويل مالي مباشر لحساب (${selectedBrother.name})`}
+                    >
+                      <Send className="w-3.5 h-3.5 -rotate-45" />
+                      <span>تحويل وصرف 💸</span>
+                    </button>
+                  )}
+
+                  {isCurrentAdmin && (
                     <button
                       onClick={() => onOpenEditBrother(selectedBrother)}
                       title="تعديل بيانات الأخ"
-                      className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl transition flex items-center gap-1.5 text-xs font-bold"
+                      className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl transition flex items-center gap-1.5 text-xs font-bold cursor-pointer"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                       <span>تعديل البيانات</span>
                     </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Total Brother Stats Box (نفس آلية بطاقة مصاريف عامة تماماً) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-950/40 to-slate-900 border border-emerald-500/30">
+                  <span className="text-xs text-emerald-300/80 font-bold block mb-1">
+                    إجمالي ما تم صرفه واستلمه ({selectedBrother.name}):
+                  </span>
+                  <span className="text-2xl font-black font-mono text-emerald-400">
+                    {formatMoney(totalBrotherSpent, currency)}
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs text-slate-400 font-bold block mb-0.5">عدد العمليات المسجلة:</span>
+                    <span className="text-xl font-black font-mono text-slate-800 dark:text-white">
+                      {brotherTransfers.length} عمليات
+                      {pendingBrotherReqs.length > 0 && (
+                        <span className="text-xs text-amber-500 font-bold mr-1.5">
+                          (+{pendingBrotherReqs.length} معلقة)
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg">
+                    🧾
+                  </div>
+                </div>
+              </div>
+
+              {/* Itemized List of Brother Transfers & Requests (نفس آلية بطاقة مصاريف عامة) */}
+              <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <span className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-emerald-500" />
+                    <span>سجل عمليات وطلبات ({selectedBrother.name}):</span>
+                  </span>
+
+                  {/* Tabs to switch between Operations List and Approved Commodities */}
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => setBrotherViewTab('transfers')}
+                      className={`px-3 py-1 rounded-lg transition cursor-pointer ${
+                        brotherViewTab === 'transfers'
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                      }`}
+                    >
+                      سجل العمليات والطلبات ({brotherTransfers.length + pendingBrotherReqs.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBrotherViewTab('commodities')}
+                      className={`px-3 py-1 rounded-lg transition cursor-pointer ${
+                        brotherViewTab === 'commodities'
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                      }`}
+                    >
+                      السلع المعتمدة ({selectedBrother.approvedFields?.length || 0})
+                    </button>
+                  </div>
+                </div>
+
+                {brotherViewTab === 'transfers' ? (
+                  /* 1. OPERATIONS & REQUESTS LIST (الآلية التراكمية المباشرة نفس مصاريف عامة تماماً) */
+                  (() => {
+                    if (brotherTransfers.length === 0 && pendingBrotherReqs.length === 0) {
+                      return (
+                        <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-2">
+                          <span className="text-3xl block">📋</span>
+                          <p className="text-xs font-bold text-slate-400">
+                            لا توجد عمليات صرف أو طلبات مسجلة لـ ({selectedBrother.name}) حتى الآن
+                          </p>
+                          <p className="text-[11px] text-slate-500">
+                            عند إرسال المستخدم لطلب وموافقة الأدمن عليه (أو التحويل المباشر له)، ستظهر كافة العمليات والمبالغ هنا فوراً بنفس آلية المصاريف العامة.
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                        {/* 1. Pending Requests (الطلبات المعلقة قيد انتظار الموافقة) */}
+                        {pendingBrotherReqs.map((r, pIdx) => (
+                          <div
+                            key={r.id || pIdx}
+                            className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-400/50 flex flex-col gap-3 shadow-xs relative"
+                          >
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-black px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                    {r.fieldName || 'طلب مصروف / سلعة'}
+                                  </span>
+                                  <span className="text-xs text-amber-600 dark:text-amber-400 font-mono">
+                                    {formatArabicDate(r.createdAt || r.date)}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 flex items-center gap-1 animate-pulse">
+                                  ⏳ قيد انتظار موافقة الأدمن
+                                </span>
+                              </div>
+                              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 bg-white/80 dark:bg-slate-800/80 p-2 rounded-lg border border-amber-500/20 mt-2">
+                                {r.reason || 'طلب أموال ومصروف'}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2 border-t border-amber-500/30">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-amber-600 dark:text-amber-400">المبلغ المطلوب:</span>
+                                <span className="text-base font-black font-mono text-amber-600 dark:text-amber-400">
+                                  {formatMoney(r.amount, currency)}
+                                </span>
+                              </div>
+
+                              {isCurrentAdmin && onOpenPendingRequests && (
+                                <button
+                                  type="button"
+                                  onClick={() => onOpenPendingRequests(r.id)}
+                                  className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition flex items-center gap-1 cursor-pointer active:scale-95"
+                                >
+                                  <span>معاينة والموافقة 👑</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* 2. Executed Transfers (نفس بطاقة وعمليات مصاريف عامة تماماً) */}
+                        {brotherTransfers.map((t, idx) => (
+                          <div
+                            key={t.id || idx}
+                            className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 flex flex-col gap-3 shadow-xs hover:border-emerald-500/40 transition relative"
+                          >
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-black px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                                  {t.fieldName || 'سلعة / مصروف'}
+                                </span>
+                                <span className="text-xs text-slate-400 font-mono">
+                                  {formatArabicDate(t.date || t.timestamp)}
+                                </span>
+                              </div>
+                              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-100 dark:border-slate-700 mt-2">
+                                {t.reason || 'بدون تفاصيل'}
+                              </p>
+                              {(t.requestedBy || t.senderName) && (
+                                <p className="text-[11px] text-teal-600 dark:text-teal-400 font-bold mt-1">
+                                  👤 {t.requestedBy ? `تم الصرف بطلب من المستخدم: ${t.requestedBy}` : `تم التحويل بواسطة: ${t.senderName}`}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
+                              <span className="text-base font-black font-mono text-emerald-600 dark:text-emerald-400">
+                                {formatMoney(t.amount, currency)}
+                              </span>
+                              {isCurrentAdmin && (
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingTransfer(t)}
+                                    title="تعديل هذا الطلب"
+                                    className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-emerald-500 transition cursor-pointer"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => deleteTransfer(t.id)}
+                                    title="حذف هذا الطلب واسترجاع المبلغ"
+                                    className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()
+                ) : (
+                  /* 2. APPROVED COMMODITIES SUMMARY (السلع المعتمدة وأسعارها) */
+                  <div className="flex flex-col gap-2.5 max-h-[340px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scroll-smooth">
+                    {selectedBrother.approvedFields?.map((f, index) => {
+                      const calculatedSpent = dynamicFieldSpent(f.id, f.name);
+                      const pending = fundRequests?.find((r) =>
+                        r.status === 'pending' &&
+                        (r.brotherId === selectedBrother.id || r.brotherName === selectedBrother.name) &&
+                        (r.fieldId === f.id || (r.fieldName && f.name && (r.fieldName.includes(f.name) || f.name.includes(r.fieldName))))
+                      );
+                      const priceAmount = calculatedSpent > 0
+                        ? calculatedSpent
+                        : (f.spent || 0) > 0
+                        ? f.spent
+                        : (pending?.amount || 0);
+                      const isPending = calculatedSpent === 0 && (f.spent || 0) === 0 && Boolean(pending);
+
+                      const normF = normalizeArabicText(f.name);
+                      const timesTransferred = transfers.filter((t) => {
+                        if (!isTransferStrictlyForBrother(t, selectedBrother)) return false;
+                        if (t.fieldId && t.fieldId === f.id) return true;
+                        const normT = normalizeArabicText(t.fieldName || t.reason);
+                        return normT && normF && (normT === normF || normT.includes(normF) || normF.includes(normT));
+                      }).length;
+
+                      const timesPending = (fundRequests || []).filter((r) => {
+                        if (r.status !== 'pending') return false;
+                        const isForThisBrother = r.brotherId === selectedBrother.id ||
+                          (selectedBrother.bankAccountNumber && r.bankAccountNumber === selectedBrother.bankAccountNumber) ||
+                          (selectedBrother.accountNumber && r.brotherAccountNumber === selectedBrother.accountNumber);
+                        if (!isForThisBrother) return false;
+                        if (r.fieldId && r.fieldId === f.id) return true;
+                        const normR = normalizeArabicText(r.fieldName || r.commodityName || r.reason);
+                        return normR && normF && (normR === normF || normR.includes(normF) || normR.includes(normR));
+                      }).length;
+
+                      const effectiveCount = timesTransferred + timesPending;
+
+                      return (
+                        <div
+                          key={f.id}
+                          className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-3 relative group/field hover:border-emerald-400 transition shadow-xs"
+                        >
+                          {/* Commodity Name & Index & Full-width Hint (Clickable to view order history - فوق السعر بالكامل) */}
+                          <div
+                            onClick={() => setInspectedCommodity({
+                              field: f,
+                              brother: selectedBrother,
+                              effectiveCount,
+                              priceAmount
+                            })}
+                            className="flex items-start gap-2.5 cursor-pointer select-none"
+                            title="اضغط هنا لعرض تفاصيل وسجل مرات طلب هذه السلعة 📋"
+                          >
+                            <span className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-black flex items-center justify-center shrink-0 mt-0.5">
+                              {index + 1}
+                            </span>
+                            <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-500/20 group-hover/field:scale-110 transition mt-0.5">
+                              🛒
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span className="font-black text-slate-800 dark:text-white text-xs sm:text-sm block break-words leading-snug group-hover/field:text-emerald-500 transition underline-offset-4 group-hover/field:underline">
+                                {f.name}
+                              </span>
+                              {isPending ? (
+                                <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bold block mt-1">
+                                  ⏳ بانتظار موافقة الأدمن والتحويل
+                                </span>
+                              ) : (
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-bold block mt-1 group-hover/field:text-emerald-500 transition">
+                                  اضغط لعرض سجل الطلبات 📋
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Admin Delete Commodity */}
+                            {isCurrentAdmin && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (window.confirm(`هل أنت متأكد من حذف سلعة [${f.name}]؟`)) {
+                                    const updated = (selectedBrother.approvedFields || []).filter((item) => item.id !== f.id);
+                                    updateBrotherFields(selectedBrother.id, updated);
+                                  }
+                                }}
+                                title="حذف هذه السلعة"
+                                className="opacity-0 group-hover/field:opacity-100 p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition rounded-lg shrink-0"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+
+                          {/* خط فاصل أنيق يفصل النص عن السعر */}
+                          <div className="border-t border-slate-200/80 dark:border-slate-800" />
+
+                          {/* صف السعر ورقم العدد أسفل الاسم والنص بالكامل وبدون أي تلاعب بالمبالغ */}
+                          <div className="flex items-center justify-between pt-0.5">
+                            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-bold">
+                              <span>السعر / المصروف:</span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <div
+                                title={`عدد مرات طلب السلعة: ${effectiveCount}`}
+                                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border-2 border-teal-400 dark:border-teal-600 flex items-center justify-center font-mono font-black text-xs sm:text-sm shadow-sm shrink-0"
+                              >
+                                {effectiveCount}
+                              </div>
+
+                              <button
+                                type="button"
+                                disabled={!isCurrentAdmin}
+                                onClick={() => {
+                                  if (isCurrentAdmin) {
+                                    setAdjustingCommodity({
+                                      field: f,
+                                      brother: selectedBrother,
+                                      currentPrice: priceAmount
+                                    });
+                                  }
+                                }}
+                                className={`text-xs sm:text-sm font-black font-mono px-3 py-1.5 rounded-xl shadow-xs border transition flex items-center gap-1.5 select-none ${
+                                  isCurrentAdmin
+                                    ? 'cursor-pointer hover:scale-105 hover:ring-2 hover:ring-emerald-400 active:scale-95 group/price'
+                                    : 'cursor-default'
+                                } ${
+                                  isPending
+                                    ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                                    : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
+                                }`}
+                                title={isCurrentAdmin ? 'اضغط لتعديل السعر واسترجاع أو خصم الفارق من الصندوق ✏️ (صلاحية الأدمن 👑)' : undefined}
+                              >
+                                {isCurrentAdmin && (
+                                  <Edit3 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 opacity-60 group-hover/price:opacity-100 group-hover/price:scale-110 transition shrink-0" />
+                                )}
+                                <span>{formatMoney(priceAmount, currency)}</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {(!selectedBrother.approvedFields || selectedBrother.approvedFields.length === 0) && (
+                      <div className="text-center py-7 text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 space-y-1">
+                        <span className="text-lg block">🛍️</span>
+                        <span className="font-bold text-slate-300">لا توجد سلع مسجلة لهذا المستخدم حالياً.</span>
+                        <span className="text-[11px] text-slate-500 block">عند قيامك بتحويل مبلغ وكتابة اسم السلعة (أو طلب المستخدم لمبلغ وسلعة)، ستظهر السلعة وسعرها هنا فوراً!</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-
-          {/* Approved Commodities & Exact Prices Display */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-emerald-500" />
-                <span>السلع والمصروفات الخاصة بـ ({selectedBrother.name}):</span>
-              </span>
-            </div>
-
-            <div className="flex flex-col gap-2.5 max-h-[340px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scroll-smooth">
-              {selectedBrother.approvedFields?.map((f, index) => {
-                const calculatedSpent = dynamicFieldSpent(f.id, f.name);
-                const pending = fundRequests?.find((r) =>
-                  r.status === 'pending' &&
-                  (r.brotherId === selectedBrother.id || r.brotherName === selectedBrother.name) &&
-                  (r.fieldId === f.id || (r.fieldName && f.name && (r.fieldName.includes(f.name) || f.name.includes(r.fieldName))))
-                );
-                // Real spent: transfers calculated spent > explicit field spent > pending request amount > 0.
-                // NEVER fallback to f.limit which caused arbitrary budget ceilings to display as prices!
-                const priceAmount = calculatedSpent > 0
-                  ? calculatedSpent
-                  : (f.spent || 0) > 0
-                  ? f.spent
-                  : (pending?.amount || 0);
-                const isPending = calculatedSpent === 0 && (f.spent || 0) === 0 && Boolean(pending);
-
-                // Calculate EXACT count: (Completed transfers) + (Active pending requests)
-                const normF = normalizeArabicText(f.name);
-                const timesTransferred = transfers.filter((t) => {
-                  if (!isTransferStrictlyForBrother(t, selectedBrother)) return false;
-                  if (t.fieldId && t.fieldId === f.id) return true;
-                  const normT = normalizeArabicText(t.fieldName || t.reason);
-                  return normT && normF && (normT === normF || normT.includes(normF) || normF.includes(normT));
-                }).length;
-
-                const timesPending = (fundRequests || []).filter((r) => {
-                  if (r.status !== 'pending') return false;
-                  const isForThisBrother = r.brotherId === selectedBrother.id ||
-                    (selectedBrother.bankAccountNumber && r.bankAccountNumber === selectedBrother.bankAccountNumber) ||
-                    (selectedBrother.accountNumber && r.brotherAccountNumber === selectedBrother.accountNumber);
-                  if (!isForThisBrother) return false;
-                  if (r.fieldId && r.fieldId === f.id) return true;
-                  const normR = normalizeArabicText(r.fieldName || r.commodityName || r.reason);
-                  return normR && normF && (normR === normF || normR.includes(normF) || normR.includes(normR));
-                }).length;
-
-                const totalEvents = timesTransferred + timesPending;
-                const effectiveCount = totalEvents;
-
-                return (
-                  <div
-                    key={f.id}
-                    className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between relative group/field hover:border-emerald-400 transition shadow-xs"
-                  >
-                    {/* Commodity Name & Index (Clickable to view order history) */}
-                    <div
-                      onClick={() => setInspectedCommodity({
-                        field: f,
-                        brother: selectedBrother,
-                        effectiveCount,
-                        priceAmount
-                      })}
-                      className="flex items-center gap-2.5 min-w-0 cursor-pointer flex-1 select-none"
-                      title="اضغط هنا لعرض تفاصيل وسجل مرات طلب هذه السلعة 📋"
-                    >
-                      <span className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-black flex items-center justify-center shrink-0">
-                        {index + 1}
-                      </span>
-                      <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-500/20 group-hover/field:scale-110 transition">
-                        🛒
-                      </div>
-                      <div className="min-w-0">
-                        <span className="font-black text-slate-800 dark:text-white text-xs sm:text-sm truncate block group-hover/field:text-emerald-500 transition underline-offset-4 group-hover/field:underline">
-                          {f.name}
-                        </span>
-                        {isPending ? (
-                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold block">
-                            ⏳ بانتظار موافقة الأدمن والتحويل
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-slate-400 font-bold block group-hover/field:text-emerald-500/80 transition">
-                            اضغط لعرض سجل الطلبات 📋
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Price & Circular Quantity Counter in front of commodity */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      {/* Circular Count Badge (رقم العدد في دائرة أمام السعر) */}
-                      <div
-                        title={`عدد مرات طلب السلعة: ${effectiveCount}`}
-                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border-2 border-teal-400 dark:border-teal-600 flex items-center justify-center font-mono font-black text-xs sm:text-sm shadow-sm shrink-0"
-                      >
-                        {effectiveCount}
-                      </div>
-
-                      {/* Price Badge (Clickable for Admin to Adjust Price & Refund/Deduct) */}
-                      <button
-                        type="button"
-                        disabled={!isCurrentAdmin}
-                        onClick={() => {
-                          if (isCurrentAdmin) {
-                            setAdjustingCommodity({
-                              field: f,
-                              brother: selectedBrother,
-                              currentPrice: priceAmount
-                            });
-                          }
-                        }}
-                        className={`text-xs sm:text-sm font-black font-mono px-3 py-1.5 rounded-xl shadow-xs border transition flex items-center gap-1.5 select-none ${
-                          isCurrentAdmin
-                            ? 'cursor-pointer hover:scale-105 hover:ring-2 hover:ring-emerald-400 active:scale-95 group/price'
-                            : 'cursor-default'
-                        } ${
-                          isPending
-                            ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
-                            : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
-                        }`}
-                        title={isCurrentAdmin ? 'اضغط لتعديل السعر واسترجاع أو خصم الفارق من الصندوق ✏️ (صلاحية الأدمن 👑)' : undefined}
-                      >
-                        {isCurrentAdmin && (
-                          <Edit3 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 opacity-60 group-hover/price:opacity-100 group-hover/price:scale-110 transition shrink-0" />
-                        )}
-                        <span>{formatMoney(priceAmount, currency)}</span>
-                      </button>
-
-                      {/* Admin Delete Commodity */}
-                      {isCurrentAdmin && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (window.confirm(`هل أنت متأكد من حذف سلعة [${f.name}]؟`)) {
-                              const updated = (selectedBrother.approvedFields || []).filter((item) => item.id !== f.id);
-                              updateBrotherFields(selectedBrother.id, updated);
-                            }
-                          }}
-                          title="حذف هذه السلعة"
-                          className="opacity-0 group-hover/field:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition rounded"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {(!selectedBrother.approvedFields || selectedBrother.approvedFields.length === 0) && (
-                <div className="text-center py-7 text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="text-lg block">🛍️</span>
-                  <span className="font-bold text-slate-300">لا توجد سلع مسجلة لهذا المستخدم حالياً.</span>
-                  <span className="text-[11px] text-slate-500 block">عند قيامك بتحويل مبلغ وكتابة اسم السلعة (أو طلب المستخدم لمبلغ وسلعة)، ستظهر السلعة وسعرها هنا فوراً!</span>
-                </div>
-              )}
-            </div>
-          </div>
 
           {/* Action Buttons: Chat & Messages & Voice Notes + Edit Commodities */}
           <div className="pt-2 flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
