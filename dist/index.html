@@ -11,12 +11,24 @@
     <meta http-equiv="Expires" content="0" />
     
     <script>
-      // Register Service Worker for Background Push Notifications (Calls & Transfers)
+      // Register Service Worker for background push notifications and refresh stale app shells.
       if ('serviceWorker' in navigator) {
+        var hadController = Boolean(navigator.serviceWorker.controller);
+        var refreshingForUpdate = false;
+
+        navigator.serviceWorker.addEventListener('controllerchange', function() {
+          if (!hadController || refreshingForUpdate) return;
+          refreshingForUpdate = true;
+          window.location.reload();
+        });
+
         window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js')
+          navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
             .then(function(reg) {
               console.log('✅ Service Worker registered for background push:', reg.scope);
+              reg.update().catch(function(updateErr) {
+                console.log('Service Worker update note:', updateErr);
+              });
             })
             .catch(function(err) {
               console.log('Service Worker registration note:', err);
