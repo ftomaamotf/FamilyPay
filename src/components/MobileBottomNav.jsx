@@ -23,7 +23,7 @@ export const MobileBottomNav = ({
 
   const tabs = [
     { id: 'dashboard', label: 'الصندوق', icon: LayoutDashboard },
-    { id: 'brothers', label: 'الدوائر 👥', icon: Users },
+    { id: 'brothers', label: 'المستخدمين', icon: Users },
   ];
 
   return (
