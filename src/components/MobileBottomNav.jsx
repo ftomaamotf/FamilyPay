@@ -22,8 +22,8 @@ export const MobileBottomNav = ({
   const canSend = canCurrentUserSend ? canCurrentUserSend() : true;
 
   const tabs = [
-    { id: 'dashboard', label: 'الصندوق', icon: LayoutDashboard },
     { id: 'brothers', label: 'المستخدمين', icon: Users },
+    { id: 'dashboard', label: 'الصندوق', icon: LayoutDashboard },
   ];
 
   return (
