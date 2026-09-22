@@ -1,8 +1,8 @@
 import React from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { QrCode, Moon, Sun, Settings, LogOut, MessageSquare } from 'lucide-react';
+import { QrCode, Moon, Sun, Settings, LogOut, MessageSquare, Users } from 'lucide-react';
 
-export const BottomToolsBar = ({ onOpenQrModal, onOpenSettings, onOpenChat, onLogout }) => {
+export const BottomToolsBar = ({ onOpenUsers, onOpenQrModal, onOpenSettings, onOpenChat, onLogout }) => {
   const { settings, updateSettings } = useFinance();
 
   return (
@@ -15,8 +15,20 @@ export const BottomToolsBar = ({ onOpenQrModal, onOpenSettings, onOpenChat, onLo
           <span>صندوق عائلة عجمي المالي المشترك • نظام سحابي متزامن</span>
         </div>
 
-        {/* 5 Bottom Toolbar Icons */}
+        {/* Bottom Toolbar Icons */}
         <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/90 p-1.5 px-3 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+
+          {/* Users */}
+          {onOpenUsers && (
+            <button
+              onClick={onOpenUsers}
+              title="عرض المستخدمين"
+              className="p-2 sm:px-3 rounded-xl text-emerald-700 dark:text-emerald-300 hover:bg-white dark:hover:bg-slate-700 transition flex items-center gap-1.5 text-xs font-bold shadow-xs bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300/40"
+            >
+              <Users className="w-4 h-4" />
+              <span className="inline">المستخدمين</span>
+            </button>
+          )}
           
           {/* Chat & Voice Notes */}
           {onOpenChat && (

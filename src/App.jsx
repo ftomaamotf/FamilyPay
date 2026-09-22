@@ -416,6 +416,7 @@ function MainApp() {
 
       {/* Bottom Tools & Settings Bar (تنزيل شريط الإعدادات في الأسفل) */}
       <BottomToolsBar
+        onOpenUsers={() => setActiveTab('brothers')}
         onOpenQrModal={() => setQrModalOpen(true)}
         onOpenSettings={() => setSettingsModalOpen(true)}
         onOpenChat={handleOpenChat}
